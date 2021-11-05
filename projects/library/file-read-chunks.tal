@@ -2,6 +2,14 @@
 
 # Summary
 
+*** CAUTION: this library is deprecated! ***
+
+Chunked file reads are now possible in the File device directly: just use
+File/load or File/save multiple times. This library exists for compatibility to
+keep asma going until it gets a more substantial rewrite.
+
+***
+
 Reads a file in chunks - perfect for when you have a small buffer or when you
 don't know the file size. Copes with files up to 4,294,967,295 bytes long.
 
@@ -17,9 +25,11 @@ don't know the file size. Copes with files up to 4,294,967,295 bytes long.
 
 	&loop
 	STH2kr .File/name DEO2     ( F* U* B* OL* OH* SZ*     / FN* )
-	STH2k .File/length DEO2    ( F* U* B* OL* OH*         / FN* SZ* )
-	STH2k .File/offset-hs DEO2 ( F* U* B* OL*             / FN* SZ* OH* )
-	STH2k .File/offset-ls DEO2 ( F* U* B*                 / FN* SZ* OH* OL* )
+	STH2k ,ffwd/length STR2    ( F* U* B* OL* OH*         / FN* SZ* )
+	STH2                       ( F* U* B* OL*             / FN* SZ* OH* )
+	STH2k ,ffwd/offset STR2    ( F* U* B*                 / FN* SZ* OH* OL* )
+	DUP2 ,ffwd/addr STR2
+	,ffwd JSR
 	SWP2                       ( F* B* U*                 / FN* SZ* OH* OL* )
 	ROT2k NIP2                 ( F* B* U* B* F*           / FN* SZ* OH* OL* )
 	OVR2 .File/load DEO2       ( F* B* U* B* F*           / FN* SZ* OH* OL* )
@@ -39,6 +49,25 @@ don't know the file size. Copes with files up to 4,294,967,295 bytes long.
 	SUB2                       ( F* U'* B* OL'*              / FN* SZ* OH'* )
 	STH2r STH2r                ( F* U'* B* OL'* OH'* SZ*     / FN* )
 	,&loop JMP
+
+@ffwd
+	LIT2 &length $2
+	LIT2 &offset $2
+
+	&coarse ( length* offset* )
+	GTH2k ,&fine JCN
+	OVR2 .File/length DEO2
+	,&addr LDR2 .File/load DEO2
+	OVR2 SUB2
+	,&coarse JMP
+
+	&fine ( length* offset* )
+	.File/length DEO2 ( length* )
+	,&addr LDR2 .File/load DEO2
+	.File/length DEO2 ( )
+	JMP2r
+
+	&addr $2
 
 (
 

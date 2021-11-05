@@ -17,6 +17,8 @@ then
 	clang-format -i src/devices/ppu.c
 	clang-format -i src/devices/apu.h
 	clang-format -i src/devices/apu.c
+	clang-format -i src/devices/file.h
+	clang-format -i src/devices/file.c
 	clang-format -i src/uxnasm.c
 	clang-format -i src/uxnemu.c
 	clang-format -i src/uxncli.c
@@ -49,8 +51,8 @@ fi
 
 echo "Building.."
 cc ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-cc ${CFLAGS} ${CORE} src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
-cc ${CFLAGS} ${CORE} src/uxncli.c -o bin/uxncli
+cc ${CFLAGS} ${CORE} src/devices/file.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
+cc ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]
 then

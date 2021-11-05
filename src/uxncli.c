@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "uxn.h"
+#include "devices/file.h"
 
 /*
 Copyright (c) 2021 Devine Lu Linvega
@@ -78,19 +79,22 @@ console_deo(Device *d, Uint8 port)
 static void
 file_deo(Device *d, Uint8 port)
 {
-	Uint8 read = port == 0xd;
-	if(read || port == 0xf) {
-		char *name = (char *)&d->mem[peek16(d->dat, 0x8)];
-		Uint16 result = 0, length = peek16(d->dat, 0xa);
-		long offset = (peek16(d->dat, 0x4) << 16) + peek16(d->dat, 0x6);
-		Uint16 addr = peek16(d->dat, port - 1);
-		FILE *f = fopen(name, read ? "rb" : (offset ? "ab" : "wb"));
-		if(f) {
-			if(fseek(f, offset, SEEK_SET) != -1)
-				result = read ? fread(&d->mem[addr], 1, length, f) : fwrite(&d->mem[addr], 1, length, f);
-			fclose(f);
-		}
-		poke16(d->dat, 0x2, result);
+	switch(port) {
+	case 0x3:
+		file_prepare(&d->mem[peek16(d->dat, 0x2)]);
+		break;
+	case 0x9:
+		poke16(d->dat, 0x6, file_read(&d->mem[peek16(d->dat, 0x8)], peek16(d->dat, 0x4)));
+		break;
+	case 0xb:
+		poke16(d->dat, 0x6, file_write(&d->mem[peek16(d->dat, 0xa)], peek16(d->dat, 0x4)));
+		break;
+	case 0xd:
+		poke16(d->dat, 0x6, file_stat(&d->mem[peek16(d->dat, 0xc)], peek16(d->dat, 0x4)));
+		break;
+	case 0xe:
+		poke16(d->dat, 0x6, file_delete());
+		break;
 	}
 }
 

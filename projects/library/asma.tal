@@ -196,12 +196,11 @@
 @asma-init-next-pass ( -- )
 	;asma/pass LDA INC ;asma/pass STA
 	;asma-write-buffer ;asma-output/ptr STA2
-	#0000 DUP2k
-		;asma-output/offset STA2
+	#0000 DUP2
 		;asma/addr STA2
 		;asma/state STA
 	#01 SWP ( 0100 ) ;asma/written-addr STA2
-	;&preamble-end ;&preamble SUB2k ,asma-assemble-chunk JSR POP2 POP2
+	;&preamble-end ;&preamble SUB2k ;asma-assemble-chunk JSR2 POP2 POP2
 	JMP2r
 
 	&preamble
@@ -498,15 +497,14 @@ include projects/library/binary-tree.tal
 	NIP2 ( start* )
 	,&after-flush JMP
 
-@asma-output [ &ptr $2 &offset $2 ]
+@asma-output [ &ptr $2 ]
 
 @asma-flush-ignore ( len* -- )
 	POP2
 	JMP2r
 
 @asma-flush-to-file ( len* -- )
-	DUP2 .File/length DEO2
-	,asma-output/offset LDR2 DUP2 .File/offset-ls DEO2 ADD2 ,asma-output/offset STR2
+	.File/length DEO2
 	;asma/dest-filename LDA2 .File/name DEO2
 	;asma-write-buffer .File/save DEO2
 	JMP2r

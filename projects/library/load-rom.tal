@@ -11,8 +11,6 @@
 )
 
 	.File/name DEO2
-	#0000 .File/offset-hs DEO2
-	#0000 .File/offset-ls DEO2
 
 	( return if file can't be found, or zero length )
 	#0001 .File/length DEO2
