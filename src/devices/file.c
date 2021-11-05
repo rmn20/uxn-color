@@ -24,7 +24,7 @@ WITH REGARD TO THIS SOFTWARE.
 static FILE *f;
 static DIR *d;
 static int dir_fd;
-static char *current_filename;
+static char *current_filename = "";
 static enum { IDLE,
 	FILE_READ,
 	FILE_WRITE,
