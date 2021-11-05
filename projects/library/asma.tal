@@ -24,6 +24,9 @@
 )
 
 @asma-assemble-file ( src-filename* dest-filename* -- )
+	#01 .File/append DEO
+	DUP2 .File/name DEO2
+	#01 .File/delete DEO
 	;asma/dest-filename STA2 ;asma/src-filename STA2
 
 	;asma-init-first-pass JSR2

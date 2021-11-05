@@ -107,11 +107,11 @@ file_read(void *dest, Uint16 len)
 }
 
 Uint16
-file_write(void *src, Uint16 len)
+file_write(void *src, Uint16 len, Uint8 flags)
 {
 	if(state != FILE_WRITE) {
 		reset();
-		if((f = fopen(current_filename, "ab")) != NULL)
+		if((f = fopen(current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
 			state = FILE_WRITE;
 	}
 	if(state == FILE_WRITE)

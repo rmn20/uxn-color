@@ -87,7 +87,7 @@ file_deo(Device *d, Uint8 port)
 		poke16(d->dat, 0x6, file_read(&d->mem[peek16(d->dat, 0x8)], peek16(d->dat, 0x4)));
 		break;
 	case 0xb:
-		poke16(d->dat, 0x6, file_write(&d->mem[peek16(d->dat, 0xa)], peek16(d->dat, 0x4)));
+		poke16(d->dat, 0x6, file_write(&d->mem[peek16(d->dat, 0xa)], peek16(d->dat, 0x4), d->dat[0xf]));
 		break;
 	case 0xd:
 		poke16(d->dat, 0x6, file_stat(&d->mem[peek16(d->dat, 0xc)], peek16(d->dat, 0x4)));
