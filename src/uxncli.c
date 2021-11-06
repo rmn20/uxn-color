@@ -80,20 +80,23 @@ static void
 file_deo(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x3:
-		file_prepare(&d->mem[peek16(d->dat, 0x2)]);
+	case 0x1:
+		d->vector = peek16(d->dat, 0x0);
 		break;
 	case 0x9:
-		poke16(d->dat, 0x6, file_read(&d->mem[peek16(d->dat, 0x8)], peek16(d->dat, 0x4)));
-		break;
-	case 0xb:
-		poke16(d->dat, 0x6, file_write(&d->mem[peek16(d->dat, 0xa)], peek16(d->dat, 0x4), d->dat[0xf]));
+		file_prepare(&d->mem[peek16(d->dat, 0x8)]);
 		break;
 	case 0xd:
-		poke16(d->dat, 0x6, file_stat(&d->mem[peek16(d->dat, 0xc)], peek16(d->dat, 0x4)));
+		poke16(d->dat, 0x2, file_read(&d->mem[peek16(d->dat, 0xc)], peek16(d->dat, 0xa)));
 		break;
-	case 0xe:
-		poke16(d->dat, 0x6, file_delete());
+	case 0xf:
+		poke16(d->dat, 0x2, file_write(&d->mem[peek16(d->dat, 0xe)], peek16(d->dat, 0xa), d->dat[0x7]));
+		break;
+	case 0x5:
+		poke16(d->dat, 0x2, file_stat(&d->mem[peek16(d->dat, 0x4)], peek16(d->dat, 0xa)));
+		break;
+	case 0x6:
+		poke16(d->dat, 0x2, file_delete());
 		break;
 	}
 }
