@@ -114,8 +114,11 @@ file_write(void *src, Uint16 len, Uint8 flags)
 		if((f = fopen(current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
 			state = FILE_WRITE;
 	}
-	if(state == FILE_WRITE)
-		return fwrite(src, 1, len, f);
+	if(state == FILE_WRITE) {
+		Uint16 ret = fwrite(src, 1, len, f);
+		fflush(f);
+		return ret;
+	}
 	return 0;
 }
 
