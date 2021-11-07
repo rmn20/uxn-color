@@ -14,7 +14,7 @@
 
 	( return if file can't be found, or zero length )
 	#0001 .File/length DEO2
-	;&tmp .File/load DEO2
+	;&tmp .File/read DEO2
 	.File/success DEI2 ORA JMP JMP2r
 
 	( clear wst )
@@ -81,7 +81,7 @@
 	OVR2 #f401 ( arguments for STZ2 at fd, plus an extra 01 )
 	STHkr ( first argument for ADD2 )
 	.File/success ( argument for DEI2 )
-	#0100 .File/load ( arguments for DEO2 )
+	#0100 .File/read ( arguments for DEO2 )
 	#ff00 .File/length DEO2
 	#00f0 JMP2
 

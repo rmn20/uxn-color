@@ -12,7 +12,7 @@
 
 |00 @System  &vector $2 &pad     $6 &r      $2 &g     $2 &b      $2
 |20 @Screen  &vector $2 &width   $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
-|a0 @File    &vector $2 &success $2 &stat   $2 &delete $1 &append $1 &name  $2 &length $2 &load $2 &save $2
+|a0 @File    &vector $2 &success $2 &stat   $2 &delete $1 &append $1 &name  $2 &length $2 &read $2 &write $2
 
 ( variables )
 
@@ -30,21 +30,21 @@
 	( load font )
 	#4900 .File/length DEO2
 	;font-path-large .File/name DEO2
-	;font-data .File/load DEO2
+	;font-data .File/read DEO2
 		( draw label )
 		#0020 #0020 ;title #01 ;draw-uf3 JSR2
 
 	( load font )
 	#2100 .File/length DEO2
 	;font-path-medium .File/name DEO2
-	;font-data .File/load DEO2
+	;font-data .File/read DEO2
 		( draw label )
 		#0020 #0048 ;body #02 ;draw-uf2 JSR2
 
 	( load font )
 	#0900 .File/length DEO2
 	;font-path-small .File/name DEO2
-	;font-data .File/load DEO2
+	;font-data .File/read DEO2
 		( draw label )
 		#0030 #00b8 ;footer #03 ;draw-uf1 JSR2
 	

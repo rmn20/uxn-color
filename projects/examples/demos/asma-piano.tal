@@ -2,7 +2,7 @@
 
 |00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r $2 &g $2 &b $2   &debug $1 &halt $1 ]
 |10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
-|a0 @File       [ &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &load $2 &save $2 ]
+|a0 @File       [ &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2 ]
 
 ( vectors )
 
@@ -37,12 +37,12 @@
 		Load the output ROM over the currently running program, almost as if
 		we loaded the ROM with uxnemu directly!
 
-		It's not a totally pristine environment, as File/load doesn't zero out
+		It's not a totally pristine environment, as File/read doesn't zero out
 		memory beyond the end of the file. So if the assembled program assumes
 		that all memory above it is zero, it may misbehave.
 
 		Asma itself doesn't use the zero page, but this example code writes a
-		DEO2 instruction to 0x00ff. In order to execute File/load and have the
+		DEO2 instruction to 0x00ff. In order to execute File/read and have the
 		CPU continue at memory location 0x0100, we write the final DEO2
 		instruction there and jump there as our final act.
 
@@ -52,7 +52,7 @@
 	)
 	;&dest-file .File/name DEO2
 	#ff00 .File/length DEO2
-	#0100 .File/load
+	#0100 .File/read
 	LIT DEO2 #00ff STA
 	LIT BRK #0100 STA
 	#00ff JMP2

@@ -63,31 +63,29 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 }
 
 static Uint16
-file_read_dir(void *dest, Uint16 len)
+file_read_dir(char *dest, Uint16 len)
 {
-	static char pathname[PATH_MAX];
+	static char pathname[4096];
 	char *p = dest;
 	if(de == NULL) de = readdir(d);
 	for(; de != NULL; de = readdir(d)) {
 		Uint16 n;
 		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
 			continue;
-		strncpy(pathname, current_filename, sizeof(pathname) - 1);
-		strncat(pathname, "/", sizeof(pathname) - 1);
-		strncat(pathname, de->d_name, sizeof(pathname) - 1);
+		snprintf(pathname, sizeof(pathname), "%s/%s", current_filename, de->d_name);
 		n = get_entry(p, len, pathname, de->d_name, 1);
 		if(!n) break;
 		p += n;
 		len -= n;
 	}
-	return p - (char *)dest;
+	return p - dest;
 }
 
 Uint16
 file_init(void *filename)
 {
 	reset();
-	current_filename = (char *)filename;
+	current_filename = filename;
 	return 0;
 }
 
@@ -111,17 +109,17 @@ file_read(void *dest, Uint16 len)
 Uint16
 file_write(void *src, Uint16 len, Uint8 flags)
 {
+	Uint16 ret = 0;
 	if(state != FILE_WRITE) {
 		reset();
 		if((f = fopen(current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
 			state = FILE_WRITE;
 	}
 	if(state == FILE_WRITE) {
-		Uint16 ret = fwrite(src, 1, len, f);
-		fflush(f);
-		return ret;
+		if((ret = fwrite(src, 1, len, f)) > 0 && fflush(f) != 0)
+			ret = 0;
 	}
-	return 0;
+	return ret;
 }
 
 Uint16

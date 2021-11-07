@@ -5,7 +5,7 @@
 *** CAUTION: this library is deprecated! ***
 
 Chunked file reads are now possible in the File device directly: just use
-File/load or File/save multiple times. This library exists for compatibility to
+File/read or File/write multiple times. This library exists for compatibility to
 keep asma going until it gets a more substantial rewrite.
 
 ***
@@ -32,7 +32,7 @@ don't know the file size. Copes with files up to 4,294,967,295 bytes long.
 	,ffwd JSR
 	SWP2                       ( F* B* U*                 / FN* SZ* OH* OL* )
 	ROT2k NIP2                 ( F* B* U* B* F*           / FN* SZ* OH* OL* )
-	OVR2 .File/load DEO2       ( F* B* U* B* F*           / FN* SZ* OH* OL* )
+	OVR2 .File/read DEO2       ( F* B* U* B* F*           / FN* SZ* OH* OL* )
 	.File/success DEI2 SWP2    ( F* B* U* B* length* F*   / FN* SZ* OH* OL* )
 	JSR2                       ( F* B* U'* done-up-to*    / FN* SZ* OH* OL* )
 	ROT2 SWP2                  ( F* U'* B* done-up-to*    / FN* SZ* OH* OL* )
@@ -57,13 +57,13 @@ don't know the file size. Copes with files up to 4,294,967,295 bytes long.
 	&coarse ( length* offset* )
 	GTH2k ,&fine JCN
 	OVR2 .File/length DEO2
-	,&addr LDR2 .File/load DEO2
+	,&addr LDR2 .File/read DEO2
 	OVR2 SUB2
 	,&coarse JMP
 
 	&fine ( length* offset* )
 	.File/length DEO2 ( length* )
-	,&addr LDR2 .File/load DEO2
+	,&addr LDR2 .File/read DEO2
 	.File/length DEO2 ( )
 	JMP2r
 
