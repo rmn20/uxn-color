@@ -15,7 +15,7 @@ expect_failure() {
 
 echo 'Assembling asma with uxnasm'
 bin/uxnasm projects/software/asma.tal asma-test/asma.rom > asma-test/uxnasm.log
-for F in $(find projects -path projects/library -prune -false -or -type f -name '*.tal' | sort); do
+for F in $(find projects -path projects/library -prune -false -or -path projects/assets -prune -false -or -type f -name '*.tal' | sort); do
 	echo "Comparing assembly of ${F}"
 
 	UASM_BASE="asma-test/uxnasm-$(basename "${F%.tal}")"
