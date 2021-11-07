@@ -11,21 +11,23 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
+%MOD { DIVk MUL SUB }
+%DEC { #01 - }
 %RTN { JMP2r }
 %TOS { #00 SWP }
+%SWP? { #01 JCN SWP }
 %BRK? { #01 JCN BRK }
 %RTN? { #01 JCN RTN }
 
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
-%HEX-CHAR { DUP #09 GTH #04 JCN #30 + RTN #57 + }
-
 ( devices )
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
 |10 @Console    &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
 |20 @Screen     &vector $2 &width   $2 &height $2 &auto $1 &pad $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
+|30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
 |80 @Controller &vector $2 &button $1 &key    $1 ]
 |90 @Mouse      &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
 |a0 @File       &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
@@ -35,12 +37,11 @@
 
 |0000
 
-@input $30
 @second $1
 @pointer
 	&x  $2 &y  $2
 @browser
-	&x $2 &y $2
+	&x $2 &y $2 &sel $1
 
 ( init )
 
@@ -56,6 +57,12 @@
 	;on-button .Controller/vector DEO2
 	;on-mouse .Mouse/vector DEO2
 
+	( setup synth )
+	#0110 .Audio0/adsr DEO2
+	;sin-pcm .Audio0/addr DEO2
+	#0100 .Audio0/length DEO2
+	#dd .Audio0/volume DEO ( TODO: turn ON )
+
 	( place )
 	#0080 .browser/x STZ2
 	#0010 .browser/y STZ2
@@ -63,12 +70,7 @@
 	( draw mascot )
 	#0010 #0010 #0060 #0060 ;mascot-icn #01 ;draw-icn JSR2
 
-	( load directory )
-	;dir/path .File/name DEO2
-	#1000 .File/length DEO2
-	;dir/data .File/load DEO2
-
-	;dir/data #07 ;draw-browser JSR2
+	;read-dir JSR2
 
 	( theme support )
 	;load-theme JSR2
@@ -104,9 +106,46 @@ BRK
 
 @on-button ( -> )
 
-	.Controller/key DEI BRK?
+	.Controller/button DEI
+	DUP #10 ! ,&no-up JCN
+		#01 .browser/sel LDZ GTHk SWP? POP DEC ;select-file JSR2
+		&no-up
+	DUP #20 ! ,&no-down JCN
+		.browser/sel LDZ ;dir/lines LDA LTHk SWP? POP INC ;select-file JSR2
+		&no-down
+	POP
 
 BRK
+
+@read-dir ( -- )
+
+	;dir/path .File/name DEO2
+	#1000 .File/length DEO2
+	;dir/data .File/read DEO2
+
+	( count lines )
+	LITr 00
+	;dir/data
+	&while
+		LDAk #0a ! ,&no-lb JCN
+			INCr
+			&no-lb
+		INC2 LDAk ,&while JCN
+	POP2
+	STHr #02 - ;dir/lines STA
+
+	;draw-browser JSR2
+
+RTN
+
+@select-file ( id -- )
+
+	DUP 
+		.browser/sel STZ
+		#40 + .Audio0/pitch DEO
+	;draw-browser JSR2
+
+RTN
 
 @redraw ( -- )
 
@@ -119,23 +158,24 @@ BRK
 
 RTN
 
-@draw-browser ( x* y* addr* color -- )
+@draw-browser ( -- )
 
-	STH STH2
+	( line counter ) #00 STH
 	.browser/x LDZ2 .Screen/x DEO2
 	.browser/y LDZ2 .Screen/y DEO2
-	STH2r
+	;dir/data
 	&loop
 		LDAk #0a ! ,&no-lb JCN
 			#0080 .Screen/x DEO2
 			.Screen/y DEI2 #0010 ++ .Screen/y DEO2
+			( incr line counter ) INCr
 			,&skip JMP
 			&no-lb
 		( top-addr ) LDAk #20 - TOS #0010 MUL2 ;font ++ .Screen/addr DEO2
-		( top-draw ) STHkr .Screen/sprite DEO
+		( top-draw ) #01 [ .browser/sel LDZ STHkr = #0c * + ] .Screen/sprite DEO
 		( bottom-addr ) .Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
 		( next-y ) .Screen/y DEI2 #0008 ++ .Screen/y DEO2
-		( bottom-draw ) STHkr .Screen/sprite DEO
+		( bottom-draw ) #01 [ .browser/sel LDZ STHkr = #0c * + ] .Screen/sprite DEO
 		( prev-y ) .Screen/y DEI2 #0008 -- .Screen/y DEO2
 		( move ) .Screen/x DEI2 #0008 ++ .Screen/x DEO2
 		&skip
@@ -177,17 +217,7 @@ RTN
 
 @hex-char ( hex -- char )
 
-	HEX-CHAR
-
-RTN
-
-@draw-cursor ( color -- )
-
-	STH
-	;cursor-icn .Screen/addr DEO2
-	STHkr .Screen/sprite DEO
-	.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-	STHr .Screen/sprite DEO
+	DUP #09 GTH #04 JCN #30 + RTN #57 +
 
 RTN
 
@@ -285,6 +315,24 @@ RTN
 @cursor-icn
 	ffff ffff ffff ffff
 
+@sin-pcm
+	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
+	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
+	d9db dee0 e2e4 e6e7 e9eb ecee f0f1 f2f4
+	f5f6 f7f8 f9fa fbfb fcfd fdfe fefe fefe
+	fffe fefe fefe fdfd fcfb fbfa f9f8 f7f6
+	f5f4 f2f1 f0ee eceb e9e7 e6e4 e2e0 dedb
+	d9d7 d5d2 d0ce cbc9 c6c3 c1be bbb9 b6b3
+	b0ad aaa7 a4a1 9e9b 9895 928f 8c89 8683
+	807d 7a77 7471 6e6b 6865 625f 5c59 5653
+	504d 4a47 4542 3f3d 3a37 3532 302e 2b29
+	2725 2220 1e1c 1a19 1715 1412 100f 0e0c
+	0b0a 0908 0706 0505 0403 0302 0202 0202
+	0102 0202 0202 0303 0405 0506 0708 090a
+	0b0c 0e0f 1012 1415 1719 1a1c 1e20 2225
+	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
+	5053 5659 5c5f 6265 686b 6e71 7477 7a7d
+
 include projects/library/load-rom.tal
 
 include projects/assets/logo05x05.tal
@@ -293,4 +341,5 @@ include projects/assets/msx01x02.tal
 
 @dir
 	&path ". $1
+	&lines $1
 	&data
