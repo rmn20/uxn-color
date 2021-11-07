@@ -48,13 +48,6 @@ reset(void)
 	state = IDLE;
 }
 
-void
-file_prepare(void *filename)
-{
-	reset();
-	current_filename = (char *)filename;
-}
-
 static Uint16
 get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int fail_nonzero)
 {
@@ -76,6 +69,35 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 	return strlen(p);
 }
 
+static Uint16
+file_read_dir(void *dest, Uint16 len)
+{
+	static char pathname[PATH_MAX];
+	char *p = dest;
+	if(de == NULL) de = readdir(d);
+	for(; de != NULL; de = readdir(d)) {
+		Uint16 n;
+		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
+			continue;
+		strncpy(pathname, current_filename, sizeof(pathname) - 1);
+		strncat(pathname, "/", sizeof(pathname) - 1);
+		strncat(pathname, de->d_name, sizeof(pathname) - 1);
+		n = get_entry(p, len, pathname, de->d_name, 1);
+		if(!n) break;
+		p += n;
+		len -= n;
+	}
+	return p - (char *)dest;
+}
+
+Uint16
+file_init(void *filename)
+{
+	reset();
+	current_filename = (char *)filename;
+	return 0;
+}
+
 Uint16
 file_read(void *dest, Uint16 len)
 {
@@ -88,24 +110,8 @@ file_read(void *dest, Uint16 len)
 	}
 	if(state == FILE_READ)
 		return fread(dest, 1, len, f);
-	if(state == DIR_READ) {
-		static char pathname[PATH_MAX];
-		char *p = dest;
-		if(de == NULL) de = readdir(d);
-		for(; de != NULL; de = readdir(d)) {
-			Uint16 n;
-			if(de->d_name[0] == '.' && de->d_name[1] == '\0')
-				continue;
-			strncpy(pathname, current_filename, sizeof(pathname) - 1);
-			strncat(pathname, "/", sizeof(pathname) - 1);
-			strncat(pathname, de->d_name, sizeof(pathname) - 1);
-			n = get_entry(p, len, pathname, de->d_name, 1);
-			if(!n) break;
-			p += n;
-			len -= n;
-		}
-		return p - (char *)dest;
-	}
+	if(state == DIR_READ)
+		return file_read_dir(dest, len);
 	return 0;
 }
 
