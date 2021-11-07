@@ -20,6 +20,7 @@ WITH REGARD TO THIS SOFTWARE.
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 
 static FILE *f;
 static DIR *d;
@@ -56,19 +57,22 @@ file_prepare(void *filename)
 }
 
 static Uint16
-write_entry(char *p, Uint16 len, const char *filename, struct stat *st)
+get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int fail_nonzero)
 {
-	if(len < strlen(filename) + 7) return 0;
+	struct stat st;
+	if(len < strlen(basename) + 7) return 0;
 	memcpy(p, "???? ", 5);
-	strcpy(p + 5, filename);
+	strcpy(p + 5, basename);
 	strcat(p, "\n");
-	if(S_ISDIR(st->st_mode)) {
+	if(stat(pathname, &st))
+		return fail_nonzero ? strlen(p) : 0;
+	if(S_ISDIR(st.st_mode)) {
 		memcpy(p, "---- ", 5);
-	} else if(st->st_size < 0x10000) {
-		p[0] = hex[(st->st_size >> 12) & 0xf];
-		p[1] = hex[(st->st_size >> 8) & 0xf];
-		p[2] = hex[(st->st_size >> 4) & 0xf];
-		p[3] = hex[(st->st_size >> 0) & 0xf];
+	} else if(st.st_size < 0x10000) {
+		p[0] = hex[(st.st_size >> 12) & 0xf];
+		p[1] = hex[(st.st_size >> 8) & 0xf];
+		p[2] = hex[(st.st_size >> 4) & 0xf];
+		p[3] = hex[(st.st_size >> 0) & 0xf];
 	}
 	return strlen(p);
 }
@@ -87,16 +91,17 @@ file_read(void *dest, Uint16 len)
 	if(state == FILE_READ)
 		return fread(dest, 1, len, f);
 	if(state == DIR_READ) {
+		static char pathname[PATH_MAX];
 		char *p = dest;
 		if(de == NULL) de = readdir(d);
 		for(; de != NULL; de = readdir(d)) {
-			struct stat st;
 			Uint16 n;
 			if(de->d_name[0] == '.' && de->d_name[1] == '\0')
 				continue;
-			if(fstatat(dir_fd, de->d_name, &st, 0))
-				continue;
-			n = write_entry(p, len, de->d_name, &st);
+			strncpy(pathname, current_filename, sizeof(pathname) - 1);
+			strncat(pathname, "/", sizeof(pathname) - 1);
+			strncat(pathname, de->d_name, sizeof(pathname) - 1);
+			n = get_entry(p, len, pathname, de->d_name, 1);
 			if(!n) break;
 			p += n;
 			len -= n;
@@ -125,10 +130,7 @@ file_write(void *src, Uint16 len, Uint8 flags)
 Uint16
 file_stat(void *dest, Uint16 len)
 {
-	struct stat st;
-	if(stat(current_filename, &st))
-		return 0;
-	return write_entry((char *)dest, len, current_filename, &st);
+	return get_entry(dest, len, current_filename, current_filename, 0);
 }
 
 Uint16
