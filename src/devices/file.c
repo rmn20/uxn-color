@@ -72,9 +72,7 @@ file_read_dir(void *dest, Uint16 len)
 		Uint16 n;
 		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
 			continue;
-		strncpy(pathname, current_filename, sizeof(pathname) - 1);
-		strncat(pathname, "/", sizeof(pathname) - 1);
-		strncat(pathname, de->d_name, sizeof(pathname) - 1);
+		snprintf(pathname, sizeof(pathname), "%s/%s", current_filename, de->d_name);
 		n = get_entry(p, len, pathname, de->d_name, 1);
 		if(!n) break;
 		p += n;
