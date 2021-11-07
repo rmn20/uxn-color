@@ -63,7 +63,7 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 }
 
 static Uint16
-file_read_dir(void *dest, Uint16 len)
+file_read_dir(char *dest, Uint16 len)
 {
 	static char pathname[4096];
 	char *p = dest;
@@ -78,14 +78,14 @@ file_read_dir(void *dest, Uint16 len)
 		p += n;
 		len -= n;
 	}
-	return p - (char *)dest;
+	return p - dest;
 }
 
 Uint16
 file_init(void *filename)
 {
 	reset();
-	current_filename = (char *)filename;
+	current_filename = filename;
 	return 0;
 }
 
