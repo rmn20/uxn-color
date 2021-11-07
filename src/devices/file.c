@@ -130,7 +130,12 @@ file_write(void *src, Uint16 len, Uint8 flags)
 Uint16
 file_stat(void *dest, Uint16 len)
 {
-	return get_entry(dest, len, current_filename, current_filename, 0);
+	char *basename = strrchr(current_filename, '/');
+	if(basename != NULL)
+		++basename;
+	else
+		basename = current_filename;
+	return get_entry(dest, len, current_filename, basename, 0);
 }
 
 Uint16
