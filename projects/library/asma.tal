@@ -509,7 +509,7 @@ include projects/library/binary-tree.tal
 @asma-flush-to-file ( len* -- )
 	.File/length DEO2
 	;asma/dest-filename LDA2 .File/name DEO2
-	;asma-write-buffer .File/save DEO2
+	;asma-write-buffer .File/write DEO2
 	JMP2r
 
 @asma-flush-to-console ( len* -- )

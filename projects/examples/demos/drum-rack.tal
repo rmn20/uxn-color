@@ -30,7 +30,7 @@
 |70 @Midi       [ &vector $2 &channel  $1 &note   $1 &velocity $1 ]
 |80 @Controller [ &vector $2 &button   $1 &key    $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel $1 ]
-|a0 @File       [ &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &load $2 &save $2 ]
+|a0 @File       [ &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2 ]
 
 ( variables )
 
@@ -137,7 +137,7 @@
 		( load sample )
 		OVR TOS #0019 ** ;pad-path ++ .File/name DEO2
 		OVR #04 / #40 SFT .Audio0/length + DEI2 .File/length DEO2
-		OVR TOS 2** ;pad-addr ++ LDA2 .File/load DEO2
+		OVR TOS 2** ;pad-addr ++ LDA2 .File/read DEO2
 		( draw pad )
 		OVR #01 ;draw-pad JSR2
 		( draw mixer )
