@@ -31,8 +31,6 @@ static enum { IDLE,
 	DIR_READ } state;
 static struct dirent *de;
 
-static char hex[] = "0123456789abcdef";
-
 static void
 reset(void)
 {
@@ -52,21 +50,16 @@ static Uint16
 get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int fail_nonzero)
 {
 	struct stat st;
-	if(len < strlen(basename) + 7) return 0;
-	memcpy(p, "???? ", 5);
-	strcpy(p + 5, basename);
-	strcat(p, "\n");
+	if(len < strlen(basename) + 7)
+		return 0;
 	if(stat(pathname, &st))
-		return fail_nonzero ? strlen(p) : 0;
-	if(S_ISDIR(st.st_mode)) {
-		memcpy(p, "---- ", 5);
-	} else if(st.st_size < 0x10000) {
-		p[0] = hex[(st.st_size >> 12) & 0xf];
-		p[1] = hex[(st.st_size >> 8) & 0xf];
-		p[2] = hex[(st.st_size >> 4) & 0xf];
-		p[3] = hex[(st.st_size >> 0) & 0xf];
-	}
-	return strlen(p);
+		return fail_nonzero ? snprintf(p, len, "!!!! %s\n", basename) : 0;
+	else if(S_ISDIR(st.st_mode))
+		return snprintf(p, len, "---- %s\n", basename);
+	else if(st.st_size < 0x10000)
+		return snprintf(p, len, "%04x %s\n", (Uint16)st.st_size, basename);
+	else
+		return snprintf(p, len, "???? %s\n", basename);
 }
 
 static Uint16
