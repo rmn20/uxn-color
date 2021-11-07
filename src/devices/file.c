@@ -65,7 +65,7 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 static Uint16
 file_read_dir(void *dest, Uint16 len)
 {
-	static char pathname[PATH_MAX];
+	static char pathname[4096];
 	char *p = dest;
 	if(de == NULL) de = readdir(d);
 	for(; de != NULL; de = readdir(d)) {
