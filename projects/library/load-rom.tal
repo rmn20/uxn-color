@@ -17,6 +17,9 @@
 	;&tmp .File/read DEO2
 	.File/success DEI2 ORA JMP JMP2r
 
+	( close the file so the next read starts at the beginning )
+	.File/name DEI2k ROT DEO2
+
 	( clear wst )
 	#ab
 	&wst-loop
