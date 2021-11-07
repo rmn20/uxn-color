@@ -24,7 +24,6 @@ WITH REGARD TO THIS SOFTWARE.
 
 static FILE *f;
 static DIR *d;
-static int dir_fd;
 static char *current_filename = "";
 static enum { IDLE,
 	FILE_READ,
@@ -82,10 +81,9 @@ file_read(void *dest, Uint16 len)
 {
 	if(state != FILE_READ && state != DIR_READ) {
 		reset();
-		if((d = opendir(current_filename)) != NULL) {
+		if((d = opendir(current_filename)) != NULL)
 			state = DIR_READ;
-			dir_fd = dirfd(d);
-		} else if((f = fopen(current_filename, "rb")) != NULL)
+		else if((f = fopen(current_filename, "rb")) != NULL)
 			state = FILE_READ;
 	}
 	if(state == FILE_READ)
