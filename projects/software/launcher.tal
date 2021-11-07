@@ -11,6 +11,8 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
+%10** { #40 SFT2 }
+
 %MOD { DIVk MUL SUB }
 %DEC { #01 - }
 %RTN { JMP2r }
@@ -64,7 +66,7 @@
 	#dd .Audio0/volume DEO ( TODO: turn ON )
 
 	( place )
-	#0080 .browser/x STZ2
+	#0088 .browser/x STZ2
 	#0010 .browser/y STZ2
 
 	( draw mascot )
@@ -74,6 +76,8 @@
 
 	( theme support )
 	;load-theme JSR2
+
+	#00 ;select-file JSR2
 
 BRK
 
@@ -113,6 +117,9 @@ BRK
 	DUP #20 ! ,&no-down JCN
 		.browser/sel LDZ ;dir/lines LDA LTHk SWP? POP INC ;select-file JSR2
 		&no-down
+	DUP #01 ! ,&no-a JCN
+		.browser/sel LDZ ;run-file JSR2
+		&no-a
 	POP
 
 BRK
@@ -134,27 +141,72 @@ BRK
 	POP2
 	STHr #02 - ;dir/lines STA
 
-	;draw-browser JSR2
-
 RTN
 
 @select-file ( id -- )
+
+	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
+	#0010 #0010 
+		;hand-icn #00 ;draw-icn JSR2
 
 	DUP 
 		.browser/sel STZ
 		#40 + .Audio0/pitch DEO
 	;draw-browser JSR2
 
+	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
+	#0010 #0010 
+		;hand-icn #02 ;draw-icn JSR2
+
+RTN
+
+@run-file ( id -- )
+
+	STH
+	( count lines )
+	LITr 00
+	;dir/data
+	&while
+		LDAk #0a ! ,&no-lb JCN
+			INCr
+			&no-lb
+		EQUkr STHr ,&end JCN
+		INC2 LDAk ,&while JCN
+	&end
+	POP2r
+
+	DUP2 INC2 ;close-path JSR2
+	#0006 ++ DUP2 ;print-string JSR2
+	#0a .Console/write DEO
+	;load-rom JSR2
+
+RTN
+
+@close-path ( addr* -- )
+
+	&while
+		LDAk #0a ! ,&no-lb JCN
+			STH2k #00 STH2r STA
+			,&end JMP
+			&no-lb
+		INC2 LDAk ,&while JCN
+	&end
+	POP2
+
+RTN
+
+@print-string ( addr* -- )
+
+	&loop
+		LDAk .Console/write DEO
+		INC2 LDAk ,&loop JCN
+	POP2
+
 RTN
 
 @redraw ( -- )
 
-	RTN
-	#0018 #0020 #0040 #0040 ;logo-icn #03 ;draw-icn JSR2
-	#0020 #0070 ;welcome-txt #01 ;draw-label JSR2
-	;draw-time JSR2
-	#0020 #00b0 ;prompt-txt #01 ;draw-label JSR2
-	#0020 #00c0 ;do-txt #03 ;draw-label JSR2
+	( unused )
 
 RTN
 
@@ -166,7 +218,7 @@ RTN
 	;dir/data
 	&loop
 		LDAk #0a ! ,&no-lb JCN
-			#0080 .Screen/x DEO2
+			.browser/x LDZ2 .Screen/x DEO2
 			.Screen/y DEI2 #0010 ++ .Screen/y DEO2
 			( incr line counter ) INCr
 			,&skip JMP
@@ -314,6 +366,11 @@ RTN
 	80c0 e0f0 f8e0 1000
 @cursor-icn
 	ffff ffff ffff ffff
+@hand-icn
+	000c 0a0a 1224 4780
+	0000 0000 0000 fc02
+	8180 8080 8040 3f00
+	fc20 c020 c020 c000
 
 @sin-pcm
 	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
