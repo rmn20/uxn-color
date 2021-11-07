@@ -109,17 +109,17 @@ file_read(void *dest, Uint16 len)
 Uint16
 file_write(void *src, Uint16 len, Uint8 flags)
 {
+	Uint16 ret = 0;
 	if(state != FILE_WRITE) {
 		reset();
 		if((f = fopen(current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
 			state = FILE_WRITE;
 	}
 	if(state == FILE_WRITE) {
-		Uint16 ret = fwrite(src, 1, len, f);
-		fflush(f);
-		return ret;
+		if((ret = fwrite(src, 1, len, f)) > 0 && fflush(f) != 0)
+			ret = 0;
 	}
-	return 0;
+	return ret;
 }
 
 Uint16
