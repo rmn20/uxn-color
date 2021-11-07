@@ -20,7 +20,6 @@ WITH REGARD TO THIS SOFTWARE.
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <limits.h>
 
 static FILE *f;
 static DIR *d;
