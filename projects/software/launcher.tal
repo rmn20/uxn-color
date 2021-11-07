@@ -39,7 +39,7 @@
 @second $1
 @pointer
 	&x  $2 &y  $2
-@browser-frame
+@browser
 	&x $2 &y $2
 
 ( init )
@@ -56,13 +56,28 @@
 	;on-button .Controller/vector DEO2
 	;on-mouse .Mouse/vector DEO2
 
+	( place )
+	#0080 .browser/x STZ2
+	#0010 .browser/y STZ2
+
+	( draw mascot )
+	#0010 #0010 #0060 #0060 ;mascot-icn #01 ;draw-icn JSR2
+
+	( load directory )
+	;dir/path .File/name DEO2
+	#1000 .File/length DEO2
+	;dir/data .File/load DEO2
+
+	;dir/data #07 ;draw-browser JSR2
+
 	( theme support )
 	;load-theme JSR2
-	
+
 BRK
 
 @on-frame ( -> )
 
+	BRK
 	.DateTime/second DEI .second LDZ ! BRK?
 	.DateTime/second DEI .second STZ ;draw-time JSR2
 
@@ -91,66 +106,41 @@ BRK
 
 	.Controller/key DEI BRK?
 
-	.Controller/key DEI
-	DUP #08 ! ,&no-backspace JCN
-		;form/erase JSR2 POP BRK
-		&no-backspace
-	DUP #0d ! ,&no-enter JCN
-		;form/validate JSR2 POP BRK
-		&no-enter
-	;form/append JSR2
-
 BRK
-
-@form ( -- )
-
-	&append ( char -- )
-		,&seek JSR STH2k NIP #30 < ,&can-append JCN
-			POP POP2r RTN
-			&can-append
-		( save ) STH2kr STA
-		( null ) #00 STH2r INC2 STA
-		#07 ,&draw JSR
-	RTN
-
-	&validate ( -- )
-		;input ;load-rom JSR2
-		#00 ,&draw JSR
-		( null ) #0000 ;input STA2
-	RTN
-
-	&erase ( -- )
-		;input LDA2 #0000 !! ,&can-erase JCN
-			RTN
-			&can-erase
-		#00 ,&draw JSR
-		( remove ) #00 ,&seek JSR #0001 -- STA
-		#07 ,&draw JSR
-	RTN
-
-	&seek ( -- end* )
-		;input #0001 -- 
-		&seek-loop 
-			INC2 LDAk ,&seek-loop JCN
-	RTN
-
-	&draw ( color -- )
-		STH
-		#0038 #00c0 ;input STHkr ;draw-label JSR2
-		STHr ;draw-cursor JSR2
-	RTN
-
-RTN
 
 @redraw ( -- )
 
+	RTN
 	#0018 #0020 #0040 #0040 ;logo-icn #03 ;draw-icn JSR2
 	#0020 #0070 ;welcome-txt #01 ;draw-label JSR2
 	;draw-time JSR2
 	#0020 #00b0 ;prompt-txt #01 ;draw-label JSR2
 	#0020 #00c0 ;do-txt #03 ;draw-label JSR2
-	#03 ;form/draw JSR2
-	#0010 #0010 #0060 #0060 ;mascot-icn #01 ;draw-icn JSR2
+
+RTN
+
+@draw-browser ( x* y* addr* color -- )
+
+	STH STH2
+	.browser/x LDZ2 .Screen/x DEO2
+	.browser/y LDZ2 .Screen/y DEO2
+	STH2r
+	&loop
+		LDAk #0a ! ,&no-lb JCN
+			#0080 .Screen/x DEO2
+			.Screen/y DEI2 #0010 ++ .Screen/y DEO2
+			,&skip JMP
+			&no-lb
+		( top-addr ) LDAk #20 - TOS #0010 MUL2 ;font ++ .Screen/addr DEO2
+		( top-draw ) STHkr .Screen/sprite DEO
+		( bottom-addr ) .Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
+		( next-y ) .Screen/y DEI2 #0008 ++ .Screen/y DEO2
+		( bottom-draw ) STHkr .Screen/sprite DEO
+		( prev-y ) .Screen/y DEI2 #0008 -- .Screen/y DEO2
+		( move ) .Screen/x DEI2 #0008 ++ .Screen/x DEO2
+		&skip
+		INC2 LDAk ,&loop JCN
+	POP2 POPr
 
 RTN
 
@@ -301,3 +291,6 @@ include projects/assets/logo05x05.tal
 include projects/assets/mascot0cx0c.tal
 include projects/assets/msx01x02.tal
 
+@dir
+	&path ". $1
+	&data
