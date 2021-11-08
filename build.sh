@@ -26,6 +26,7 @@ then
 fi
 
 mkdir -p bin
+CC="${CC:-cc}"
 CFLAGS="-std=c89 -Wall -Wno-unknown-pragmas"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*) # MSYS2 on Windows
@@ -51,9 +52,9 @@ else
 fi
 
 echo "Building.."
-cc ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-cc ${CFLAGS} ${CORE} src/devices/file.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
-cc ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
+${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
+${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]
 then
