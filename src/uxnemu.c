@@ -457,7 +457,7 @@ start(Uxn *u, char *rom)
 	return 1;
 }
 
-void
+static void
 restart(Uxn *u)
 {
 	set_size(WIDTH, HEIGHT, 1);
