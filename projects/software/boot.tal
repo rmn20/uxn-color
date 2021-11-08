@@ -1,23 +1,17 @@
-( launcher
-
-	TODO:
-		Theme setting
-		Window size setting
-		Play notes
-	)
+( launcher )
 
 %+  { ADD } %-   { SUB }  %*  { MUL }  %/  { DIV }
 %<  { LTH } %>   { GTH }  %=  { EQU }  %!  { NEQ }
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%10** { #40 SFT2 }
+%10** { #40 SFT2 } %10// { #04 SFT2 }
 
 %MOD { DIVk MUL SUB }
 %DEC { #01 - }
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%SWP? { #01 JCN SWP }
+%SWP? { #01 JCN SWP } %SWP2? { #01 JCN SWP2 }
 %BRK? { #01 JCN BRK }
 %RTN? { #01 JCN RTN }
 
@@ -26,14 +20,14 @@
 
 ( devices )
 
-|00 @System     &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
-|10 @Console    &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
-|20 @Screen     &vector $2 &width   $2 &height $2 &auto $1 &pad $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
-|30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
-|80 @Controller &vector $2 &button $1 &key    $1 ]
-|90 @Mouse      &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
-|a0 @File       &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
-|b0 @DateTime   &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
+|00 @System     &vector $2 &wst      $1 &rst    $1 &pad    $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1
+|10 @Console    &vector $2 &read     $1 &pad    $5 &write  $1 &error  $1
+|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
+|30 @Audio0     &vector $2 &position $2 &output $1 &pad    $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1
+|80 @Controller &vector $2 &button   $1 &key    $1
+|90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &wheel  $1 
+|a0 @File       &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
+|b0 @DateTime   &year   $2 &month    $1 &day    $1 &hour   $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 
 
 ( variables )
 
@@ -43,7 +37,8 @@
 @pointer
 	&x  $2 &y  $2
 @browser
-	&x $2 &y $2 &sel $1
+	&x $2 &y $2 
+	&sel $1 &last $1
 
 ( init )
 
@@ -77,6 +72,8 @@
 	( theme support )
 	;load-theme JSR2
 
+	( force selection )
+	#ff .browser/last STZ
 	#00 ;select-file JSR2
 
 BRK
@@ -105,6 +102,15 @@ BRK
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
+
+	( select choice )
+	.Mouse/y DEI2 
+		( clamp ) #0010 GTH2k SWP2? POP2
+		10// NIP #01 - ;select-file JSR2
+
+	.Mouse/state DEI #00 = ,&no-click JCN
+		.browser/sel LDZ ;run-file JSR2
+		&no-click
 
 BRK
 
@@ -145,12 +151,18 @@ RTN
 
 @select-file ( id -- )
 
+	DUP .browser/last LDZ ! ,&has-changed JCN
+		POP RTN
+		&has-changed
+
 	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
 	#0010 #0010 
 		;hand-icn #00 ;draw-icn JSR2
 
 	DUP 
 		.browser/sel STZ
+	DUP
+		.browser/last STZ
 		#30 + .Audio0/pitch DEO
 	;draw-browser JSR2
 
@@ -343,7 +355,7 @@ RTN
 ( helpers )
 
 @print-hex ( value* -- )
-	
+
 	&short ( value* -- )
 		SWP ,&echo JSR 
 	&byte ( value -- )
@@ -359,22 +371,8 @@ RTN
 
 RTN
 
-@welcome-txt
-	"Welcome 20 "to 20 "your 20 "UXN 20 "Ordinator $1
-@today-txt
-	"Today 20 "is 20 "0000-00-00 ", 20 "the 20 "time 20 "is 20 "00:00:00 $1
-@prompt-txt
-	"What 20 "shall 20 "we 20 "do? $1
-@do-txt
-	"$: $1
-
-@error-txt
-	"Sorry, 20 "ROM 20 "not 20 "found. $1
-
 @pointer-icn
 	80c0 e0f0 f8e0 1000
-@cursor-icn
-	ffff ffff ffff ffff
 @hand-icn
 	000c 0a0a 1224 4780
 	0000 0000 0000 fc02
@@ -402,7 +400,6 @@ RTN
 include projects/library/check-rom.tal
 include projects/library/load-rom.tal
 
-include projects/assets/logo05x05.tal
 include projects/assets/mascot0cx0c.tal
 include projects/assets/msx01x02.tal
 
