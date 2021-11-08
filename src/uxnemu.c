@@ -197,7 +197,7 @@ quit(void)
 }
 
 static int
-init(char *filepath)
+init(void)
 {
 	SDL_AudioSpec as;
 	SDL_zero(as);
@@ -216,7 +216,7 @@ init(char *filepath)
 		if(!audio_id)
 			error("sdl_audio", SDL_GetError());
 	}
-	gWindow = SDL_CreateWindow(filepath, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
@@ -255,37 +255,6 @@ domouse(SDL_Event *event)
 		devmouse->dat[6] &= (~flag);
 		break;
 	}
-}
-
-static void
-doctrl(SDL_Event *event, int z)
-{
-	Uint8 flag = 0x00;
-	SDL_Keymod mods = SDL_GetModState();
-	devctrl->dat[2] &= 0xf8;
-	if(mods & KMOD_CTRL) devctrl->dat[2] |= 0x01;
-	if(mods & KMOD_ALT) devctrl->dat[2] |= 0x02;
-	if(mods & KMOD_SHIFT) devctrl->dat[2] |= 0x04;
-	/* clang-format off */
-	switch(event->key.keysym.sym) {
-	case SDLK_ESCAPE: flag = 0x08; break;
-	case SDLK_UP: flag = 0x10; break;
-	case SDLK_DOWN: flag = 0x20; break;
-	case SDLK_LEFT: flag = 0x40; break;
-	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
-	case SDLK_F3: if(z) capture_screen(); break;
-	}
-	/* clang-format on */
-	if(z) {
-		devctrl->dat[2] |= flag;
-		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
-			devctrl->dat[3] = event->key.keysym.sym;
-		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
-			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
-	} else
-		devctrl->dat[2] &= ~flag;
 }
 
 #pragma mark - Devices
@@ -444,6 +413,89 @@ nil_deo(Device *d, Uint8 port)
 	if(port == 0x1) d->vector = peek16(d->dat, 0x0);
 }
 
+/* Boot */
+
+static int
+load(Uxn *u, char *rom)
+{
+	FILE *f;
+	if(!(f = fopen(rom, "rb"))) return 0;
+	fread(u->ram.dat + PAGE_PROGRAM, sizeof(u->ram.dat) - PAGE_PROGRAM, 1, f);
+	fprintf(stderr, "Loaded %s\n", rom);
+	SDL_SetWindowTitle(gWindow, rom);
+	return 1;
+}
+
+static int
+boot(Uxn *u, char *rom)
+{
+	if(!uxn_boot(u))
+		return error("Boot", "Failed to start uxn.");
+	if(!load(u, rom))
+		return error("Boot", "Failed to load rom.");
+
+	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
+	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
+	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
+	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
+	/* audio1   */ uxn_port(u, 0x4, audio_dei, audio_deo);
+	/* audio2   */ uxn_port(u, 0x5, audio_dei, audio_deo);
+	/* audio3   */ uxn_port(u, 0x6, audio_dei, audio_deo);
+	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
+	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
+	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
+	/* file     */ uxn_port(u, 0xa, nil_dei, file_deo);
+	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
+
+	if(!uxn_eval(u, PAGE_PROGRAM))
+		return error("Boot", "Failed to start rom.");
+
+	return 1;
+}
+
+void
+reboot(Uxn *u)
+{
+	set_size(WIDTH, HEIGHT, 1);
+	boot(u, "bin/boot.rom");
+}
+
+static void
+doctrl(Uxn *u, SDL_Event *event, int z)
+{
+	Uint8 flag = 0x00;
+	SDL_Keymod mods = SDL_GetModState();
+	devctrl->dat[2] &= 0xf8;
+	if(mods & KMOD_CTRL) devctrl->dat[2] |= 0x01;
+	if(mods & KMOD_ALT) devctrl->dat[2] |= 0x02;
+	if(mods & KMOD_SHIFT) devctrl->dat[2] |= 0x04;
+	/* clang-format off */
+	switch(event->key.keysym.sym) {
+	case SDLK_ESCAPE: flag = 0x08; break;
+	case SDLK_UP: flag = 0x10; break;
+	case SDLK_DOWN: flag = 0x20; break;
+	case SDLK_LEFT: flag = 0x40; break;
+	case SDLK_RIGHT: flag = 0x80; break;
+	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
+	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
+	case SDLK_F3: if(z) capture_screen(); break;
+    case SDLK_F4: if(z) reboot(u); break;
+	}
+	/* clang-format on */
+	if(z) {
+		devctrl->dat[2] |= flag;
+		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
+			devctrl->dat[3] = event->key.keysym.sym;
+		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
+			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
+	} else
+		devctrl->dat[2] &= ~flag;
+}
+
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
 
 int
@@ -477,7 +529,7 @@ run(Uxn *u)
 				devctrl->dat[3] = event.text.text[0]; /* fall-thru */
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				doctrl(&event, event.type == SDL_KEYDOWN);
+				doctrl(u, &event, event.type == SDL_KEYDOWN);
 				uxn_eval(u, devctrl->vector);
 				devctrl->dat[3] = 0;
 				break;
@@ -510,16 +562,6 @@ run(Uxn *u)
 	return error("Run", "Ended.");
 }
 
-static int
-load(Uxn *u, char *filepath)
-{
-	FILE *f;
-	if(!(f = fopen(filepath, "rb"))) return 0;
-	fread(u->ram.dat + PAGE_PROGRAM, sizeof(u->ram.dat) - PAGE_PROGRAM, 1, f);
-	fprintf(stderr, "Loaded %s\n", filepath);
-	return 1;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -527,25 +569,10 @@ main(int argc, char **argv)
 	Uxn u;
 	int i, loaded = 0;
 
-	if(!uxn_boot(&u))
-		return error("Boot", "Failed to start uxn.");
-
-	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(&u, 0x1, nil_dei, console_deo);
-	/* screen   */ devscreen = uxn_port(&u, 0x2, screen_dei, screen_deo);
-	/* audio0   */ devaudio0 = uxn_port(&u, 0x3, audio_dei, audio_deo);
-	/* audio1   */ uxn_port(&u, 0x4, audio_dei, audio_deo);
-	/* audio2   */ uxn_port(&u, 0x5, audio_dei, audio_deo);
-	/* audio3   */ uxn_port(&u, 0x6, audio_dei, audio_deo);
-	/* unused   */ uxn_port(&u, 0x7, nil_dei, nil_deo);
-	/* control  */ devctrl = uxn_port(&u, 0x8, nil_dei, nil_deo);
-	/* mouse    */ devmouse = uxn_port(&u, 0x9, nil_dei, nil_deo);
-	/* file     */ uxn_port(&u, 0xa, nil_dei, file_deo);
-	/* datetime */ uxn_port(&u, 0xb, datetime_dei, nil_deo);
-	/* unused   */ uxn_port(&u, 0xc, nil_dei, nil_deo);
-	/* unused   */ uxn_port(&u, 0xd, nil_dei, nil_deo);
-	/* unused   */ uxn_port(&u, 0xe, nil_dei, nil_deo);
-	/* unused   */ uxn_port(&u, 0xf, nil_dei, nil_deo);
+	if(!init())
+		return error("Init", "Failed to initialize emulator.");
+	if(!set_size(WIDTH, HEIGHT, 0))
+		return error("Window", "Failed to set window size.");
 
 	/* set default zoom */
 	if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
@@ -558,14 +585,8 @@ main(int argc, char **argv)
 			else
 				return error("Opt", "-s No scale provided.");
 		} else if(!loaded++) {
-			if(!load(&u, argv[i]))
-				return error("Load", "Failed to open rom.");
-			if(!init(argv[i]))
-				return error("Init", "Failed to initialize emulator.");
-			if(!set_size(WIDTH, HEIGHT, 0))
-				return error("Window", "Failed to set window size.");
-			if(!uxn_eval(&u, PAGE_PROGRAM))
-				return error("Init", "Failed");
+			if(!boot(&u, argv[i]))
+				return error("Boot", "Failed to boot.");
 		} else {
 			char *p = argv[i];
 			while(*p) console_input(&u, *p++);

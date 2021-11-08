@@ -5,6 +5,7 @@ rm -f ./bin/uxnasm
 rm -f ./bin/uxnemu
 rm -f ./bin/uxncli
 rm -f ./bin/boot.rom
+rm -f ./bin/asma.rom
 
 # When clang-format is present
 
@@ -60,9 +61,8 @@ then
 	cp bin/uxnemu bin/uxnasm bin/uxncli $HOME/bin/
 fi
 
-# echo "Assembling(uxnasm).."
-# ./bin/uxnasm projects/examples/demos/piano.tal bin/piano.rom
-
+echo "Assembling(boot).."
+./bin/uxnasm projects/software/boot.tal bin/boot.rom
 echo "Assembling(asma).."
 ./bin/uxnasm projects/software/asma.tal bin/asma.rom
 
