@@ -182,6 +182,11 @@ RTN
 	DUP2 INC2 ;close-path JSR2
 	#0006 ++ DUP2 ;print-string JSR2
 	#0a .Console/write DEO
+
+	DUP2 ;check-rom JSR2 ,&valid JCN
+	POP2 RTN
+
+	&valid
 	;load-rom JSR2
 
 RTN
@@ -394,6 +399,7 @@ RTN
 	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
 	5053 5659 5c5f 6265 686b 6e71 7477 7a7d
 
+include projects/library/check-rom.tal
 include projects/library/load-rom.tal
 
 include projects/assets/logo05x05.tal
