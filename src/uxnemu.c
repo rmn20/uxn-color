@@ -427,7 +427,7 @@ load(Uxn *u, char *rom)
 }
 
 static int
-boot(Uxn *u, char *rom)
+start(Uxn *u, char *rom)
 {
 	if(!uxn_boot(u))
 		return error("Boot", "Failed to start uxn.");
@@ -458,10 +458,10 @@ boot(Uxn *u, char *rom)
 }
 
 void
-reboot(Uxn *u)
+restart(Uxn *u)
 {
 	set_size(WIDTH, HEIGHT, 1);
-	boot(u, "boot.rom");
+	start(u, "boot.rom");
 }
 
 static void
@@ -483,7 +483,7 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
 	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
 	case SDLK_F3: if(z) capture_screen(); break;
-    case SDLK_F4: if(z) reboot(u); break;
+    case SDLK_F4: if(z) restart(u); break;
 	}
 	/* clang-format on */
 	if(z) {
@@ -585,7 +585,7 @@ main(int argc, char **argv)
 			else
 				return error("Opt", "-s No scale provided.");
 		} else if(!loaded++) {
-			if(!boot(&u, argv[i]))
+			if(!start(&u, argv[i]))
 				return error("Boot", "Failed to boot.");
 		} else {
 			char *p = argv[i];
