@@ -4,7 +4,7 @@ echo "Cleaning.."
 rm -f ./bin/uxnasm
 rm -f ./bin/uxnemu
 rm -f ./bin/uxncli
-rm -f ./boot.rom
+rm -f ./bin/boot.rom
 rm -f ./bin/asma.rom
 
 # When clang-format is present
@@ -62,7 +62,7 @@ then
 fi
 
 echo "Assembling(boot).."
-./bin/uxnasm projects/software/boot.tal boot.rom
+./bin/uxnasm projects/software/boot.tal bin/boot.rom
 echo "Assembling(asma).."
 ./bin/uxnasm projects/software/asma.tal bin/asma.rom
 
@@ -72,6 +72,8 @@ echo "Assembling(piano).."
 bin/uxncli bin/asma.rom projects/examples/demos/piano.tal bin/piano.rom 2> bin/piano.log
 
 echo "Running.."
-./bin/uxnemu bin/piano.rom
+cd bin
+./uxnemu piano.rom
 
 echo "Done."
+cd ..
