@@ -91,6 +91,7 @@ uxnemu orca.rom | shim
 - `F1` toggle zoom
 - `F2` toggle debug
 - `F3` capture screen
+- `F4` load boot.rom
 
 ## Need a hand?
 

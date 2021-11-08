@@ -461,7 +461,7 @@ void
 reboot(Uxn *u)
 {
 	set_size(WIDTH, HEIGHT, 1);
-	boot(u, "bin/boot.rom");
+	boot(u, "boot.rom");
 }
 
 static void

@@ -60,7 +60,7 @@
 	;on-mouse .Mouse/vector DEO2
 
 	( setup synth )
-	#0110 .Audio0/adsr DEO2
+	#0102 .Audio0/adsr DEO2
 	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
 	#dd .Audio0/volume DEO ( TODO: turn ON )
@@ -151,12 +151,16 @@ RTN
 
 	DUP 
 		.browser/sel STZ
-		#40 + .Audio0/pitch DEO
+		#30 + .Audio0/pitch DEO
 	;draw-browser JSR2
 
 	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
 	#0010 #0010 
 		;hand-icn #02 ;draw-icn JSR2
+
+	#0010 #0010 #0060 #0060 
+	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01 
+		;draw-icn JSR2
 
 RTN
 
