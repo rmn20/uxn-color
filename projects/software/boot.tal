@@ -33,7 +33,6 @@
 
 |0000
 
-@second $1
 @pointer
 	&x  $2 &y  $2
 @browser
@@ -80,9 +79,7 @@ BRK
 
 @on-frame ( -> )
 
-	BRK
-	.DateTime/second DEI .second LDZ ! BRK?
-	.DateTime/second DEI .second STZ ;draw-time JSR2
+	( unused )
 
 BRK
 
@@ -94,13 +91,9 @@ BRK
 	.pointer/y LDZ2 .Screen/y DEO2
 	#40 .Screen/sprite DEO
 
-	( record pointer positions )
-	.Mouse/x DEI2 .pointer/x STZ2 
-	.Mouse/y DEI2 .pointer/y STZ2
-
 	( draw new cursor )
-	.pointer/x LDZ2 .Screen/x DEO2
-	.pointer/y LDZ2 .Screen/y DEO2
+	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2
+	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
 	( select choice )
@@ -119,13 +112,21 @@ BRK
 	.Controller/button DEI
 	DUP #10 ! ,&no-up JCN
 		#01 .browser/sel LDZ GTHk SWP? POP DEC ;select-file JSR2
+		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
 		.browser/sel LDZ ;dir/lines LDA LTHk SWP? POP INC ;select-file JSR2
+		POP BRK
 		&no-down
 	DUP #01 ! ,&no-a JCN
 		.browser/sel LDZ ;run-file JSR2
+		POP BRK
 		&no-a
+	POP
+	.Controller/key DEI
+	DUP #0d ! ,&no-enter JCN
+		.browser/sel LDZ ;run-file JSR2
+		&no-enter
 	POP
 
 BRK
