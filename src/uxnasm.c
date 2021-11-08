@@ -329,6 +329,7 @@ pass1(FILE *f)
 {
 	int ccmnt = 0;
 	char w[64], scope[64], subw[64];
+	scope[0] = 0;
 	while(fscanf(f, "%63s", w) == 1) {
 		if(skipblock(w, &ccmnt, '(', ')')) continue;
 		if(slen(w) >= 63)
@@ -364,6 +365,7 @@ pass2(FILE *f)
 {
 	int ccmnt = 0, cmacr = 0;
 	char w[64], scope[64], subw[64];
+	scope[0] = 0;
 	while(fscanf(f, "%63s", w) == 1) {
 		if(w[0] == '%') continue;
 		if(w[0] == '&') continue;
