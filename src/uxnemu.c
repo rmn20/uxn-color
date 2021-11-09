@@ -593,9 +593,8 @@ main(int argc, char **argv)
 			console_input(&u, '\n');
 		}
 	}
-	if(!loaded)
+	if(!loaded && !start(&u, "boot.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
-
 	run(&u);
 	quit();
 	return 0;
