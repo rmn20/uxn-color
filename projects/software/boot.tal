@@ -100,7 +100,6 @@ BRK
 
 	( select choice )
 	.Mouse/y DEI2 
-		( clamp ) #0010 GTH2k SWP2? POP2
 		10// NIP #01 - ;select-file JSR2
 
 	.Mouse/state DEI #00 = ,&no-click JCN
@@ -113,11 +112,11 @@ BRK
 
 	.Controller/button DEI
 	DUP #10 ! ,&no-up JCN
-		#01 .browser/sel LDZ GTHk SWP? POP DEC ;select-file JSR2
+		#01 .browser/sel LDZ DEC ;select-file JSR2
 		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
-		.browser/sel LDZ ;dir/lines LDA LTHk SWP? POP INC ;select-file JSR2
+		.browser/sel LDZ INC ;select-file JSR2
 		POP BRK
 		&no-down
 	DUP #01 ! ,&no-a JCN
@@ -170,6 +169,11 @@ RTN
 RTN
 
 @select-file ( id -- )
+	( clamp id to useful values )
+	DUP #fc LTH ,&not-negative JCN
+	DUP EOR
+	&not-negative
+	;dir/lines LDA DEC LTHk SWP? POP
 
 	DUP .browser/last LDZ ! ,&has-changed JCN
 		POP RTN
