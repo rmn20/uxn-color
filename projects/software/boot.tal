@@ -18,6 +18,8 @@
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
+%SEL-ENTRY { ;dir/entries #00 .browser/sel LDZ DUP2 ADD2 ADD2 }
+
 ( devices )
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &pad    $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1
@@ -137,17 +139,34 @@ BRK
 	#1000 .File/length DEO2
 	;dir/data .File/read DEO2
 
-	( count lines )
-	LITr 00
-	;dir/data
+	( separate into lines )
+	#00 ;dir/data STH2k
 	&while
 		LDAk #0a ! ,&no-lb JCN
-			INCr
-			&no-lb
-		INC2 LDAk ,&while JCN
-	POP2
-	STHr #02 - ;dir/lines STA
+		STAk
+		STH2r ;add-entry JSR2
+		INC2 STH2k ,&while JMP
+		&no-lb INC2 LDAk ,&while JCN
+	POP2r POP2 POP
+RTN
 
+@add-entry ( line* -- )
+	DUP2 ;filter-entry JSR2 ,&ignored JCN
+
+	( just add entry to end for now, FIXME sort entries )
+	;dir/entries
+		#00 ;dir/lines LDA DUP2 ADD2
+		ADD2
+	STA2
+	;dir/lines LDAk INC ROT ROT STA
+	#0000
+
+	&ignored
+	POP2
+RTN
+
+@filter-entry ( line* -- ignore-flag )
+	POP2 #00
 RTN
 
 @select-file ( id -- )
@@ -179,21 +198,8 @@ RTN
 
 @run-file ( id -- )
 
-	STH
-	( count lines )
-	LITr 00
-	;dir/data
-	&while
-		LDAk #0a ! ,&no-lb JCN
-			INCr
-			&no-lb
-		EQUkr STHr ,&end JCN
-		INC2 LDAk ,&while JCN
-	&end
-	POP2r
-
-	DUP2 INC2 ;close-path JSR2
-	#0006 ++ DUP2 ;print-string JSR2
+	SEL-ENTRY LDA2
+	#0005 ++ DUP2 ;print-string JSR2
 	#0a .Console/write DEO
 
 	DUP2 ;check-rom JSR2 ,&valid JCN
@@ -201,19 +207,6 @@ RTN
 
 	&valid
 	;load-rom JSR2
-
-RTN
-
-@close-path ( addr* -- )
-
-	&while
-		LDAk #0a ! ,&no-lb JCN
-			STH2k #00 STH2r STA
-			,&end JMP
-			&no-lb
-		INC2 LDAk ,&while JCN
-	&end
-	POP2
 
 RTN
 
@@ -234,28 +227,33 @@ RTN
 
 @draw-browser ( -- )
 
-	( line counter ) #00 STH
 	.browser/x LDZ2 .Screen/x DEO2
 	.browser/y LDZ2 .Screen/y DEO2
-	;dir/data
+	SEL-ENTRY ;dir/entries
+	&outer ( selected-entry* this-entry* )
+		EQU2k #0c * #01 + STH
+		LDA2k ORAk #00 = ,&end JCN
+		STHr ,&draw-one JSR
+		.browser/x LDZ2 .Screen/x DEO2
+		.Screen/y DEI2 #0010 ++ .Screen/y DEO2
+		INC2 INC2 ,&outer JMP
+	&end
+	POP2 POP2 POP2 POPr
+RTN
+
+	&draw-one ( line* color -- )
+	STH
 	&loop
-		LDAk #0a ! ,&no-lb JCN
-			.browser/x LDZ2 .Screen/x DEO2
-			.Screen/y DEI2 #0010 ++ .Screen/y DEO2
-			( incr line counter ) INCr
-			,&skip JMP
-			&no-lb
 		( top-addr ) LDAk #20 - TOS #0010 MUL2 ;font ++ .Screen/addr DEO2
-		( top-draw ) #01 [ .browser/sel LDZ STHkr = #0c * + ] .Screen/sprite DEO
+		( top-draw ) STHkr .Screen/sprite DEO
 		( bottom-addr ) .Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
 		( next-y ) .Screen/y DEI2 #0008 ++ .Screen/y DEO2
-		( bottom-draw ) #01 [ .browser/sel LDZ STHkr = #0c * + ] .Screen/sprite DEO
+		( bottom-draw ) STHkr .Screen/sprite DEO
 		( prev-y ) .Screen/y DEI2 #0008 -- .Screen/y DEO2
 		( move ) .Screen/x DEI2 #0008 ++ .Screen/x DEO2
 		&skip
 		INC2 LDAk ,&loop JCN
 	POP2 POPr
-
 RTN
 
 @draw-time ( -- )
@@ -407,4 +405,5 @@ include projects/assets/msx01x02.tal
 @dir
 	&path ". $1
 	&lines $1
+	&entries $100
 	&data
