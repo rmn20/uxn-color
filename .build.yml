@@ -12,6 +12,8 @@ environment:
         [m1.uxn-build.ald.nu]:2223 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvWVqlHh3XQ5ziEbT55K896/mW2BVDdkU6hWgIfU9md
 secrets:
     - 138ad607-a4ec-4d74-88a1-8f3be2ba2d03
+sources:
+    - https://git.sr.ht/~rabbits/uxn
 tasks:
     - prepare: |
         rm -f out
@@ -26,6 +28,7 @@ tasks:
         mv bin uxn
         tar -czf ../out/uxn-linux-amd64.tar.gz uxn
         cd ..
+        [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
         ssh win "rm -f uxn-windows-64bit.zip; export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run; mv bin uxn; zip -qr ../uxn-windows-64bit.zip uxn"
         rsync win:uxn-windows-64bit.zip out/
