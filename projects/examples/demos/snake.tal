@@ -7,11 +7,11 @@
 %2/  { #01 SFT } %2* { #10 SFT }
 %8//  { #03 SFT2 } %8**  { #30 SFT2 }
 %MOD { DIVk MUL SUB }
+%MAX { LTHk JMP SWP POP }
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%SWP? { #01 JCN SWP }
-%RTN? { #01 JCN RTN }
 %BRK? { #01 JCN BRK }
+
 
 %DIFFICULTY { #06 }
 
@@ -117,12 +117,12 @@ RTN
 	POP2
 	POP2r
 
-	.snake/dead LDZ #00 = RTN?
+	.snake/dead LDZ #00 = JMP RTN
 
 	.snake/direction LDZ
 	DUP #01 ! ,&no-up JCN
 		.snake/y LDZ #01 - 
-			.arena/h LDZ LTHk SWP? POP 
+			.arena/h LDZ MAX
 			.snake/y STZ
 		&no-up
 	DUP #02 ! ,&no-down JCN
@@ -132,7 +132,7 @@ RTN
 		&no-down
 	DUP #04 ! ,&no-left JCN
 		.snake/x LDZ #01 - 
-			.arena/w LDZ LTHk SWP? POP 
+			.arena/w LDZ MAX
 			.snake/x STZ
 		&no-left
 	DUP #08 ! ,&no-right JCN
@@ -159,7 +159,6 @@ RTN
 			&no-collision-body
 		INC GTHk ,&loop-body JCN
 	POP2
-
 
 RTN
 
@@ -220,7 +219,7 @@ RTN
 @snake-icns
 	7eff ffff ffff ff7e
 	&face
-		7eff ffdb ffe7 ff7e
+	7eff ffdb ffe7 ff7e
 @apple-chr
 	0000 76ff ffff 7e3c
 	1008 0000 0000 0000
