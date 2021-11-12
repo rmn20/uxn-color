@@ -22,7 +22,6 @@
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
 %RTN { JMP2r }
-%SWP2? { #01 JCN SWP2 }
 %BRK? { #01 JCN BRK }
 %RTN? { #01 JCN RTN }
 %TOS { #00 SWP }
@@ -98,12 +97,12 @@
 		#0040 ++ .modpad-frame/x2 STZ2
 	.keypad-frame/y LDZ2 #0040 ++
 	DUP2 .modpad-frame/y STZ2
-		#0010 ++ .modpad-frame/y2 STZ2
+		#0020 ++ .modpad-frame/y2 STZ2
 
 	.keypad-frame/x LDZ2
 	DUP2 .bitpad-frame/x STZ2
 		#0040 ++ .bitpad-frame/x2 STZ2
-	.keypad-frame/y LDZ2 #0058 ++
+	.modpad-frame/y2 LDZ2 #0008 ++
 	DUP2 .bitpad-frame/y STZ2
 		#0010 ++ .bitpad-frame/y2 STZ2
 
@@ -204,13 +203,16 @@ BRK
 
 @click-modpad ( x* y* -> )
 
-	POP2
-	( get key )
-	.modpad-frame/x LDZ2 -- 10// NIP
+	.modpad-frame/y LDZ2 -- 10// 4**
+	SWP2 .modpad-frame/x LDZ2 -- 10// #0003 AND2 ++ NIP
 	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
 	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
 	DUP #02 ! ,&no-mul JCN ;do-mul JSR2 &no-mul
 	DUP #03 ! ,&no-div JCN ;do-div JSR2 &no-div
+	DUP #04 ! ,&no-and JCN ;do-and JSR2 &no-and
+	DUP #05 ! ,&no-ora JCN ;do-ora JSR2 &no-ora
+	DUP #06 ! ,&no-eor JCN ;do-eor JSR2 &no-eor
+	DUP #07 ! ,&no-not JCN ;do-not JSR2 &no-not
 	POP
 
 	;draw-bitpad JSR2
@@ -364,6 +366,62 @@ RTN
 
 RTN
 
+@do-and ( -- )
+
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#46 .Audio0/pitch DEO
+	#04 ;draw-modpad JSR2
+	;pop JSR2 ;pop JSR2 SWP2 AND2 ;push JSR2
+
+RTN
+
+@do-ora ( -- )
+
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#47 .Audio0/pitch DEO
+	#05 ;draw-modpad JSR2
+	;pop JSR2 ;pop JSR2 SWP2 ORA2 ;push JSR2
+
+RTN
+
+@do-eor ( -- )
+
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#48 .Audio0/pitch DEO
+	#06 ;draw-modpad JSR2
+	;pop JSR2 ;pop JSR2 SWP2 EOR2 ;push JSR2
+
+RTN
+
+@do-not ( -- )
+
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #00 > RTN?
+
+	#49 .Audio0/pitch DEO
+	#07 ;draw-modpad JSR2
+	;pop JSR2 #ffff EOR2  ;push JSR2
+
+RTN
+
 @key-value ( key -- value )
 
 	DUP #2f > OVR #3a < #0101 !! ,&no-num JCN
@@ -490,12 +548,12 @@ RTN
 @draw-modpad ( key -- )
 
 	STH
-	#04 #00
+	#08 #00
 	&loop
 		( state ) DUP STHkr = STH
 		( glyph ) DUP TOS 8** ;mod-icns ++ STH2
-		( y ) .modpad-frame/y LDZ2 STH2
-		( x ) DUP TOS 10** .modpad-frame/x LDZ2 ++ STH2
+		( y ) DUP 4/ TOS 10** .modpad-frame/y LDZ2 ++ STH2
+		( x ) DUP 4MOD TOS 10** .modpad-frame/x LDZ2 ++ STH2
 		STH2r STH2r STH2r STHr #03 ;draw-key JSR2
 		INC GTHk ,&loop JCN
 	POP2
@@ -688,6 +746,11 @@ RTN
 	0000 0000 fe00 0000
 	0010 5428 c628 5410
 	0010 0000 fe00 0010
+
+	0078 8484 4836 8876
+	0010 1010 1010 1010
+	0000 1028 4482 0000
+	0000 0060 920c 0000
 
 @button-icns
 	&outline
