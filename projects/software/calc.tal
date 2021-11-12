@@ -2,9 +2,9 @@
 	a simple calculator
 	uxnasm projects/software/calc.tal bin/calc.rom && uxnemu bin/calc.rom )
 
-%+  { ADD } %-   { SUB }              %/   { DIV }
+%+  { ADD } %-   { SUB }  %/   { DIV }
 %<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ }
-%++ { ADD2 } %-- { SUB2 }              %// { DIV2 }
+%++ { ADD2 } %-- { SUB2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
 %2*   { #10 SFT } 
@@ -90,21 +90,21 @@
 		#0040 ++ .keypad-frame/x2 STZ2
 	.center/y LDZ2 #0018 -- 
 	DUP2 .keypad-frame/y STZ2
-		#0040 ++ .keypad-frame/y2 STZ2
+		#003f ++ .keypad-frame/y2 STZ2
 
 	.keypad-frame/x LDZ2
 	DUP2 .modpad-frame/x STZ2
 		#0040 ++ .modpad-frame/x2 STZ2
 	.keypad-frame/y LDZ2 #0040 ++
 	DUP2 .modpad-frame/y STZ2
-		#0020 ++ .modpad-frame/y2 STZ2
+		#001f ++ .modpad-frame/y2 STZ2
 
 	.keypad-frame/x LDZ2
 	DUP2 .bitpad-frame/x STZ2
 		#0040 ++ .bitpad-frame/x2 STZ2
 	.modpad-frame/y2 LDZ2 #0008 ++
 	DUP2 .bitpad-frame/y STZ2
-		#0010 ++ .bitpad-frame/y2 STZ2
+		#000f ++ .bitpad-frame/y2 STZ2
 
 	.center/x LDZ2 #0020 -- 
 	DUP2 .input-frame/x STZ2
@@ -128,6 +128,7 @@ BRK
 	DUP #0d ! ,&no-enter JCN
 		;do-push JSR2 POP BRK
 		&no-enter
+	( arithmetic )
 	DUP LIT '+ ! ,&no-add JCN 
 		;do-add JSR2 POP BRK &no-add
 	DUP LIT '- ! ,&no-sub JCN 
@@ -136,6 +137,16 @@ BRK
 		;do-mul JSR2 POP BRK &no-mul
 	DUP LIT '/ ! ,&no-div JCN 
 		;do-div JSR2 POP BRK &no-div
+	( bitwise )
+	DUP LIT '& ! ,&no-and JCN 
+		;do-and JSR2 POP BRK &no-and
+	DUP LIT '| ! ,&no-ora JCN 
+		;do-ora JSR2 POP BRK &no-ora
+	DUP LIT '^ ! ,&no-eor JCN 
+		;do-eor JSR2 POP BRK &no-eor
+	DUP LIT '~ ! ,&no-not JCN 
+		;do-not JSR2 POP BRK &no-not
+	( clear )
 	DUP #1b ! ,&no-esc JCN
 		;do-pop JSR2 POP BRK &no-esc
 	DUP #08 ! ,&no-backspace JCN
@@ -287,7 +298,7 @@ RTN
 
 @do-push ( -- )
 
-	.input/value LDZ2 #0000 >> ,&not-empty JCN
+	.input/value LDZ2 ADD ,&not-empty JCN
 		RTN
 		&not-empty
 	.stack/length LDZ #07 < ,&not-full JCN
