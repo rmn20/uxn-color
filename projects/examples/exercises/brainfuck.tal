@@ -40,27 +40,13 @@ BRK
 
 @op ( op -- )
 
-	LIT '> !~ ,&right JCN
-		.pointer LDZ2k INC2 ROT STZ2 
-		POP RTN &right
-	LIT '< !~ ,&left JCN
-		.pointer LDZ2k DEC2 ROT STZ2 
-		POP RTN &left
-	LIT '+ !~ ,&inc JCN
-		.pointer LDZ2 STH2k LDA INC STH2r STA 
-		POP RTN &inc
-	LIT '- !~ ,&dec JCN
-		.pointer LDZ2 STH2k LDA DEC STH2r STA
-		POP RTN &dec
-	LIT '. !~ ,&emit JCN
-		.pointer LDZ2 LDA EMIT
-		POP RTN &emit
-	LIT '[ !~ ,&next JCN
-		POP  ,goto-next JSR
-		RTN &next
-	LIT '] !~ ,&prev JCN
-		POP ,goto-back JSR
-		RTN &prev
+	LIT '> !~ ,&movr JCN [ .pointer LDZ2k INC2 ROT STZ2 POP RTN ] &movr
+	LIT '< !~ ,&movl JCN [ .pointer LDZ2k DEC2 ROT STZ2 POP RTN ] &movl
+	LIT '+ !~ ,&incr JCN [ .pointer LDZ2 STH2k LDA INC STH2r STA POP RTN ] &incr
+	LIT '- !~ ,&decr JCN [ .pointer LDZ2 STH2k LDA DEC STH2r STA POP RTN ] &decr
+	LIT '. !~ ,&emit JCN [ .pointer LDZ2 LDA EMIT POP RTN ] &emit
+	LIT '[ !~ ,&next JCN [ POP  ,goto-next JSR RTN ] &next
+	LIT '] !~ ,&prev JCN [ POP ,goto-back JSR RTN ] &prev
 	POP
 
 RTN
@@ -107,11 +93,7 @@ RTN
 
 @program ( Hello World! )
 
-	2b 2b 2b 2b 2b 2b 2b 2b 5b 3e 2b 2b 2b 2b 5b 3e 
-	2b 2b 3e 2b 2b 2b 3e 2b 2b 2b 3e 2b 3c 3c 3c 3c 
-	2d 5d 3e 2b 3e 2b 3e 2d 3e 3e 2b 5b 3c 5d 3c 2d 
-	5d 3e 3e 2e 3e 2d 2d 2d 2e 2b 2b 2b 2b 2b 2b 2b 
-	2e 2e 2b 2b 2b 2e 3e 3e 2e 3c 2d 2e 3c 2e 2b 2b 
-	2b 2e 2d 2d 2d 2d 2d 2d 2e 2d 2d 2d 2d 2d 2d 2d 
-	2d 2e 3e 3e 2b 2e 3e 2b 2b 2e 0a
-
+	"++++++++[>++++[>++>+++>+++>+<<<<
+	"-]>+>+>->>+[<]<-]>>.>---.+++++++
+	"..+++.>>.<-.<.+++.------.-------
+	"-.>>+.>++.
