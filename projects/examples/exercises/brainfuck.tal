@@ -12,11 +12,11 @@
 
 |0000
 
-@pointer $2
+@ptr $2
 
 |0100 ( -> )
 
-	MEMORY .pointer STZ2
+	MEMORY .ptr STZ2
 
 	;program
 	&while
@@ -31,15 +31,15 @@ BRK
 @op ( op -- )
 
 	( Move the pointer to the right )
-	LIT '> !~ ,&movr JCN [ .pointer LDZ2k INC2 ROT STZ2 POP RTN ] &movr
+	LIT '> !~ ,&movr JCN [ .ptr LDZ2k INC2 ROT STZ2 POP RTN ] &movr
 	( Move the pointer to the left )
-	LIT '< !~ ,&movl JCN [ .pointer LDZ2k DEC2 ROT STZ2 POP RTN ] &movl
+	LIT '< !~ ,&movl JCN [ .ptr LDZ2k DEC2 ROT STZ2 POP RTN ] &movl
 	( Increment the memory cell at the pointer )
-	LIT '+ !~ ,&incr JCN [ .pointer LDZ2 STH2k LDA INC STH2r STA POP RTN ] &incr
+	LIT '+ !~ ,&incr JCN [ .ptr LDZ2 STH2k LDA INC STH2r STA POP RTN ] &incr
 	( Decrement the memory cell at the pointer )
-	LIT '- !~ ,&decr JCN [ .pointer LDZ2 STH2k LDA DEC STH2r STA POP RTN ] &decr
+	LIT '- !~ ,&decr JCN [ .ptr LDZ2 STH2k LDA DEC STH2r STA POP RTN ] &decr
 	( Output the character signified by the cell at the pointer )
-	LIT '. !~ ,&emit JCN [ .pointer LDZ2 LDA EMIT POP RTN ] &emit
+	LIT '. !~ ,&emit JCN [ .ptr LDZ2 LDA EMIT POP RTN ] &emit
 	( Jump past the matching ] if the cell at the pointer is 0 )
 	LIT '[ !~ ,&next JCN [ POP  ,goto-next JSR RTN ] &next
 	( Jump back to the matching [ if the cell at the pointer is nonzero )
@@ -50,14 +50,12 @@ RTN
 
 @goto-next ( -- )
 
-	.pointer LDZ2 LDA #00 EQU JMP RTN
+	.ptr LDZ2 LDA #00 EQU JMP RTN
 
 	( depth ) LITr 00
 	INC2
 	&loop
-		LDAk LIT '[ NEQ ,&no-depth JCN
-			INCr
-			&no-depth
+		LDAk LIT '[ NEQ JMP INCr
 		LDAk LIT '] NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
 			DECr
@@ -70,14 +68,12 @@ RTN
 
 @goto-back ( -- )
 
-	.pointer LDZ2 LDA #00 NEQ JMP RTN
+	.ptr LDZ2 LDA #00 NEQ JMP RTN
 
 	( depth ) LITr 00
 	DEC2
 	&loop
-		LDAk LIT '] NEQ ,&no-depth JCN
-			INCr
-			&no-depth
+		LDAk LIT '] NEQ JMP INCr
 		LDAk LIT '[ NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
 			DECr
