@@ -1,0 +1,232 @@
+
+( 
+	uxnasm projects/examples/demos/nametable.tal bin/nametable.rom 
+	uxnemu bin/nametable.rom 
+)
+
+%+  { ADD } %-   { SUB }              %/   { DIV }  
+%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
+
+%2** { #10 SFT2 } %2// { #01 SFT2 }
+%8** { #30 SFT2 } %8// { #03 SFT2 }
+%10** { #40 SFT2 } %10// { #04 SFT2 }
+%MOD2 { DIV2k MUL2 SUB2 }
+%MOD { DIVk MUL SUB }
+%RTN { JMP2r }
+
+%WIDTH { #0037 }
+%HEIGHT { #0029 } ( 08cf )
+%LENGTH { WIDTH HEIGHT MUL2 10** }
+
+( devices )
+
+|00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
+|10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
+|20 @Screen     [ &vector $2 &width    $2 &height $2 &auto $1 &pad   $1 &x      $2 &y      $2 &addr $2 &pixel  $1 &sprite $1 ]
+|80 @Controller [ &vector $2 &button   $1 &key    $1 ]
+|90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
+|a0 @File       [ &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name  $2 &length $2 &read $2 &write $2 ]
+
+( variables )
+
+|0000
+
+( program )
+
+@tiles-frame
+	&x $2 &y $2
+@nametable-frame
+	&x $2 &y $2
+@buffer $10
+
+|0100 ( -> )
+
+	( theme ) 
+	#34cd .System/r DEO2 
+	#28ac .System/g DEO2 
+	#297b .System/b DEO2
+
+	WIDTH 8** #0010 ++ .Screen/width DEO2
+	#01e8 .Screen/height DEO2
+
+	#0008 .tiles-frame/x STZ2
+	HEIGHT 8** #0008 ++ .tiles-frame/y STZ2
+	#0008 .nametable-frame/x STZ2 
+	#0008 .nametable-frame/y STZ2
+
+	;input-name 
+		DUP2 ,load JSR
+		;assoc JSR2 
+
+	;draw-tiles JSR2
+	;draw-nametable JSR2
+	;draw-short JSR2
+
+BRK
+
+@load ( filename* -- )
+
+	LIT2r 0000
+	.File/name DEO2
+	&stream
+		#0010 .File/length DEO2
+		;buffer 
+			DUP2 .File/read DEO2
+			,find-tile JSR #ffff !! ,&skip JCN
+				;buffer ;add-tile JSR2
+				&skip
+		INC2r
+		.File/success DEI2 #0000 !! ,&stream JCN
+	STH2r #0001 -- ;result/tiles STA2
+
+RTN
+
+@find-tile ( addr* -- addr* )
+
+	STH2
+	;result/length LDA2 #0000
+	&loop
+		DUP2 10** ;result/data ++ STH2kr ;tiles-equal JSR2 #00 = ,&continue JCN
+			NIP2 POP2r RTN
+			&continue
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2 POP2r
+	( default ) #ffff
+
+RTN
+
+@tiles-equal ( a* b* -- bool )
+
+	STH2
+	DUP2 #0010 ++ SWP2
+	&loop
+		LDAk LDAkr STHr = ,&continue JCN
+			POP2 POP2 POP2r #00 RTN
+			&continue
+		INC2r
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2 POP2r #01
+
+RTN
+
+@add-tile ( addr* -- addr* )
+
+	STH2
+	#0010 #0000
+	&loop
+		( addr* ) DUP2 ;result/length LDA2 10** ;result/data ++ ++
+		( data ) OVR2 STH2kr ++ LDA
+		( order ) ROT ROT STA
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+	POP2r
+	( incr ) ;result/length LDA2 INC2 ;result/length STA2
+
+RTN
+
+@assoc ( -- length )
+
+	LIT2r 0000
+	.File/name DEO2
+	&stream
+		#0010 .File/length DEO2
+		;buffer 
+			DUP2 .File/read DEO2
+			;find-tile JSR2 STH2kr SWP2 ;set-tile JSR2
+		INC2r
+		.File/success DEI2 #0000 !! ,&stream JCN
+	POP2r
+
+RTN
+
+( draw )
+
+@draw-tiles ( -- )
+
+	.tiles-frame/x LDZ2 .Screen/x DEO2
+	.tiles-frame/y LDZ2 .Screen/y DEO2
+	;result/data .Screen/addr DEO2
+
+	( width ) LITr 00
+	( auto x addr ) #05 .Screen/auto DEO
+	;result/data ;result/length LDA2 10** ++ ;result/data
+	&loop
+		STHkr WIDTH NIP MOD ,&continue JCN
+			.tiles-frame/x LDZ2 .Screen/x DEO2
+			.Screen/y DEI2 #0008 ++ .Screen/y DEO2
+			POPr LITr 00
+			&continue
+		INCr
+		#81 .Screen/sprite DEO
+		#0010 ++ GTH2k ,&loop JCN
+	POP2 POP2
+	( auto none ) #00 .Screen/auto DEO
+	POPr
+
+RTN
+
+@set-tile ( id* addr* -- )
+
+	SWP2 2** ;result/data ++ ;result/length LDA2 10** ++ STA2
+
+RTN
+
+@get-tile ( id* -- addr* )
+
+	2** ;result/length LDA2 10** ;result/data ++ ++ LDA2
+
+RTN
+
+@draw-nametable ( -- )
+
+	;result/tiles LDA2 #0000
+	&loop
+		DUP2 WIDTH MOD2 8** .nametable-frame/x LDZ2 ++ .Screen/x DEO2
+		DUP2 WIDTH DIV2 8** .nametable-frame/y LDZ2 ++ .Screen/y DEO2
+		DUP2 ;get-tile JSR2 10** ;result/data ++ .Screen/addr DEO2
+		#81 .Screen/sprite DEO
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+
+RTN
+
+@draw-short ( -- )
+
+	#0008 .Screen/x DEO2
+	#0008 .Screen/y DEO2
+	#01 .Screen/auto DEO
+		;result/length LDA2 SWP 
+		( high ) ,&draw-byte JSR
+		( low ) ,&draw-byte JSR
+	#05 .Screen/auto DEO
+
+RTN
+
+	&draw-byte ( byte -- )
+		DUP
+		( high ) #04 SFT ,&draw-char JSR
+		( low ) #0f AND ,&draw-char JSR
+		RTN
+	&draw-char ( num -- )
+		#30 SFT #00 SWP ;font-hex ADD2 .Screen/addr DEO2
+		#01 .Screen/sprite DEO
+		RTN
+
+@input-name "projects/pictures/bulma37x29.chr $1
+
+@font-hex ( 0-F )
+	007c 8282 8282 827c 0030 1010 1010 1010
+	007c 8202 7c80 80fe 007c 8202 1c02 827c
+	000c 1424 4484 fe04 00fe 8080 7c02 827c
+	007c 8280 fc82 827c 007c 8202 1e02 0202
+	007c 8282 7c82 827c 007c 8282 7e02 827c
+	007c 8202 7e82 827e 00fc 8282 fc82 82fc
+	007c 8280 8080 827c 00fc 8282 8282 82fc
+	007c 8280 f080 827c 007c 8280 f080 8080
+
+@result
+	&length $2
+	&tiles $2
+	&data
