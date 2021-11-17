@@ -93,7 +93,10 @@ static Uint8
 datetime_dei(Device *d, Uint8 port)
 {
 	time_t seconds = time(NULL);
+	struct tm zt = {0};
 	struct tm *t = localtime(&seconds);
+	if(t == NULL)
+		t = &zt;
 	switch(port) {
 	case 0x0: return (t->tm_year + 1900) >> 8;
 	case 0x1: return (t->tm_year + 1900);
@@ -155,9 +158,11 @@ static int
 load(Uxn *u, char *filepath)
 {
 	FILE *f;
-	if(!(f = fopen(filepath, "rb")))
-		return 0;
-	fread(u->ram.dat + PAGE_PROGRAM, sizeof(u->ram.dat) - PAGE_PROGRAM, 1, f);
+	int r;
+	if(!(f = fopen(filepath, "rb"))) return 0;
+	r = fread(u->ram.dat + PAGE_PROGRAM, 1, sizeof(u->ram.dat) - PAGE_PROGRAM, f);
+	fclose(f);
+	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", filepath);
 	return 1;
 }
