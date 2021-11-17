@@ -16,7 +16,9 @@
 %10** { #40 SFT2 } %10// { #04 SFT2 }
 %20** { #50 SFT2 }
 
+%2MOD2 { #0001 AND2 }
 %4MOD { #03 AND } %4MOD2 { #0003 AND2 }
+%8MOD { #07 AND }
 
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
@@ -202,7 +204,6 @@ BRK
 
 @click-keypad ( x* y* -> )
 
-	( get key )
 	( y ) .keypad-frame/y LDZ2 -- #24 SFT2
 	( x ) SWP2 .keypad-frame/x LDZ2 -- 10// 4MOD2
 	( value ) ++ ;keypad/layout ++ LDA 
@@ -215,7 +216,8 @@ BRK
 @click-modpad ( x* y* -> )
 
 	( y ) .modpad-frame/y LDZ2 -- #24 SFT2 NIP STH
-	( x ) .modpad-frame/x LDZ2 -- 10// NIP STHr +
+	( x ) .modpad-frame/x LDZ2 -- 10// 
+	( value ) NIP STHr +
 	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
 	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
 	DUP #02 ! ,&no-mul JCN ;do-mul JSR2 &no-mul
@@ -233,9 +235,9 @@ BRK
 
 @click-bitpad ( x* y* -> )
 
-	.bitpad-frame/y LDZ2 -- 8// NIP 8* STH
-	.bitpad-frame/x LDZ2 -- 8// NIP STHr +
-	STHk
+	( y ) .bitpad-frame/y LDZ2 -- 8// NIP 8* STH
+	( x ) .bitpad-frame/x LDZ2 -- 8// NIP 
+	( value ) STHr + STHk
 
 	#30 + .Audio0/pitch DEO
 
@@ -268,8 +270,8 @@ BRK
 
 	DUP #50 + .Audio0/pitch DEO
 	DUP TOS ;keypad/series ++ LDA ;draw-keypad JSR2
-	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
-	.input/length LDZ INC .input/length STZ
+	TOS .input/value LDZ2 10** ++ .input/value STZ2
+	( INCZ ) .input/length LDZk INC SWP STZ
 	#ff ;draw-input JSR2
 	;draw-bitpad JSR2
 
@@ -278,7 +280,7 @@ RTN
 @push ( value* -- )
 
 	( store ) .stack/length LDZ 2* .stack/items + STZ2
-	( incr ) .stack/length LDZ INC .stack/length STZ
+	( INCZ ) .stack/length LDZk INC SWP STZ
 	( reset ) #0000 .input/value STZ2
 	#00 ;draw-input JSR2
 	;draw-stack JSR2
@@ -288,8 +290,8 @@ RTN
 @pop ( -- value* )
 
 	.stack/length LDZ #01 - 2* .stack/items + LDZ2
-	( clear ) #0000 .stack/length LDZ #01 - 2* .stack/items + STZ2
-	( incr ) .stack/length LDZ #01 - .stack/length STZ
+	( clear ) #0000 [ .stack/length LDZ #01 - 2* .stack/items + ] STZ2
+	( DECZ ) .stack/length LDZk #01 - SWP STZ
 	#01 ;draw-input JSR2
 	;draw-stack JSR2
 
@@ -297,12 +299,9 @@ RTN
 
 @do-push ( -- )
 
-	.input/value LDZ2 ADD ,&not-empty JCN
-		RTN
-		&not-empty
-	.stack/length LDZ #07 < ,&not-full JCN
-		RTN
-		&not-full
+	.input/value LDZ2 ADD #00 > JMP RTN
+	.stack/length LDZ #07 < JMP RTN
+
 	#40 .Audio0/pitch DEO
 	.input/value LDZ2 ;push JSR2
 
@@ -475,12 +474,11 @@ RTN
 	STH STH2
 	.Screen/y DEO2
 	#0020 ++ .Screen/x DEO2
-	#04 #00
+	#0400
 	&loop
 		.Screen/x DEI2 #0008 -- .Screen/x DEO2
 		( value ) DUP STH2kr ROT 4* SFT2 #000f AND2
 		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
-		( no not draw zeros )
 		( get color ) ROTr STHkr 
 		( place stack ) ROTr ROTr
 		( no leading zeros )
@@ -575,9 +573,9 @@ RTN
 
 	#10 #00
 	&loop
-		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 #0001 AND2 NIP STH
+		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 2MOD2 NIP STH
 		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ STH2
-		( x ) DUP #07 AND TOS 8** .bitpad-frame/x LDZ2 ++
+		( x ) DUP 8MOD TOS 8** .bitpad-frame/x LDZ2 ++
 		STH2r STHr #01 ,draw-bit JSR
 		INC GTHk ,&loop JCN
 	POP2
