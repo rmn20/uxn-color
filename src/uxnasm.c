@@ -142,7 +142,7 @@ sublabel(char *src, char *scope, char *name)
 #pragma mark - Parser
 
 static int
-error(char *name, char *msg)
+error(const char *name, const char *msg)
 {
 	fprintf(stderr, "%s: %s\n", name, msg);
 	return 0;
@@ -310,17 +310,14 @@ parsetoken(char *w)
 }
 
 static int
-doinclude(FILE *f, int (*pass)(FILE *))
+doinclude(const char *filename, int (*pass)(FILE *))
 {
-	char word[64];
-	FILE *finc;
+	FILE *f;
 	int ret;
-	if(fscanf(f, "%63s", word) != 1)
-		return error("End of input", "include");
-	if(!(finc = fopen(word, "r")))
-		return error("Include failed to open", word);
-	ret = pass(finc);
-	fclose(finc);
+	if(!(f = fopen(filename, "r")))
+		return error("Include failed to open", filename);
+	ret = pass(f);
+	fclose(f);
 	return ret;
 }
 
@@ -348,8 +345,8 @@ pass1(FILE *f)
 		} else if(w[0] == '&') {
 			if(!makelabel(sublabel(subw, scope, w + 1)))
 				return error("Pass 1 - Invalid sublabel", w);
-		} else if(scmp(w, "include", 8)) {
-			if(!doinclude(f, pass1))
+		} else if(w[0] == '~') {
+			if(!doinclude(w + 1, pass1))
 				return 0;
 		} else if(sihx(w))
 			addr += slen(w) / 2;
@@ -386,8 +383,8 @@ pass2(FILE *f)
 		} else if(w[0] == '@') {
 			scpy(w + 1, scope, 64);
 			continue;
-		} else if(scmp(w, "include", 8)) {
-			if(!doinclude(f, pass2))
+		} else if(w[0] == '~') {
+			if(!doinclude(w + 1, pass2))
 				return 0;
 			continue;
 		}

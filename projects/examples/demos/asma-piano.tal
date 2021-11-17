@@ -62,7 +62,7 @@
 	&dest-file
 		"bin/asma-boot.rom 00
 
-include projects/library/asma.tal
+~projects/library/asma.tal
 
 (
 	Heap, a large temporary area for keeping track of labels. More complex

@@ -40,7 +40,7 @@
 	#01 .System/halt DEO
 	BRK
 
-include projects/library/asma.tal
+~projects/library/asma.tal
 
 @asma-heap
 |e000 &end

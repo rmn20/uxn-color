@@ -226,7 +226,7 @@
 	POP2 POP2 POP2 POP2 POP2
 	JMP2r
 
-include projects/library/file-read-chunks.tal
+~projects/library/file-read-chunks.tal
 
 (
 	Assemble a chunk of source code, which begins with whitespace or the start
@@ -303,7 +303,6 @@ include projects/library/file-read-chunks.tal
 	asma/state contains several meaningful bits:
 	0x02 we are in a comment,
 	0x04 we are in a macro body,
-	0x08 we are expecting an include filename, and
 	0x10 we are in a macro body that we are ignoring
 	   (because the macro was already defined in a previous pass).
 	Since 0x10 never appears without 0x04, the lowest bit set in asma/state is
@@ -349,15 +348,11 @@ include projects/library/file-read-chunks.tal
 		:asma-first-char-normal/_entry
 		:asma-first-char-comment/_entry
 		:asma-first-char-macro/_entry
-		$2 ( invalid position )
-		$2 ( empty tree for include )
 
 	&body-routines
 		:asma-normal-body
 		:asma-ignore
 		:asma-macro-body
-		$2 ( invalid position )
-		:asma-include-filename
 
 @asma-parse-hex-digit ( charcode -- 00-0f if valid hex
                                  OR 10-ff otherwise )
@@ -410,14 +405,14 @@ include projects/library/file-read-chunks.tal
 %asma-RETURN-FLAG { #40 }
 %asma-KEEP-FLAG { #80 }
 
-include projects/library/string.tal
+~projects/library/string.tal
 
 @asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
                                     OR node-incoming-ptr* 01 if key not found )
 	;asma/token LDA2
 	( fall through to traverse-tree )
 
-include projects/library/binary-tree.tal
+~projects/library/binary-tree.tal
 
 @asma-parse-opcode ( -- byte 00 if valid opcode
                      OR 01 otherwise )
@@ -526,7 +521,7 @@ include projects/library/binary-tree.tal
 	POP2 POP2
 	JMP2r
 
-include projects/library/heap.tal
+~projects/library/heap.tal
 
 (
 	First character routines.
@@ -793,12 +788,6 @@ include projects/library/heap.tal
 
 	&not-macro
 	POP2
-	;&include-string ;asma/token LDA2
-		;strcmp JSR2 NIP2 NIP2 NIP ,&not-include JCN
-	#08 asma-STATE-SET
-	JMP2r
-
-	&not-include
 	;asma-msg-token ;asma/error STA2
 	JMP2r
 
@@ -806,10 +795,8 @@ include projects/library/heap.tal
 	;asma-msg-too-deep ;asma/error STA2
 	JMP2r
 
-	&include-string "include 00
-
-@asma-include-filename
-	#08 asma-STATE-CLEAR
+@asma-include
+	.System/rst DEI #e0 GTH ,asma-normal-body/too-deep JCN
 	;heap LDA2
 		;asma/token LDA2 ;append-heap-string JSR2
 		;asma-assemble-file-pass JSR2
@@ -864,7 +851,8 @@ include projects/library/heap.tal
 	&5d         :&40       :&7c         '] 00          :asma-ignore
 	&7b          $2         $2          '{ 00          :asma-ignore
 	&7c         :&7b       :&7d         '| 00          :asma-pad-absolute
-	&7d          $2         $2          '} 00          :asma-ignore
+	&7d          $2        :&7e         '} 00          :asma-ignore
+	&7e          $2         $2          '~ 00          :asma-include
 
 @asma-opcodes
 	&_entry     :&GTH      :&ROT &_disasm "LIT 00

@@ -82,8 +82,8 @@ expect_failure 'Recursion level too deep:' <<'EOD'
 %you { me }
 |1000 me
 EOD
-expect_failure 'Recursion level too deep: include' <<'EOD'
-include asma-test/in.tal
+expect_failure 'Recursion level too deep: ~asma-test/in.tal' <<'EOD'
+~asma-test/in.tal
 EOD
 expect_failure 'Label not found: ;blah' <<'EOD'
 |1000 ;blah
