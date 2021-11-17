@@ -253,9 +253,6 @@ RTN
 	s .fps/second STZ
 	.fps/next LDZ .fps/current STZ
 
-	( ~fps.next ^print-byte-decimal JSR
-	,strings-fps ^print-string JSR )
-
 	#00 .fps/next STZ
 	JMP2r
 
