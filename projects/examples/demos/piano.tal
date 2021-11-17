@@ -138,15 +138,21 @@ BRK
 	( release )
 	#00 .Controller/key DEO
 
-	.Controller/button DEI #f0 AND
-	DUP #04 SFT #01 AND #01 ! ,&no-up JCN
-		( move ) .Audio0/addr DEI2 #0001 -- .Audio0/addr DEO2 &no-up
-	DUP #05 SFT #01 AND #01 ! ,&no-down JCN
-		( move ) .Audio0/addr DEI2 INC2 .Audio0/addr DEO2 &no-down
-	DUP #06 SFT #01 AND #01 ! ,&no-left JCN
-		( move ) .Audio0/addr DEI2 #0010 -- .Audio0/addr DEO2 &no-left
-	DUP #07 SFT #01 AND #01 ! ,&no-right JCN
-		( move ) .Audio0/addr DEI2 #0010 ++ .Audio0/addr DEO2 &no-right
+	.Controller/button DEI 
+	DUP #11 ! ,&cu JCN #3c ;play JSR2 &cu
+	DUP #21 ! ,&cd JCN #3d ;play JSR2 &cd
+	DUP #41 ! ,&cl JCN #3e ;play JSR2 &cl
+	DUP #81 ! ,&cr JCN #3f ;play JSR2 &cr
+	DUP #12 ! ,&au JCN #40 ;play JSR2 &au
+	DUP #22 ! ,&ad JCN #41 ;play JSR2 &ad
+	DUP #42 ! ,&al JCN #42 ;play JSR2 &al
+	DUP #82 ! ,&ar JCN #43 ;play JSR2 &ar
+	DUP #14 ! ,&su JCN #44 ;play JSR2 &su
+	DUP #24 ! ,&sd JCN #45 ;play JSR2 &sd
+	DUP #44 ! ,&sl JCN #46 ;play JSR2 &sl
+	DUP #84 ! ,&sr JCN #47 ;play JSR2 &sr
+	DUP #40 ! ,&l JCN .Audio0/addr DEI2 #0010 -- .Audio0/addr DEO2 &l
+	DUP #80 ! ,&r JCN .Audio0/addr DEI2 #0010 ++ .Audio0/addr DEO2 &r
 	POP
 
 	;draw-octave JSR2
