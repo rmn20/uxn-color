@@ -384,7 +384,10 @@ static Uint8
 datetime_dei(Device *d, Uint8 port)
 {
 	time_t seconds = time(NULL);
+	struct tm zt = {0};
 	struct tm *t = localtime(&seconds);
+	if(t == NULL)
+		t = &zt;
 	switch(port) {
 	case 0x0: return (t->tm_year + 1900) >> 8;
 	case 0x1: return (t->tm_year + 1900);
