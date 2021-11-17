@@ -27,7 +27,7 @@ fi
 
 mkdir -p bin
 CC="${CC:-cc}"
-CFLAGS="-std=c89 -Wall -Wno-unknown-pragmas"
+CFLAGS="${CFLAGS:--std=c89 -Wall -Wno-unknown-pragmas}"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*) # MSYS2 on Windows
 	UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
