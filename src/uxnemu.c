@@ -422,8 +422,11 @@ static int
 load(Uxn *u, char *rom)
 {
 	FILE *f;
+	int r;
 	if(!(f = fopen(rom, "rb"))) return 0;
-	fread(u->ram.dat + PAGE_PROGRAM, sizeof(u->ram.dat) - PAGE_PROGRAM, 1, f);
+	r = fread(u->ram.dat + PAGE_PROGRAM, 1, sizeof(u->ram.dat) - PAGE_PROGRAM, f);
+	fclose(f);
+	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", rom);
 	SDL_SetWindowTitle(gWindow, rom);
 	return 1;
