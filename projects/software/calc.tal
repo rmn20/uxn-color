@@ -501,6 +501,26 @@ RTN
 
 RTN
 
+@draw-decimal ( -- )
+
+	.bitpad-frame/y2 LDZ2 #0008 ++ .Screen/y DEO2
+	.center/x LDZ2 #0014 -- .Screen/x DEO2
+	#01 .Screen/auto DEO
+
+	.input/value LDZ2
+	( 10,000 ) #2710 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 ]
+	( 1,000 ) #03e8 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 ]
+	( 100 ) #0064 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 NIP ]
+	( 10 ) #0a DIVk DUP ,&digit JSR [ MUL SUB ]
+	( 1 ) ,&digit JSR
+	#00 .Screen/auto DEO
+
+RTN
+	&digit ( num -- )
+		8* TOS ;font-hex ++ .Screen/addr DEO2
+		#03 .Screen/sprite DEO
+	RTN
+
 @draw-input ( key -- )
 
 	STH
@@ -530,6 +550,8 @@ RTN
 		;line-hor-dotted JSR2
 
 	POPr
+
+	;draw-decimal JSR2
 
 RTN
 
