@@ -21,6 +21,8 @@
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
+%RELEASE-MOUSE { #0096 DEO }
+
 %RTN { JMP2r }
 %BRK? { #01 JCN BRK }
 %RTN? { #01 JCN RTN }
@@ -206,7 +208,7 @@ BRK
 	( value ) ++ ;keypad/layout ++ LDA 
 		;push-input JSR2
 
-	( release mouse ) #00 .Mouse/state DEO
+	RELEASE-MOUSE
 
 BRK
 
@@ -225,7 +227,7 @@ BRK
 	POP
 
 	;draw-bitpad JSR2
-	( release mouse ) #00 .Mouse/state DEO
+	RELEASE-MOUSE
 
 BRK
 
@@ -242,8 +244,8 @@ BRK
 		[ STHr #0f SWP - ] #40 SFT SFT2 EOR2 
 		.input/value STZ2
 
-	( release mouse ) #00 .Mouse/state DEO
 	;draw-bitpad JSR2
+	RELEASE-MOUSE
 
 BRK
 
@@ -258,8 +260,7 @@ BRK
 		;do-pop JSR2
 		&no-pop
 	POP
-
-	( release mouse ) #00 .Mouse/state DEO
+	RELEASE-MOUSE
 
 BRK
 
