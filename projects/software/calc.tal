@@ -16,7 +16,7 @@
 %10** { #40 SFT2 } %10// { #04 SFT2 }
 %20** { #50 SFT2 }
 
-%4MOD { #03 AND }
+%4MOD { #03 AND } %4MOD2 { #0003 AND2 }
 
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
@@ -161,18 +161,15 @@ BRK
 @on-mouse ( -> )
 
 	;pointer-icn .Screen/addr DEO2
+
 	( clear last cursor )
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
 	#40 .Screen/sprite DEO
 
-	( record pointer positions )
-	.Mouse/x DEI2 .pointer/x STZ2 
-	.Mouse/y DEI2 .pointer/y STZ2
-
 	( draw new cursor )
-	.pointer/x LDZ2 .Screen/x DEO2
-	.pointer/y LDZ2 .Screen/y DEO2
+	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2
+	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
 	( handle events )
@@ -204,9 +201,10 @@ BRK
 @click-keypad ( x* y* -> )
 
 	( get key )
-	.keypad-frame/y LDZ2 -- 10// 4**
-	SWP2 .keypad-frame/x LDZ2 -- 10// #0003 AND2
-	++ ;keypad/layout ++ LDA ;push-input JSR2
+	( y ) .keypad-frame/y LDZ2 -- #24 SFT2
+	( x ) SWP2 .keypad-frame/x LDZ2 -- 10// 4MOD2
+	( value ) ++ ;keypad/layout ++ LDA 
+		;push-input JSR2
 
 	( release mouse ) #00 .Mouse/state DEO
 
@@ -214,8 +212,8 @@ BRK
 
 @click-modpad ( x* y* -> )
 
-	.modpad-frame/y LDZ2 -- 10// 4**
-	SWP2 .modpad-frame/x LDZ2 -- 10// #0003 AND2 ++ NIP
+	( y ) .modpad-frame/y LDZ2 -- #24 SFT2 NIP STH
+	( x ) .modpad-frame/x LDZ2 -- 10// NIP STHr +
 	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
 	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
 	DUP #02 ! ,&no-mul JCN ;do-mul JSR2 &no-mul
