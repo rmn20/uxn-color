@@ -38,6 +38,10 @@
 @current $1
 @center
 	&x $2 &y $2
+@date
+	&x $2 &y $2
+@time
+	&x $2 &y $2
 @needles
 	&hx $2 &hy $2 &mx $2 &my $2 &sx $2 &sy $2
 @line
@@ -60,8 +64,14 @@
 	;on-frame .Screen/vector DEO2
 
 	( center )
-	.Screen/width DEI2 2// .center/x STZ2
-	.Screen/height DEI2 2// .center/y STZ2
+	.Screen/width DEI2 2// 
+		DUP2 .center/x STZ2
+		DUP2 #0048 -- .date/x STZ2
+		#0020 -- .time/x STZ2
+	.Screen/height DEI2 2// 
+		DUP2 .center/y STZ2
+		DUP2 #0068 -- .date/y STZ2
+		#0060 ++ .time/y STZ2
 
 	( circle )
 	#3c00 
@@ -120,18 +130,18 @@ RTN
 	( auto addr ) #04 .Screen/auto DEO
 
 	( dotw )
-	.center/y LDZ2 #0068 -- .Screen/y DEO2
-	.center/x LDZ2 #0048 -- .Screen/x DEO2
+	.date/x LDZ2 .Screen/x DEO2
+	.date/y LDZ2 .Screen/y DEO2
 	.DateTime/dotw DEI 4* TOS ;dotw ++ ;draw-dotw JSR2
 	( date )
-	.center/x LDZ2 #0014 -- .Screen/x DEO2
+	.Screen/x DEI2 #001c ++ .Screen/x DEO2
 	.DateTime/month DEI2 
 		SWP INC ,&number JSR
 		;font/slash ,&char JSR
 		,&number JSR
 	( time )
-	.center/y LDZ2 #0060 ++ .Screen/y DEO2
-	.center/x LDZ2 #0020 -- .Screen/x DEO2
+	.time/y LDZ2 .Screen/y DEO2
+	.time/x LDZ2 .Screen/x DEO2
 	.DateTime/hour DEI2 
 		SWP ,&number JSR
 		;font/spacer ,&char JSR
