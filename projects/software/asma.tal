@@ -31,7 +31,7 @@
 	DUP EOR ( 00 )
 	;append-heap-byte JSR2 ( )
 
-	,&output-file LDR2 EOR ,&run JCN
+	,&output-file LDR2 ORA ,&run JCN
 	;heap LDA2 ,&output-file STR2
 	BRK
 
