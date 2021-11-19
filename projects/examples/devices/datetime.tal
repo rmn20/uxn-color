@@ -5,26 +5,24 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 } 
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 } 
 
-%4* { #20 SFT }
-%8* { #30 SFT }
-%10* { #40 SFT }
-%2// { #01 SFT2 }
-%4// { #02 SFT2 }
-%2** { #10 SFT2 }
+%4*   { #20 SFT }
+%10*  { #40 SFT }
+%2**  { #10 SFT2 } %2// { #01 SFT2 }
+%4//  { #02 SFT2 }
 %10** { #40 SFT2 }
-
-%DIAMETER  { #0080 }
-%RADIUS    { DIAMETER 2// }
+%20** { #50 SFT2 }
 
 %TOS     { #00 SWP }
 %RTN     { JMP2r }
 %MOD     { DUP2 DIV MUL SUB }
 %ABS2    { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 -- }
+%LTS2    { #8000 ++ SWP2 #8000 ++ GTH2 }
+%GTS2    { #8000 ++ SWP2 #8000 ++ LTH2 }
+
+%RADIUS    { #0040 }
 %SCALEX  { 2// .center/x LDZ2 ++ RADIUS -- }
 %SCALEY  { 2// .center/y LDZ2 ++ RADIUS -- }
 %12HOURS { #0c MOD }
-%LTS2    { #8000 ++ SWP2 #8000 ++ GTH2 }
-%GTS2    { #8000 ++ SWP2 #8000 ++ LTH2 }
 
 ( devices )
 
@@ -75,7 +73,7 @@
 		INC GTHk ,&loop JCN
 	POP2
 
-BRK
+( continue )
 
 @on-frame ( -> )
 
@@ -94,9 +92,12 @@ BRK
 @draw-needles ( mul -- )
 
 	STH
-	.center/x LDZ2 .center/y LDZ2 .needles/sx LDZ2 .needles/sy LDZ2 #02 STHkr * ;draw-line JSR2
-	.center/x LDZ2 .center/y LDZ2 .needles/mx LDZ2 .needles/my LDZ2 #01 STHkr * ;draw-line JSR2
-	.center/x LDZ2 .center/y LDZ2 .needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 
+		OVR2 OVR2 
+		OVR2 OVR2
+		.needles/sx LDZ2 .needles/sy LDZ2 #02 STHkr * ;draw-line JSR2
+		.needles/mx LDZ2 .needles/my LDZ2 #01 STHkr * ;draw-line JSR2
+		.needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
 
 RTN
 
@@ -106,8 +107,8 @@ RTN
 		TOS SCALEY .needles/sy STZ2
 		TOS SCALEX .needles/sx STZ2
 	#00 .DateTime/minute DEI 2** ;table ++ LDA2
-		TOS #0020 ** RADIUS ++ #0024 // SCALEY #0007 ++ .needles/my STZ2
-		TOS #0020 ** RADIUS ++ #0024 // SCALEX #0007 ++ .needles/mx STZ2
+		TOS 20** RADIUS ++ #0024 // SCALEY #0007 ++ .needles/my STZ2
+		TOS 20** RADIUS ++ #0024 // SCALEX #0007 ++ .needles/mx STZ2
 	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
 		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/hy STZ2
 		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/hx STZ2
