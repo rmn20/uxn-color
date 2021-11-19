@@ -24,6 +24,10 @@
 %SCALEY  { 2// .center/y LDZ2 ++ RADIUS -- }
 %12HOURS { #0c MOD }
 
+%IS-UC { DUP #40 > SWP #5b < AND }
+%IS-LC { DUP #60 > SWP #7b < AND }
+%IS-NUM { DUP #2f > SWP #3a < AND }
+
 ( devices )
 
 |00 @System     [ &vector $2 &pad      $6 &r      $2 &g     $2 &b      $2 ]
@@ -35,7 +39,8 @@
 
 |0000
 
-@current $1
+@last 
+	&day $1 &sec $1
 @center
 	&x $2 &y $2
 @date
@@ -66,7 +71,7 @@
 	( center )
 	.Screen/width DEI2 2// 
 		DUP2 .center/x STZ2
-		DUP2 #0048 -- .date/x STZ2
+		DUP2 #0028 -- .date/x STZ2
 		#0020 -- .time/x STZ2
 	.Screen/height DEI2 2// 
 		DUP2 .center/y STZ2
@@ -83,23 +88,40 @@
 		INC GTHk ,&loop JCN
 	POP2
 
-( continue )
+BRK
 
 @on-frame ( -> )
 
-	( only draw once per second )
-	.DateTime/second DEI .current LDZ = ,&skip JCN
+	( once per second )
+	.DateTime/second DEI 
+	DUP .last/sec LDZ = ,&same-sec JCN
 		( clear ) #00 ,draw-needles JSR
-		( update ) ,update-needles JSR
+		( update ) ;make-needles JSR2
 		( draw ) #01 ,draw-needles JSR
-		;draw-display JSR2
-		&skip
+		.time/x LDZ2 .Screen/x DEO2
+		.time/y LDZ2 .Screen/y DEO2
+		;make-time JSR2
+		;time-txt ;draw-text JSR2
+		DUP .last/sec STZ
+		&same-sec
+	POP
 
-	.DateTime/second DEI .current STZ
+	( once per day )
+	.DateTime/day DEI 
+	DUP .last/day LDZ = ,&same-day JCN
+		.date/x LDZ2 .Screen/x DEO2
+		.date/y LDZ2 .Screen/y DEO2
+		.DateTime/dotw DEI 4* TOS ;week-txt ++ ;draw-text JSR2
+		.DateTime/month DEI 4* TOS ;month-txt ++ ;draw-text JSR2
+		;make-date JSR2
+		;date-txt ;draw-text JSR2
+		DUP .last/day STZ
+		&same-day
+	POP
 
 BRK
 
-@draw-needles ( mul -- )
+@draw-needles ( draw -- )
 
 	STH
 	.center/x LDZ2 .center/y LDZ2 
@@ -111,81 +133,33 @@ BRK
 
 RTN
 
-@update-needles ( -- )
+@draw-text ( addr* -- )
 
-	#00 .DateTime/second DEI 2** ;table ++ LDA2
-		TOS SCALEY .needles/sy STZ2
-		TOS SCALEX .needles/sx STZ2
-	#00 .DateTime/minute DEI 2** ;table ++ LDA2
-		TOS 20** RADIUS ++ #0024 // SCALEY #0007 ++ .needles/my STZ2
-		TOS 20** RADIUS ++ #0024 // SCALEX #0007 ++ .needles/mx STZ2
-	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
-		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/hy STZ2
-		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/hx STZ2
-
-RTN
-
-@draw-display ( -- )
-
-	( auto addr ) #04 .Screen/auto DEO
-
-	( dotw )
-	.date/x LDZ2 .Screen/x DEO2
-	.date/y LDZ2 .Screen/y DEO2
-	.DateTime/dotw DEI 4* TOS ;dotw ++ ;draw-dotw JSR2
-	( date )
-	.Screen/x DEI2 #001c ++ .Screen/x DEO2
-	.DateTime/month DEI2 
-		SWP INC ,&number JSR
-		;font/slash ,&char JSR
-		,&number JSR
-	( time )
-	.time/y LDZ2 .Screen/y DEO2
-	.time/x LDZ2 .Screen/x DEO2
-	.DateTime/hour DEI2 
-		SWP ,&number JSR
-		;font/spacer ,&char JSR
-		,&number JSR
-		;font/spacer ,&char JSR
-	.DateTime/second DEI 
-		,&number JSR
-
-	( auto none ) #00 .Screen/auto DEO
-
-RTN
-	&pady ( -- )
-		.Screen/y DEI2 #0008 ++ .Screen/y DEO2 RTN
-	&char ( char* -- )
+	( auto addr ) #06 .Screen/auto DEO
+	&while
+		LDAk
+		DUP IS-LC ,&lc JCN
+		DUP IS-UC ,&uc JCN
+		DUP IS-NUM ,&num JCN
+		DUP LIT '/ = ,&slash JCN
+		DUP LIT ': = ,&colon JCN
+		POP ;font/blank
+		&end
 		.Screen/addr DEO2
-		#03 .Screen/sprite DEO
-		,&pady JSR
-		#03 .Screen/sprite DEO
-		,&reset JSR
-		RTN
-	&digit ( number -- )
-		10* TOS ;font ++ .Screen/addr DEO2
-		#03 .Screen/sprite DEO
-		,&pady JSR
-		#03 .Screen/sprite DEO
-		RTN
-	&number ( number -- )
-		DUP #0a DIV ,&digit JSR
-			,&reset JSR
-			#0a MOD ,&digit JSR
-	&reset
+		#0303 .Screen/sprite DEO .Screen/sprite DEO
+		.Screen/y DEI2 #0010 -- .Screen/y DEO2
 		.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		.Screen/y DEI2 #0008 -- .Screen/y DEO2
-	RTN
-
-@draw-dotw ( str* -- )
-
-	DUP2 #0003 ++ SWP2
-	&loop
-		LDAk #41 - TOS 10** ;font/letters ++ ;draw-display/char JSR2
-		INC2 GTH2k ,&loop JCN
-	POP2 POP2
+		INC2 LDAk ,&while JCN
+	POP2
+	( auto none ) #00 .Screen/auto DEO
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 
 RTN
+	&lc #61 - TOS 10** ;font/lc ++ ,&end JMP
+	&uc #41 - TOS 10** ;font/uc ++ ,&end JMP
+	&num #30 - TOS 10** ;font/num ++ ,&end JMP
+	&slash POP ;font/slash ,&end JMP
+	&colon POP ;font/colon ,&end JMP
 
 @draw-line ( x1 y1 x2 y2 color -- )
 	
@@ -215,8 +189,54 @@ RTN
 
 RTN
 
-@dotw
-	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 "Sat $1
+@make-needles ( -- )
+
+	#00 .DateTime/second DEI 2** ;table ++ LDA2
+		TOS SCALEY .needles/sy STZ2
+		TOS SCALEX .needles/sx STZ2
+	#00 .DateTime/minute DEI 2** ;table ++ LDA2
+		TOS 20** RADIUS ++ #0024 // SCALEY #0007 ++ .needles/my STZ2
+		TOS 20** RADIUS ++ #0024 // SCALEX #0007 ++ .needles/mx STZ2
+	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
+		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/hy STZ2
+		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/hx STZ2
+
+RTN
+
+@make-date ( -- )
+
+	.DateTime/day DEI
+		DUP #0a DIV #30 + ;date-txt STA
+		#0a MOD #30 + ;date-txt INC STA
+
+RTN
+
+@make-time ( -- )
+
+	.DateTime/hour DEI ;time-txt/h ,decimal JSR
+	.DateTime/minute DEI ;time-txt/m ,decimal JSR
+	.DateTime/second DEI ;time-txt/s ,decimal JSR
+
+RTN
+
+@decimal ( -- )
+
+	STH2
+	DUP #0a DIV #30 + STH2kr STA
+	#0a MOD #30 + STH2r INC2 STA
+
+RTN
+
+@time-txt
+	&h "00: &m "00: &s "00 $1
+@date-txt
+	"00 $1
+@week-txt
+	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 
+	"Sat $1
+@month-txt
+	"Jan $1 "Feb $1 "Mar $1 "Apr $1 "May $1 "Jun $1
+	"Jul $1 "Aug $1 "Sep $1 "Oct $1 "Nov $1 "Dec $1
 
 @table ( 60 positions on a circle )
 	8000 8d00 9a02 a706 b40b c011 cb18 d520
@@ -229,6 +249,7 @@ RTN
 	4b0b 5806 6502 7200
 
 @font
+	&num
 	0018 2442 4242 4242 4242 4242 4224 1800
 	0008 1828 0808 0808 0808 0808 0808 1c00
 	0018 2442 4202 0202 0408 1020 4040 7e00
@@ -239,11 +260,7 @@ RTN
 	007e 4202 0204 0404 0808 0810 1010 1000
 	0018 2442 4242 2418 2442 4242 4224 1800
 	0018 2442 4242 4242 261a 0202 0408 3000
-	&spacer
-	0000 0000 0010 1000 0000 0000 1010 0000
-	&slash
-	0202 0404 0808 1010 2020 4040 8080 0000
-	&letters
+	&uc
 	0010 1028 2844 4444 8282 fe82 8282 0000
 	00f8 4442 4242 4478 4442 4242 44f8 0000
 	003c 4282 8280 8080 8080 8282 423c 0000
@@ -270,12 +287,7 @@ RTN
 	0042 4242 2424 1818 1824 2442 4242 0000
 	0082 8282 4444 2828 1010 1010 1038 0000
 	007e 4204 0408 0810 1020 2040 427e 0000
-	0e08 0808 0808 0808 0808 0808 0808 080e
-	0082 8282 4444 fe28 10fe 1010 1010 1000
-	7010 1010 1010 1010 1010 1010 1010 1070
-	1028 4400 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 00fe
-	1010 1008 0000 0000 0000 0000 0000 0000
+	&lc
 	0000 0000 0030 0808 3848 4848 4834 0000
 	0060 2020 202c 3222 2222 2222 322c 0000
 	0000 0000 001c 2240 4040 4040 221c 0000
@@ -302,4 +314,9 @@ RTN
 	0000 0000 00ee 4428 1010 1028 44ee 0000
 	0000 0000 00ee 4444 4448 2828 1010 2040
 	0000 0000 007c 4408 0810 2020 447c 0000
-
+	&colon
+	0000 0000 0010 1000 0000 0000 1010 0000
+	&slash
+	0202 0404 0808 1010 2020 4040 8080 0000
+	&blank
+	0000 0000 0000 0000 0000 0000 0000 0000
