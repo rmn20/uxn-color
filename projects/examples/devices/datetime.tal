@@ -162,16 +162,16 @@ RTN
 		#03 .Screen/sprite DEO
 		,&reset JSR
 		RTN
+	&digit ( number -- )
+		10* TOS ;font ++ .Screen/addr DEO2
+		#03 .Screen/sprite DEO
+		,&pady JSR
+		#03 .Screen/sprite DEO
+		RTN
 	&number ( number -- )
-		DUP #0a DIV [ 10* TOS ;font ++ ] .Screen/addr DEO2
-			#03 .Screen/sprite DEO
-			,&pady JSR
-			#03 .Screen/sprite DEO
+		DUP #0a DIV ,&digit JSR
 			,&reset JSR
-			#0a MOD [ 10* TOS ;font ++ ] .Screen/addr DEO2
-			#03 .Screen/sprite DEO
-			,&pady JSR
-			#03 .Screen/sprite DEO
+			#0a MOD ,&digit JSR
 	&reset
 		.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 		.Screen/y DEI2 #0008 -- .Screen/y DEO2
