@@ -56,7 +56,8 @@
 	&sx $2 &sy $2
 	&zx $2 &zy $2
 @line
-	&x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 &dx $2 &dy $2 &e1 $2 &e2 $2 &color $1
+	&x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 
+	&dx $2 &dy $2 &e1 $2 &e2 $2 &color $1
 
 ( program )
 
@@ -81,15 +82,23 @@
 		#0020 -- .time/x STZ2
 	.Screen/height DEI2 2// 
 		DUP2 .center/y STZ2
-		DUP2 #0068 -- .date/y STZ2
-		#0060 ++ .time/y STZ2
+		DUP2 #0078 -- .date/y STZ2
+		#0070 ++ .time/y STZ2
 
 	( circle )
 	#3c00 
 	&loop
+		( dots )
 		DUP TOS 2** ;table ++ LDA2 
-			#001c ;circle JSR2 .Screen/x DEO2 .Screen/y DEO2
-		DUP #0f MOD #00 EQU INC .Screen/pixel DEO
+			#0018 ;circle JSR2
+			.Screen/x DEO2 .Screen/y DEO2 #01 .Screen/pixel DEO
+		( markers )
+		DUP #05 MOD ,&no-marker JCN
+			DUP TOS 2** ;table ++ LDA2 
+			STH2k #0018 ;circle JSR2 SWP2
+			STH2r #001c ;circle JSR2 SWP2
+				#01 ;draw-line JSR2
+			&no-marker
 		INC GTHk ;&loop JCN2
 	POP2
 
@@ -107,7 +116,7 @@ BRK
 		( make time )
 		.DateTime/hour DEI .time-buf/h ;decimal JSR2
 		.DateTime/minute DEI .time-buf/m ;decimal JSR2
-		.DateTime/second DEI .time-buf/s ;decimal JSR2
+		DUP .time-buf/s ;decimal JSR2
 		( draw label )
 		.time/x LDZ2 .Screen/x DEO2
 		.time/y LDZ2 .Screen/y DEO2
@@ -124,7 +133,7 @@ BRK
 	.DateTime/day DEI 
 	DUP .last/day LDZ = ,&same-day JCN
 		( make date )
-		.DateTime/day DEI .date-buf ;decimal JSR2
+		DUP .date-buf ;decimal JSR2
 		( draw label )
 		.date/x LDZ2 .Screen/x DEO2
 		.date/y LDZ2 .Screen/y DEO2
@@ -230,7 +239,7 @@ RTN
 
 RTN
 
-@decimal ( value* label* -- )
+@decimal ( value* label -- )
 
 	STH
 	DUP #0a DIV #30 + STHkr STZ
