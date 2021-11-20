@@ -39,9 +39,6 @@
 
 |0000
 
-@date-buf $4
-@time-buf
-	&h $2 &s1 $1 &m $2 &s2 $1 &s $3
 @last 
 	&day $1 &sec $1
 @center
@@ -55,6 +52,8 @@
 	&mx $2 &my $2 
 	&sx $2 &sy $2
 	&zx $2 &zy $2
+@buf
+	&d $3 &h $2 &s1 $1 &m $2 &s2 $1 &s $3
 @line
 	&x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 
 	&dx $2 &dy $2 &e1 $2 &e2 $2 &color $1
@@ -103,10 +102,10 @@
 	POP2
 
 	LIT ': 
-		DUP .time-buf/s1 STZ
-		.time-buf/s2 STZ
+		DUP .buf/s1 STZ
+		.buf/s2 STZ
 
-BRK
+( continue )
 
 @on-frame ( -> )
 
@@ -114,13 +113,13 @@ BRK
 	.DateTime/second DEI 
 	DUP .last/sec LDZ = ,&same-sec JCN
 		( make time )
-		.DateTime/hour DEI .time-buf/h ;decimal JSR2
-		.DateTime/minute DEI .time-buf/m ;decimal JSR2
-		DUP .time-buf/s ;decimal JSR2
+		.DateTime/hour DEI .buf/h ;decimal JSR2
+		.DateTime/minute DEI .buf/m ;decimal JSR2
+		DUP .buf/s ;decimal JSR2
 		( draw label )
 		.time/x LDZ2 .Screen/x DEO2
 		.time/y LDZ2 .Screen/y DEO2
-		;time-buf ;draw-text JSR2
+		;buf/h ;draw-text JSR2
 		( draw needles )
 		#00 ;draw-needles JSR2
 		;make-needles JSR2
@@ -133,13 +132,13 @@ BRK
 	.DateTime/day DEI 
 	DUP .last/day LDZ = ,&same-day JCN
 		( make date )
-		DUP .date-buf ;decimal JSR2
+		DUP .buf/d ;decimal JSR2
 		( draw label )
 		.date/x LDZ2 .Screen/x DEO2
 		.date/y LDZ2 .Screen/y DEO2
 		.DateTime/dotw DEI 4* TOS ;week-txt ++ ;draw-text JSR2
 		.DateTime/month DEI 4* TOS ;month-txt ++ ;draw-text JSR2
-		;date-buf ;draw-text JSR2
+		;buf/d ;draw-text JSR2
 		DUP .last/day STZ
 		&same-day
 	POP
@@ -158,6 +157,7 @@ BRK
 		.needles/mx LDZ2 .needles/my LDZ2 #01 STHkr * ;draw-line JSR2
 		OVR2 OVR2
 		.needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
+		( middle )
 		#0001 -- .Screen/y DEO2 #0001 -- .Screen/x DEO2
 		;middle-icn .Screen/addr DEO2
 		#0a .Screen/sprite DEO
@@ -192,7 +192,7 @@ RTN
 	&slash POP ;font/slash ,&end JMP
 	&colon POP ;font/colon ,&end JMP
 
-@draw-line ( x1 y1 x2 y2 color -- )
+@draw-line ( x1* y1* x2* y2* color -- )
 	
 	( load ) .line/color STZ .line/y0 STZ2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
 	.line/x0 LDZ2 .line/x LDZ2 -- ABS2 .line/dx STZ2
@@ -234,7 +234,7 @@ RTN
 
 RTN
 
-@circle ( cx cy radius* -- )
+@circle ( cx cy radius* -- y* x* )
 
 	STH2 SWP
 	TOS 10** STH2kr // .center/x LDZ2 ++ #0080 10** STH2kr // -- 
@@ -244,7 +244,7 @@ RTN
 
 RTN
 
-@decimal ( value* label -- )
+@decimal ( value* zp-label -- )
 
 	STH
 	DUP #0a DIV #30 + STHkr STZ
@@ -255,6 +255,7 @@ RTN
 @week-txt
 	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 
 	"Sat $1
+
 @month-txt
 	"Jan $1 "Feb $1 "Mar $1 "Apr $1 "May $1 "Jun $1
 	"Jul $1 "Aug $1 "Sep $1 "Oct $1 "Nov $1 "Dec $1
