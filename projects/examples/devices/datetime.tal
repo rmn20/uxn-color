@@ -39,6 +39,9 @@
 
 |0000
 
+@date-buf $4
+@time-buf
+	&h $2 &s1 $1 &m $2 &s2 $1 &s $3
 @last 
 	&day $1 &sec $1
 @center
@@ -48,7 +51,9 @@
 @time
 	&x $2 &y $2
 @needles
-	&hx $2 &hy $2 &mx $2 &my $2 &sx $2 &sy $2
+	&hx $2 &hy $2 
+	&mx $2 &my $2 
+	&sx $2 &sy $2
 @line
 	&x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 &dx $2 &dy $2 &e1 $2 &e2 $2 &color $1
 
@@ -88,6 +93,10 @@
 		INC GTHk ,&loop JCN
 	POP2
 
+	LIT ': 
+		DUP .time-buf/s1 STZ
+		.time-buf/s2 STZ
+
 BRK
 
 @on-frame ( -> )
@@ -95,13 +104,18 @@ BRK
 	( once per second )
 	.DateTime/second DEI 
 	DUP .last/sec LDZ = ,&same-sec JCN
-		( clear ) #00 ,draw-needles JSR
-		( update ) ;make-needles JSR2
-		( draw ) #01 ,draw-needles JSR
+		( make time )
+		.DateTime/hour DEI .time-buf/h ;decimal JSR2
+		.DateTime/minute DEI .time-buf/m ;decimal JSR2
+		.DateTime/second DEI .time-buf/s ;decimal JSR2
+		( draw label )
 		.time/x LDZ2 .Screen/x DEO2
 		.time/y LDZ2 .Screen/y DEO2
-		;make-time JSR2
-		;time-txt ;draw-text JSR2
+		;time-buf ;draw-text JSR2
+		( draw needles )
+		#00 ;draw-needles JSR2
+		;make-needles JSR2
+		#01 ;draw-needles JSR2
 		DUP .last/sec STZ
 		&same-sec
 	POP
@@ -109,12 +123,14 @@ BRK
 	( once per day )
 	.DateTime/day DEI 
 	DUP .last/day LDZ = ,&same-day JCN
+		( make date )
+		.DateTime/day DEI .date-buf ;decimal JSR2
+		( draw label )
 		.date/x LDZ2 .Screen/x DEO2
 		.date/y LDZ2 .Screen/y DEO2
 		.DateTime/dotw DEI 4* TOS ;week-txt ++ ;draw-text JSR2
 		.DateTime/month DEI 4* TOS ;month-txt ++ ;draw-text JSR2
-		;make-date JSR2
-		;date-txt ;draw-text JSR2
+		;date-buf ;draw-text JSR2
 		DUP .last/day STZ
 		&same-day
 	POP
@@ -203,34 +219,14 @@ RTN
 
 RTN
 
-@make-date ( -- )
+@decimal ( value* label* -- )
 
-	.DateTime/day DEI
-		DUP #0a DIV #30 + ;date-txt STA
-		#0a MOD #30 + ;date-txt INC STA
-
-RTN
-
-@make-time ( -- )
-
-	.DateTime/hour DEI ;time-txt/h ,decimal JSR
-	.DateTime/minute DEI ;time-txt/m ,decimal JSR
-	.DateTime/second DEI ;time-txt/s ,decimal JSR
+	STH
+	DUP #0a DIV #30 + STHkr STZ
+	#0a MOD #30 + STHr INC STZ
 
 RTN
 
-@decimal ( -- )
-
-	STH2
-	DUP #0a DIV #30 + STH2kr STA
-	#0a MOD #30 + STH2r INC2 STA
-
-RTN
-
-@time-txt
-	&h "00: &m "00: &s "00 $1
-@date-txt
-	"00 $1
 @week-txt
 	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 
 	"Sat $1
