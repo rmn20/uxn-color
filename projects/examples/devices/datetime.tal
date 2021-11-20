@@ -84,23 +84,9 @@
 		DUP2 #0078 -- .date/y STZ2
 		#006c ++ .time/y STZ2
 
-	( circle )
-	#3c00 
-	&loop
-		( dots )
-		DUP TOS 2** ;table ++ LDA2 
-			#0018 ;circle JSR2
-			.Screen/x DEO2 .Screen/y DEO2 #01 .Screen/pixel DEO
-		( markers )
-		DUP #05 MOD ,&no-marker JCN
-			DUP TOS 2** ;table ++ LDA2 
-			STH2k #0018 ;circle JSR2 SWP2
-			STH2r #001c ;circle JSR2 SWP2
-				#01 ;draw-line JSR2
-			&no-marker
-		INC GTHk ;&loop JCN2
-	POP2
+	;draw-watchface JSR2
 
+	( time buffer )
 	LIT ': 
 		DUP .buf/s1 STZ
 		.buf/s2 STZ
@@ -217,6 +203,26 @@ RTN
 		&skipx
 		;&loop JMP2
 	&end
+
+RTN
+
+@draw-watchface ( -- )
+
+	#3c00 
+	&loop
+		( dots )
+		DUP TOS 2** ;table ++ LDA2 
+			#0018 ;circle JSR2
+			.Screen/x DEO2 .Screen/y DEO2 #01 .Screen/pixel DEO
+		( markers )
+		DUP #05 MOD ,&no-marker JCN
+			DUP TOS 2** ;table ++ LDA2 
+			STH2k #0018 ;circle JSR2 SWP2
+			STH2r #001c ;circle JSR2 SWP2
+				#01 ;draw-line JSR2
+			&no-marker
+		INC GTHk ;&loop JCN2
+	POP2
 
 RTN
 
