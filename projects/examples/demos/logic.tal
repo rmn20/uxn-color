@@ -17,10 +17,10 @@
 %10** { #40 SFT2 } %10// { #04 SFT2 }
 %20** { #50 SFT2 } %20// { #05 SFT2 }
 
-%DEBUG  { ;print-hex JSR2 #0a .Console/write DEO }
-%DEBUG2 { SWP ;print-hex JSR2 ;print-hex JSR2 #0a .Console/write DEO }
-
 %RELEASE-MOUSE { #0096 DEO }
+%AUTO-X { #01 .Screen/auto DEO }
+%AUTO-X-ADDR { #05 .Screen/auto DEO }
+%AUTO-NONE { #00 .Screen/auto DEO }
 
 %RTN { JMP2r }
 %TOS { #00 SWP }
@@ -51,7 +51,6 @@
 	&a $1 &b $1
 @pointer
 	&x $2 &y $2
-
 
 ( program )
 
@@ -139,7 +138,23 @@ BRK
 	.Screen/y DEI2 #000d ++ .Screen/y DEO2
 	.input LDZ2 EOR #03 ;draw-byte JSR2
 
+	( labels )
+	AUTO-X-ADDR
+	.b-frame/x LDZ2 #0020 -- .Screen/x DEO2
+	;names-icn/and .Screen/addr DEO2
+	.b-frame/y2 LDZ2 #0004 ++ .Screen/y DEO2
+	,&draw-label JSR
+	.b-frame/y2 LDZ2 #0014 ++ .Screen/y DEO2
+	,&draw-label JSR
+	.b-frame/y2 LDZ2 #0024 ++ .Screen/y DEO2
+	,&draw-label JSR
+	AUTO-NONE
+
 RTN
+	&draw-label
+		.b-frame/x LDZ2 #0020 -- .Screen/x DEO2 
+		#03 .Screen/sprite DEOk DEOk DEO
+	RTN
 
 @draw-byte ( value -- )
 
@@ -151,6 +166,7 @@ RTN
 		INC GTHk ,&loop JCN
 	POP2
 	.Screen/y DEI2 #0003 ++ .Screen/y DEO2
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 	STHr ;draw-hex JSR2
 	POPr
 
@@ -160,7 +176,7 @@ RTN
 
 	STH STH
 
-	#05 .Screen/auto DEO
+	AUTO-X-ADDR
 	;button-icns/off [ #00 STHkr 20* ++ ] .Screen/addr DEO2
 	OVRr STHr .Screen/sprite DEO
 	OVRr STHr .Screen/sprite DEO
@@ -168,7 +184,7 @@ RTN
 	.Screen/x DEI2 #0010 -- .Screen/x DEO2
 	OVRr STHr .Screen/sprite DEO
 	OVRr STHr .Screen/sprite DEO
-	#00 .Screen/auto DEO
+	AUTO-NONE
 	.Screen/y DEI2 #0008 -- .Screen/y DEO2
 
 	POPr POPr
@@ -177,14 +193,16 @@ RTN
 
 @draw-hex ( value -- )
 
-	DUP #04 SFT TOS 8** ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		( draw ) #01 .Screen/sprite DEO
-	#0f AND TOS 8** ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		( draw ) #01 .Screen/sprite DEO
+	AUTO-X
+	DUP #04 SFT ,&draw JSR
+	#0f AND ,&draw JSR
+	AUTO-X
 
 RTN
+	&draw
+		TOS 8** ;font-hex ++ .Screen/addr DEO2
+		( draw ) #01 .Screen/sprite DEO
+	RTN
 
 @draw-cursor ( -- )
 	
@@ -218,16 +236,6 @@ RTN
 
 RTN
 
-@print-hex ( value -- )
-	
-	STHk #04 SFT ,&parse JSR .Console/write DEO
-	STHr #0f AND ,&parse JSR .Console/write DEO
-	RTN
-	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 ADD RTN &above #09 SUB #60 ADD RTN
-
-RTN
-
 @cursor 
 	80c0 e0f0 f8e0 1000 
 
@@ -243,6 +251,20 @@ RTN
 	bfbf bfbf 9f40 3f00
 	fafa fafa f204 f800
 
+@names-icn
+	&and
+	fc02 027e 8286 fa00
+	bcc2 8282 8282 8200
+	fc82 8282 8282 fc00
+	&ora
+	7c82 8282 8282 7c00
+	fc82 82fc 8282 8200
+	fc02 027e 8286 fa00
+	&eor
+	8282 4438 4482 8200
+	7c82 8282 8282 7c00
+	fc82 82fc 8282 8200
+
 @font-hex ( 0-F )
 	007c 8282 8282 827c 0030 1010 1010 1010
 	007c 8202 7c80 80fe 007c 8202 1c02 827c
@@ -252,5 +274,4 @@ RTN
 	007c 8202 7e82 827e 00fc 8282 fc82 82fc
 	007c 8280 8080 827c 00fc 8282 8282 82fc
 	007c 8280 f080 827c 007c 8280 f080 8080
-
 
