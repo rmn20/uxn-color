@@ -54,6 +54,7 @@
 	&hx $2 &hy $2 
 	&mx $2 &my $2 
 	&sx $2 &sy $2
+	&zx $2 &zy $2
 @line
 	&x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 &dx $2 &dy $2 &e1 $2 &e2 $2 &color $1
 
@@ -86,11 +87,10 @@
 	( circle )
 	#3c00 
 	&loop
-		( load ) DUP TOS 2** ;table ++ LDA2
-		TOS #0010 ** #001c // .center/x LDZ2 ++ #0049 -- .Screen/x DEO2
-		TOS #0010 ** #001c // .center/y LDZ2 ++ #0049 -- .Screen/y DEO2
+		DUP TOS 2** ;table ++ LDA2 
+			#001c ;circle JSR2 .Screen/x DEO2 .Screen/y DEO2
 		DUP #0f MOD #00 EQU INC .Screen/pixel DEO
-		INC GTHk ,&loop JCN
+		INC GTHk ;&loop JCN2
 	POP2
 
 	LIT ': 
@@ -143,6 +143,8 @@ BRK
 	.center/x LDZ2 .center/y LDZ2 
 		OVR2 OVR2 
 		OVR2 OVR2
+		OVR2 OVR2
+		.needles/zx LDZ2 .needles/zy LDZ2 #02 STHkr * ;draw-line JSR2
 		.needles/sx LDZ2 .needles/sy LDZ2 #02 STHkr * ;draw-line JSR2
 		.needles/mx LDZ2 .needles/my LDZ2 #01 STHkr * ;draw-line JSR2
 		.needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
@@ -207,15 +209,24 @@ RTN
 
 @make-needles ( -- )
 
-	#00 .DateTime/second DEI 2** ;table ++ LDA2
-		TOS SCALEY .needles/sy STZ2
-		TOS SCALEX .needles/sx STZ2
-	#00 .DateTime/minute DEI 2** ;table ++ LDA2
-		TOS 20** RADIUS ++ #0024 // SCALEY #0007 ++ .needles/my STZ2
-		TOS 20** RADIUS ++ #0024 // SCALEX #0007 ++ .needles/mx STZ2
-	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
-		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/hy STZ2
-		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/hx STZ2
+	[ #00 .DateTime/second DEI #1e + #3c MOD ] 2** ;table ++ LDA2
+		#00a0 ,circle JSR .needles/zx STZ2 .needles/zy STZ2
+	[ #00 .DateTime/second DEI ] 2** ;table ++ LDA2
+		#0020 ,circle JSR .needles/sx STZ2 .needles/sy STZ2 
+	[ #00 .DateTime/minute DEI ] 2** ;table ++ LDA2
+		#0022 ,circle JSR .needles/mx STZ2 .needles/my STZ2 
+	[ #00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD ] 2** ;table ++ LDA2
+		#002a ,circle JSR .needles/hx STZ2 .needles/hy STZ2
+
+RTN
+
+@circle ( cx cy radius* -- )
+
+	STH2 SWP
+	TOS 10** STH2kr // .center/x LDZ2 ++ #0080 10** STH2kr // -- 
+	STH2 SWP2r
+	TOS 10** STH2kr // .center/y LDZ2 ++  #0080 10** STH2kr // --
+	POP2r STH2r
 
 RTN
 
