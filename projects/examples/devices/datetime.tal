@@ -83,7 +83,7 @@
 	.Screen/height DEI2 2// 
 		DUP2 .center/y STZ2
 		DUP2 #0078 -- .date/y STZ2
-		#0070 ++ .time/y STZ2
+		#006c ++ .time/y STZ2
 
 	( circle )
 	#3c00 
@@ -150,13 +150,17 @@ BRK
 
 	STH
 	.center/x LDZ2 .center/y LDZ2 
-		OVR2 OVR2 
-		OVR2 OVR2
 		OVR2 OVR2
 		.needles/zx LDZ2 .needles/zy LDZ2 #02 STHkr * ;draw-line JSR2
+		OVR2 OVR2
 		.needles/sx LDZ2 .needles/sy LDZ2 #02 STHkr * ;draw-line JSR2
+		OVR2 OVR2
 		.needles/mx LDZ2 .needles/my LDZ2 #01 STHkr * ;draw-line JSR2
+		OVR2 OVR2
 		.needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
+		#0001 -- .Screen/y DEO2 #0001 -- .Screen/x DEO2
+		;middle-icn .Screen/addr DEO2
+		#0a .Screen/sprite DEO
 
 RTN
 
@@ -224,7 +228,8 @@ RTN
 		#0020 ,circle JSR .needles/sx STZ2 .needles/sy STZ2 
 	[ #00 .DateTime/minute DEI ] 2** ;table ++ LDA2
 		#0022 ,circle JSR .needles/mx STZ2 .needles/my STZ2 
-	[ #00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD ] 2** ;table ++ LDA2
+	[ #00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD ]
+	( minute offset ) [ #00 .DateTime/minute DEI #0f / ++ ] 2** ;table ++ LDA2
 		#002a ,circle JSR .needles/hx STZ2 .needles/hy STZ2
 
 RTN
@@ -263,6 +268,9 @@ RTN
 	11c0 0bb4 06a7 029a 008d 0080 0072 0265
 	0658 0b4b 113f 1834 202a 2a20 3418 3f11
 	4b0b 5806 6502 7200
+
+@middle-icn
+	40e0 4000 0000 0000
 
 @font
 	&num
@@ -336,3 +344,4 @@ RTN
 	0202 0404 0808 1010 2020 4040 8080 0000
 	&blank
 	0000 0000 0000 0000 0000 0000 0000 0000
+
