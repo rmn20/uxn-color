@@ -7,6 +7,8 @@
 %++ { ADD2 } %-- { SUB2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
+%!~ { NEQk NIP }
+
 %2*   { #10 SFT } 
 %4*   { #20 SFT } %4/ { #02 SFT }
 %8*   { #30 SFT } %8/   { #03 SFT }
@@ -83,39 +85,31 @@
 	#0110 .Audio0/adsr DEO2
 	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
-	#dd .Audio0/volume DEO ( TODO: turn ON )
+	#dd .Audio0/volume DEO
 
 	( center )
 	.Screen/width DEI2 2// .center/x STZ2
 	.Screen/height DEI2 2// .center/y STZ2
 
 	.center/x LDZ2 #0020 -- 
-	DUP2 .keypad-frame/x STZ2
-		#0040 ++ .keypad-frame/x2 STZ2
+		DUP2 .keypad-frame/x STZ2 #0040 ++ .keypad-frame/x2 STZ2
 	.center/y LDZ2 #0018 -- 
-	DUP2 .keypad-frame/y STZ2
-		#003f ++ .keypad-frame/y2 STZ2
+		DUP2 .keypad-frame/y STZ2 #003f ++ .keypad-frame/y2 STZ2
 
 	.keypad-frame/x LDZ2
-	DUP2 .modpad-frame/x STZ2
-		#0040 ++ .modpad-frame/x2 STZ2
+		DUP2 .modpad-frame/x STZ2 #0040 ++ .modpad-frame/x2 STZ2
 	.keypad-frame/y LDZ2 #0040 ++
-	DUP2 .modpad-frame/y STZ2
-		#001f ++ .modpad-frame/y2 STZ2
+		DUP2 .modpad-frame/y STZ2 #001f ++ .modpad-frame/y2 STZ2
 
 	.keypad-frame/x LDZ2
-	DUP2 .bitpad-frame/x STZ2
-		#0040 ++ .bitpad-frame/x2 STZ2
+		DUP2 .bitpad-frame/x STZ2 #0040 ++ .bitpad-frame/x2 STZ2
 	.modpad-frame/y2 LDZ2 #0008 ++
-	DUP2 .bitpad-frame/y STZ2
-		#000f ++ .bitpad-frame/y2 STZ2
+		DUP2 .bitpad-frame/y STZ2 #000f ++ .bitpad-frame/y2 STZ2
 
 	.center/x LDZ2 #0020 -- 
-	DUP2 .input-frame/x STZ2
-		#0040 ++ .input-frame/x2 STZ2
+		DUP2 .input-frame/x STZ2 #0040 ++ .input-frame/x2 STZ2
 	.center/y LDZ2 #002a -- 
-	DUP2 .input-frame/y STZ2
-		#0010 ++ .input-frame/y2 STZ2
+		DUP2 .input-frame/y STZ2 #0010 ++ .input-frame/y2 STZ2
 
 	( theme support )
 	;load-theme JSR2
@@ -124,40 +118,26 @@ BRK
 
 @on-button ( -> )
 
-	.Controller/key DEI #00 ! ,&continue JCN
-		;redraw JSR2 BRK
-		&continue
-
 	.Controller/key DEI 
-	DUP #0d ! ,&no-enter JCN
-		;do-push JSR2 POP BRK
-		&no-enter
-	( arithmetic )
-	DUP LIT '+ ! ,&no-add JCN 
-		;do-add JSR2 POP BRK &no-add
-	DUP LIT '- ! ,&no-sub JCN 
-		;do-sub JSR2 POP BRK &no-sub
-	DUP LIT '* ! ,&no-mul JCN 
-		;do-mul JSR2 POP BRK &no-mul
-	DUP LIT '/ ! ,&no-div JCN 
-		;do-div JSR2 POP BRK &no-div
-	( bitwise )
-	DUP LIT '& ! ,&no-and JCN 
-		;do-and JSR2 POP BRK &no-and
-	DUP LIT '| ! ,&no-ora JCN 
-		;do-ora JSR2 POP BRK &no-ora
-	DUP LIT '^ ! ,&no-eor JCN 
-		;do-eor JSR2 POP BRK &no-eor
-	DUP LIT '~ ! ,&no-not JCN 
-		;do-not JSR2 POP BRK &no-not
-	( clear )
-	DUP #1b ! ,&no-esc JCN
-		;do-pop JSR2 POP BRK &no-esc
-	DUP #08 ! ,&no-backspace JCN
+	( generics )
+	#00 !~ ,&no-release JCN ;redraw JSR2 POP BRK &no-release
+	#0d !~ ,&no-enter JCN ;do-push JSR2 POP BRK &no-enter
+	#1b !~ ,&no-esc JCN ;do-pop JSR2 POP BRK &no-esc
+	#08 !~ ,&no-backspace JCN
 		.input/value LDZ2 #04 SFT2 .input/value STZ2
-		#ff ;draw-input JSR2
-		POP BRK
+		#ff ;draw-input JSR2 POP BRK
 		&no-backspace
+	( arithmetic )
+	LIT '+ !~ ,&no-add JCN ;do-add JSR2 POP BRK &no-add
+	LIT '- !~ ,&no-sub JCN ;do-sub JSR2 POP BRK &no-sub
+	LIT '* !~ ,&no-mul JCN ;do-mul JSR2 POP BRK &no-mul
+	LIT '/ !~ ,&no-div JCN ;do-div JSR2 POP BRK &no-div
+	( bitwise )
+	LIT '& !~ ,&no-and JCN ;do-and JSR2 POP BRK &no-and
+	LIT '| !~ ,&no-ora JCN ;do-ora JSR2 POP BRK &no-ora
+	LIT '^ !~ ,&no-eor JCN ;do-eor JSR2 POP BRK &no-eor
+	LIT '~ !~ ,&no-not JCN ;do-not JSR2 POP BRK &no-not
+	( value )
 	;key-value JSR2 ;push-input JSR2
 
 BRK
@@ -182,14 +162,10 @@ BRK
 		.Mouse/state DEI .pointer/last STZ
 		POP2
 		.Mouse/x DEI2 .Mouse/y DEI2 
-		OVR2 OVR2 .keypad-frame 
-			;within-rect JSR2 ;click-keypad JCN2
-		OVR2 OVR2 .input-frame 
-			;within-rect JSR2 ;click-input JCN2
-		OVR2 OVR2 .modpad-frame 
-			;within-rect JSR2 ;click-modpad JCN2
-		OVR2 OVR2 .bitpad-frame 
-			;within-rect JSR2 ;click-bitpad JCN2
+		OVR2 OVR2 .keypad-frame ;within-rect JSR2 ;click-keypad JCN2
+		OVR2 OVR2 .input-frame ;within-rect JSR2 ;click-input JCN2
+		OVR2 OVR2 .modpad-frame ;within-rect JSR2 ;click-modpad JCN2
+		OVR2 OVR2 .bitpad-frame ;within-rect JSR2 ;click-bitpad JCN2
 		POP2 POP2
 		BRK
 		&no-down
@@ -217,17 +193,7 @@ BRK
 
 	( y ) .modpad-frame/y LDZ2 -- #24 SFT2 NIP STH
 	( x ) .modpad-frame/x LDZ2 -- 10// 
-	( value ) NIP STHr +
-	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
-	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
-	DUP #02 ! ,&no-mul JCN ;do-mul JSR2 &no-mul
-	DUP #03 ! ,&no-div JCN ;do-div JSR2 &no-div
-	DUP #04 ! ,&no-and JCN ;do-and JSR2 &no-and
-	DUP #05 ! ,&no-ora JCN ;do-ora JSR2 &no-ora
-	DUP #06 ! ,&no-eor JCN ;do-eor JSR2 &no-eor
-	DUP #07 ! ,&no-not JCN ;do-not JSR2 &no-not
-	POP
-
+	( lookup ) STHr + 2** ;keypad/ops ++ LDA2 JSR2
 	;draw-bitpad JSR2
 	RELEASE-MOUSE
 
@@ -595,22 +561,13 @@ RTN
 
 	#10 #00
 	&loop
-		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 2MOD2 NIP STH
-		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ STH2
-		( x ) DUP 8MOD TOS 8** .bitpad-frame/x LDZ2 ++
-		STH2r STHr #01 ,draw-bit JSR
+		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ .Screen/y DEO2
+		( x ) DUP 8MOD TOS 8** .bitpad-frame/x LDZ2 ++ .Screen/x DEO2
+		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 2MOD2 
+		( addr ) 8** ;bit-icns ++ .Screen/addr DEO2
+		#01 .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
-
-RTN
-
-@draw-bit ( x* y* state color -- )
-
-	STH
-	( addr ) 8* TOS ;bit-icns ++ .Screen/addr DEO2 
-	( y ) .Screen/y DEO2
-	( x ) .Screen/x DEO2
-	STHr .Screen/sprite DEO	
 
 RTN
 
@@ -628,8 +585,7 @@ RTN
 	,&color LDR .Screen/sprite DEO
 	.Screen/x DEI2 #0010 -- .Screen/x DEO2
 	.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-	,&color LDR .Screen/sprite DEO
-	,&color LDR .Screen/sprite DEO
+	,&color LDR .Screen/sprite DEOk DEO
 	( glyph )
 	,&glyph LDR2 .Screen/addr DEO2
 	.Screen/x DEI2 #000c -- .Screen/x DEO2
@@ -650,8 +606,7 @@ RTN
 	( y ) .Screen/y DEO2
 	( x ) .Screen/x DEO2
 	( draw background )
-	,&color LDR .Screen/sprite DEO
-	,&color LDR .Screen/sprite DEO
+	,&color LDR .Screen/sprite DEOk DEO
 	( glyph )
 	,&glyph LDR2 .Screen/addr DEO2
 	.Screen/y DEI2 #000c -- .Screen/y DEO2
@@ -742,6 +697,9 @@ RTN
 		0101 0102
 		0101 0102
 		0102 0202
+	&ops
+		:do-add :do-sub :do-mul :do-div
+		:do-and :do-ora :do-eor :do-not
 
 @sin-pcm
 	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
@@ -783,29 +741,29 @@ RTN
 	0000 0060 920c 0000
 
 @button-icns
-	&outline
+	( outline )
 		3f40 8080 8080 8080
 		f804 0202 0202 0202
 		8080 8080 8040 3f00
 		0202 0202 0204 f800
-	&full
+	( full )
 		3f7f ffff ffff ffff
 		f8fc fefe fefe fefe
 		ffff ffff ff7f 3f00
 		fefe fefe fefc f800
 
 @button-thin-icns
-	&outline
+	( outline )
 		3844 8282 8282 8282
 		8282 8282 8244 3800
-	&full
+	( full )
 		387c fefe fefe fefe
 		fefe fefe fe7c 3800
 
 @bit-icns
-	&outline
+	( outline )
 		3844 8282 8244 3800
-	&full
+	( full )
 		387c fefe fe7c 3800
 
 @stack-icns
