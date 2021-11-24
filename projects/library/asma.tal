@@ -188,6 +188,9 @@
 )
 
 @asma-init-first-pass ( -- )
+	LIT2 POP2 POP EOR ;asma-parse-opcode/short-flag STA
+	LIT2 POPr POP EOR ;asma-parse-opcode/return-flag STA
+	LIT2 POPk POP EOR ;asma-parse-opcode/keep-flag STA
 	#ff ;asma/pass STA
 	#0000 DUP2k
 		;asma/error STA2
@@ -401,10 +404,6 @@
 	#00
 	JMP2r
 
-%asma-SHORT-FLAG { #20 }
-%asma-RETURN-FLAG { #40 }
-%asma-KEEP-FLAG { #80 }
-
 ~projects/library/string.tal
 
 @asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
@@ -441,15 +440,15 @@
 
 	&not-end
 	DUP LIT '2 NEQ ,&not-two JCN
-	POP asma-SHORT-FLAG ORA ,&loop JMP
+	POP LIT &short-flag $1 ORA ,&loop JMP
 
 	&not-two
 	DUP LIT 'r NEQ ,&not-return JCN
-	POP asma-RETURN-FLAG ORA ,&loop JMP
+	POP LIT &return-flag $1 ORA ,&loop JMP
 
 	&not-return
 	LIT 'k NEQ ,&not-keep JCN
-	&set-keep asma-KEEP-FLAG ORA ,&loop JMP
+	&set-keep LIT &keep-flag $1 ORA ,&loop JMP
 
 	&not-keep ( 00 byte / end* )
 	&not-found ( incoming-ptr* / end* )
