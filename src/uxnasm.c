@@ -282,8 +282,6 @@ parsetoken(char *w)
 		pushbyte((Uint8)w[1], 0);
 		return 1;
 	} else if(w[0] == '#') { /* immediate */
-		if(slen(w + 1) == 1)
-			pushbyte((Uint8)w[1], 1);
 		if(sihx(w + 1) && slen(w + 1) == 2)
 			pushbyte(shex(w + 1), 1);
 		else if(sihx(w + 1) && slen(w + 1) == 4)
