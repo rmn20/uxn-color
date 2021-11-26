@@ -22,6 +22,7 @@
 
 %WIDTH { #40 }   %HEIGHT { #40 }
 %WIDTH-MOD { #3f AND }   %HEIGHT-MOD { #3f AND }
+%IN-RANGE { INCk SWP SUB2 GTH }
 
 %BANK1 { #8000 } %BANK2 { #a000 }
 
@@ -32,6 +33,7 @@
 ( devices )
 
 |00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g     $2 &b      $2 ]
+|10 @Console    [ &vector $2 &read $1 &pad    $5 &write $1 &error  $1 ]
 |20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr  $2 &pixel $1 &sprite $1 ]
 |30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
 |80 @Controller [ &vector $2 &button   $1 &key    $1 ]
@@ -44,6 +46,7 @@
 @world   [ &frame $1 &count $2 ]
 @anchor  [ &x $2 &y $2 ]
 @pointer [ &x $2 &y $2 ]
+@rle     [ &x $1 &y $1 &n $1 ]
 
 ( program )
 
@@ -55,6 +58,7 @@
 	#024f .System/b DEO2
 
 	( vectors )
+	;on-input   .Console/vector DEO2
 	;on-frame   .Screen/vector DEO2
 	;on-mouse   .Mouse/vector DEO2
 	;on-control .Controller/vector DEO2
@@ -229,6 +233,15 @@ RTN
 
 RTN
 
+@unset-cell ( x y -- )
+	
+	DUP2 ,get-index JSR STH2
+	POP 8MOD #01 SWP SFL #ff EOR
+	LDAkr STHr SWP AND
+	STH2r STA
+
+RTN
+
 @get-cell ( x y -- cell )
 	
 	DUP2 ,get-index JSR LDA 
@@ -268,6 +281,67 @@ RTN
 	( draw ) STHr .Screen/sprite DEO
 
 RTN
+
+@on-input ( -> )
+	,&main JSR
+	BRK
+
+	&main
+	.Console/read DEI #20 GTH JMP JMP2r ( ignore whitespace )
+	.Console/read DEI LIT 'b EQU ,unset-run JCN
+	.Console/read DEI LIT 'o EQU ,set-run JCN
+	.Console/read DEI LIT '$ EQU ,input-eol JCN
+	.Console/read DEI LIT '! EQU ,input-eop JCN
+	LIT2 '0 '9 .Console/read DEI IN-RANGE ,input-number JCN
+	#44 .Console/write DEO
+	;on-ignore-until-eol .Console/vector DEO2
+	JMP2r
+
+@unset-run ( -- )
+	;unset-cell ,run JMP ( tail call )
+
+@set-run ( -- )
+	;set-cell ( fall through )
+
+@run ( cell-fn* -- )
+	STH2
+	;on-frame-paused .Screen/vector DEO2
+	.rle/n LDZk #00 ROT STZ
+	DUP #00 NEQ JMP INC
+	&loop ( count / cell-fn* )
+		DUP #00 EQU ,&end JCN
+		.rle/x LDZ .rle/y LDZ STH2kr JSR2
+		.rle/x LDZk INC SWP STZ
+		#01 SUB
+		,&loop JMP
+	&end
+	POP POP2r
+	JMP2r
+
+@input-number ( -- )
+	.rle/n LDZk #0a MUL
+		.Console/read DEI LIT '0 SUB
+		ADD SWP STZ
+	JMP2r
+
+@input-eol ( -- )
+	WIDTH .rle/x LDZ SUB .rle/n STZ
+	,unset-run JSR
+	#00 .rle/x STZ
+	.rle/y LDZk INC SWP STZ
+	JMP2r
+
+@input-eop ( -- )
+	,input-eol JSR
+	HEIGHT .rle/y LDZ GTH ,input-eop JCN
+	;on-frame .Screen/vector DEO2
+	#00 .rle/y STZ
+	BRK
+
+@on-ignore-until-eol ( -> )
+	.Console/read DEI #0a EQU JMP BRK
+	;on-input .Console/vector DEO2
+	BRK
 
 @cursor 
 	80c0 e0f0 f8e0 1000
