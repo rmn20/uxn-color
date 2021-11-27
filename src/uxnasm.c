@@ -72,6 +72,12 @@ error(const char *name, const char *msg)
 	return 0;
 }
 
+static char *
+sublabel(char *src, char *scope, char *name)
+{
+	return scat(scat(scpy(scope, src, 64), "/"), name);
+}
+
 static Macro *
 findmacro(char *name)
 {
@@ -161,6 +167,23 @@ makelabel(char *name)
 	return 1;
 }
 
+static int
+makereference(char *scope, char *label, Uint16 addr)
+{
+	char subw[64];
+	Reference *r;
+	if(p.rlen == 2048)
+		return error("Too many references", label);
+	r = &p.refs[p.rlen++];
+	if(label[1] == '&')
+		scpy(sublabel(subw, scope, label + 2), r->name, 64);
+	else
+		scpy(label + 1, r->name, 64);
+	r->rune = label[0];
+	r->addr = addr;
+	return 1;
+}
+
 static void
 writebyte(Uint8 b)
 {
@@ -190,25 +213,6 @@ writelitbyte(Uint8 b)
 	writebyte(findopcode("LIT"));
 	writebyte(b);
 	litlast = 1;
-}
-
-static char *
-sublabel(char *src, char *scope, char *name)
-{
-	return scat(scat(scpy(scope, src, 64), "/"), name);
-}
-
-static void
-prefill(char *scope, char *label, Uint16 addr)
-{
-	char subw[64];
-	Reference *r = &p.refs[p.rlen++];
-	if(label[1] == '&')
-		scpy(sublabel(subw, scope, label + 2), r->name, 64);
-	else
-		scpy(label + 1, r->name, 64);
-	r->rune = label[0];
-	r->addr = addr;
 }
 
 static int
@@ -274,19 +278,19 @@ tokenize(char *w, FILE *f)
 			writeshort(shex(w + 1), 1);
 		break;
 	case '.': /* literal byte zero-page */
-		prefill(p.scope, w, p.ptr - litlast);
+		makereference(p.scope, w, p.ptr - litlast);
 		writelitbyte(0xff);
 		break;
 	case ',': /* literal byte relative */
-		prefill(p.scope, w, p.ptr - litlast);
+		makereference(p.scope, w, p.ptr - litlast);
 		writelitbyte(0xff);
 		break;
 	case ';': /* literal short absolute */
-		prefill(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr);
 		writeshort(0xffff, 1);
 		break;
 	case ':': /* raw short absolute */
-		prefill(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr);
 		writeshort(0xffff, 0);
 		break;
 	case '\'': /* raw char */
