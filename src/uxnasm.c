@@ -264,10 +264,12 @@ tokenize(char *w, FILE *f)
 		if(!makelabel(w + 1))
 			return error("Invalid label", w);
 		scpy(w + 1, p.scope, 64);
+		litlast = 0;
 		break;
 	case '&': /* sublabel */
 		if(!makelabel(sublabel(subw, p.scope, w + 1)))
 			return error("Invalid sublabel", w);
+		litlast = 0;
 		break;
 	case '#': /* literals hex */
 		if(!sihx(w + 1) || (slen(w) != 3 && slen(w) != 5))
