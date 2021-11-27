@@ -99,8 +99,8 @@ BRK
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
 	( select choice )
-	.Mouse/y DEI2 
-		10// NIP #01 - ;select-file JSR2
+	.Mouse/y DEI2 .browser/y LDZ2 --
+		10// NIP ;select-file JSR2
 
 	.Mouse/state DEI #00 = ,&no-click JCN
 		.browser/sel LDZ ;run-file JSR2
@@ -180,6 +180,8 @@ RTN
 		POP RTN
 		&has-changed
 
+	DUP ;scroll-browser JSR2
+
 	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
 	#0010 #0010 
 		;hand-icn #00 ;draw-icn JSR2
@@ -200,6 +202,29 @@ RTN
 		;draw-icn JSR2
 
 RTN
+
+( Scroll the browser to accomodate off-screen line items )
+@scroll-browser ( id -- )
+	( Check whether the selection moved up or down )
+	.browser/last LDZ OVR SWP SUB #80 AND ,&negative JCN
+
+	&positive ( The selection moved down )
+	( Calculate the id currently at the bottom of the screen )
+	.Screen/height DEI2 .browser/y LDZ2 #0010 ++ -- 10// NIP
+	GTH ,&scroll-up JCN [ RTN ]
+	&scroll-up
+		.browser/y LDZ2k #0010 -- ROT STZ2
+		RTN
+
+	&negative ( The selection moved up )
+	( Calculate the id currently at the top of the screen )
+	( TODO make a macro constant for y initial pos )
+	#0010 .browser/y LDZ2 -- 10// NIP
+
+	LTH ,&scroll-down JCN [ RTN ]
+	&scroll-down
+		.browser/y LDZ2k #0010 ++ ROT STZ2 ( Decrement y by 0x10 )
+		RTN
 
 @run-file ( id -- )
 
@@ -236,11 +261,13 @@ RTN
 	.browser/y LDZ2 .Screen/y DEO2
 	SEL-ENTRY ;dir/entries
 	&outer ( selected-entry* this-entry* )
+		.Screen/y DEI2 #0010 LTH2 ,&inc JCN ( Don't draw anything in the first row )
 		EQU2k #0c * #01 + STH
 		LDA2k ORAk #00 = ,&end JCN
+		,&clear JSR
 		STHr ,&draw-one JSR
 		.browser/x LDZ2 .Screen/x DEO2
-		.Screen/y DEI2 #0010 ++ .Screen/y DEO2
+		&inc .Screen/y DEI2 #0010 ++ .Screen/y DEO2
 		INC2 INC2 ,&outer JMP
 	&end
 	POP2 POP2 POP2 POPr
@@ -259,6 +286,20 @@ RTN
 		&skip
 		INC2 LDAk ,&loop JCN
 	POP2 POPr
+RTN
+
+	&clear ( -- )
+	.Screen/x DEI2k ( Stash the current x pos )
+	#ff00
+	&clear-loop
+		#00 .Screen/sprite DEO
+		.Screen/y DEI2k #0008 ++ ROT DEO2
+		#00 .Screen/sprite DEO
+		.Screen/y DEI2k #0008 -- ROT DEO2
+		.Screen/x DEI2k #0008 ++ ROT DEO2
+		INC NEQk ,&clear-loop JCN
+	POP2
+	ROT DEO2
 RTN
 
 @draw-time ( -- )
