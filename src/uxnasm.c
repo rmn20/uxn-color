@@ -14,10 +14,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define TRIM 0x0100
 #define LENGTH 0x10000
 
-#define REFERENCES 2048
-#define LABELS 512
-#define MACROS 256
-
 typedef unsigned char Uint8;
 typedef signed char Sint8;
 typedef unsigned short Uint16;
@@ -40,9 +36,9 @@ typedef struct {
 typedef struct {
 	Uint8 data[LENGTH];
 	Uint16 ptr, length, llen, mlen, rlen;
-	Label labels[LABELS];
-	Macro macros[MACROS];
-	Reference refs[REFERENCES];
+	Label labels[512];
+	Macro macros[256];
+	Reference refs[2048];
 	char scope[64];
 } Program;
 
@@ -132,7 +128,7 @@ makemacro(char *name, FILE *f)
 		return error("Macro name is hex number", name);
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Macro name is invalid", name);
-	if(p.mlen == MACROS)
+	if(p.mlen == 256)
 		return error("Too many macros", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
@@ -156,26 +152,12 @@ makelabel(char *name)
 		return error("Label name is hex number", name);
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Label name is invalid", name);
-	if(p.llen == LABELS)
+	if(p.llen == 512)
 		return error("Too many labels", name);
 	l = &p.labels[p.llen++];
 	l->addr = p.ptr;
 	l->refs = 0;
 	scpy(name, l->name, 64);
-	return 1;
-}
-
-static int
-doinclude(const char *filename)
-{
-	FILE *f;
-	char w[64];
-	if(!(f = fopen(filename, "r")))
-		return error("Include failed to open", filename);
-	while(fscanf(f, "%63s", w) == 1)
-		if(!tokenize(w, f))
-			return error("Unknown token", w);
-	fclose(f);
 	return 1;
 }
 
@@ -229,6 +211,20 @@ prefill(char *scope, char *label, Uint16 addr)
 		scpy(label + 1, r->name, 64);
 	r->rune = label[0];
 	r->addr = addr;
+}
+
+static int
+doinclude(const char *filename)
+{
+	FILE *f;
+	char w[64];
+	if(!(f = fopen(filename, "r")))
+		return error("Include failed to open", filename);
+	while(fscanf(f, "%63s", w) == 1)
+		if(!tokenize(w, f))
+			return error("Unknown token", w);
+	fclose(f);
+	return 1;
 }
 
 static int
@@ -368,18 +364,6 @@ resolve(void)
 	return 1;
 }
 
-static void
-review(char *filename)
-{
-	int i;
-	for(i = 0; i < p.llen; ++i)
-		if(p.labels[i].name[0] >= 'A' && p.labels[i].name[0] <= 'Z')
-			continue; /* Ignore capitalized labels(devices) */
-		else if(!p.labels[i].refs)
-			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	fprintf(stderr, "Assembled %s in %d bytes(%.2f%% used), %d labels, %d macros.\n", filename, p.length - TRIM, p.length / 652.80, p.llen, p.mlen);
-}
-
 static int
 assemble(FILE *f)
 {
@@ -390,6 +374,18 @@ assemble(FILE *f)
 			return error("Unknown token", w);
 	resolve();
 	return 1;
+}
+
+static void
+review(char *filename)
+{
+	int i;
+	for(i = 0; i < p.llen; ++i)
+		if(p.labels[i].name[0] >= 'A' && p.labels[i].name[0] <= 'Z')
+			continue; /* Ignore capitalized labels(devices) */
+		else if(!p.labels[i].refs)
+			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
+	fprintf(stderr, "Assembled %s in %d bytes(%.2f%% used), %d labels, %d macros.\n", filename, p.length - TRIM, p.length / 652.80, p.llen, p.mlen);
 }
 
 int
