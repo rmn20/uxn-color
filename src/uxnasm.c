@@ -162,9 +162,8 @@ makelabel(char *name)
 }
 
 static void
-writebyte(Uint8 b, int lit)
+writebyte(Uint8 b)
 {
-	if(lit) writebyte(findopcode("LIT"), 0);
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
@@ -173,9 +172,10 @@ writebyte(Uint8 b, int lit)
 static void
 writeshort(Uint16 s, int lit)
 {
-	if(lit) writebyte(findopcode("LIT2"), 0);
-	writebyte((s >> 8) & 0xff, 0);
-	writebyte(s & 0xff, 0);
+	if(lit)
+		writebyte(findopcode("LIT2"));
+	writebyte(s >> 8);
+	writebyte(s & 0xff);
 }
 
 static void
@@ -185,12 +185,10 @@ writelitbyte(Uint8 b)
 		Uint8 hb = p.data[p.ptr - 1];
 		p.ptr -= 2;
 		writeshort((hb << 8) + b, 1);
-		litlast = 0;
 		return;
 	}
-	p.data[p.ptr++] = findopcode("LIT");
-	p.data[p.ptr++] = b;
-	p.length = p.ptr;
+	writebyte(findopcode("LIT"));
+	writebyte(b);
 	litlast = 1;
 }
 
@@ -292,22 +290,22 @@ tokenize(char *w, FILE *f)
 		writeshort(0xffff, 0);
 		break;
 	case '\'': /* raw char */
-		writebyte((Uint8)w[1], 0);
+		writebyte((Uint8)w[1]);
 		break;
 	case '"': /* raw string */
 		i = 0;
 		while((c = w[++i]))
-			writebyte(c, 0);
+			writebyte(c);
 		break;
 	case '[': break; /* ignored */
 	case ']': break; /* ignored */
 	default:
 		/* opcode */
 		if(findopcode(w) || scmp(w, "BRK", 4))
-			writebyte(findopcode(w), 0);
+			writebyte(findopcode(w));
 		/* raw byte */
 		else if(sihx(w) && slen(w) == 2)
-			writebyte(shex(w), 0);
+			writebyte(shex(w));
 		/* raw short */
 		else if(sihx(w) && slen(w) == 4)
 			writeshort(shex(w), 0);
