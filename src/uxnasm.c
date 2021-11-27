@@ -47,6 +47,7 @@ typedef struct {
 } Program;
 
 Program p;
+static int litlast = 0;
 
 /* clang-format off */
 
@@ -184,6 +185,7 @@ writebyte(Uint8 b, int lit)
 	if(lit) writebyte(findopcode("LIT"), 0);
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
+	litlast = 0;
 }
 
 static void
@@ -192,6 +194,22 @@ writeshort(Uint16 s, int lit)
 	if(lit) writebyte(findopcode("LIT2"), 0);
 	writebyte((s >> 8) & 0xff, 0);
 	writebyte(s & 0xff, 0);
+}
+
+static void
+writelitbyte(Uint8 b)
+{
+	if(litlast) { /* combine literals */
+		Uint8 hb = p.data[p.ptr - 1];
+		p.ptr -= 2;
+		writeshort((hb << 8) + b, 1);
+		litlast = 0;
+		return;
+	}
+	p.data[p.ptr++] = findopcode("LIT");
+	p.data[p.ptr++] = b;
+	p.length = p.ptr;
+	litlast = 1;
 }
 
 static char *
@@ -216,11 +234,9 @@ prefill(char *scope, char *label, Uint16 addr)
 static int
 tokenize(char *w, FILE *f)
 {
-	char word[64];
-	char subw[64];
-	char c;
-	Macro *m;
 	int i = 0;
+	char word[64], subw[64], c;
+	Macro *m;
 	if(slen(w) >= 63)
 		return error("Invalid token", w);
 	switch(w[0]) {
@@ -259,14 +275,17 @@ tokenize(char *w, FILE *f)
 		if(!sihx(w + 1) || (slen(w) != 3 && slen(w) != 5))
 			return error("Invalid hex literal", w);
 		if(slen(w) == 3)
-			writebyte(shex(w + 1), 1);
+			writelitbyte(shex(w + 1));
 		else if(slen(w) == 5)
 			writeshort(shex(w + 1), 1);
 		break;
 	case '.': /* literal byte zero-page */
+		prefill(p.scope, w, p.ptr - litlast);
+		writelitbyte(0xff);
+		break;
 	case ',': /* literal byte relative */
-		prefill(p.scope, w, p.ptr);
-		writebyte(0xff, 1);
+		prefill(p.scope, w, p.ptr - litlast);
+		writelitbyte(0xff);
 		break;
 	case ';': /* literal short absolute */
 		prefill(p.scope, w, p.ptr);
