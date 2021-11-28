@@ -293,7 +293,6 @@ RTN
 	.Console/read DEI LIT '$ EQU ,input-eol JCN
 	.Console/read DEI LIT '! EQU ,input-eop JCN
 	LIT2 '0 '9 .Console/read DEI IN-RANGE ,input-number JCN
-	#44 .Console/write DEO
 	;on-ignore-until-eol .Console/vector DEO2
 	JMP2r
 
