@@ -641,9 +641,11 @@
 	#00 JMP2r
 
 @asma-pad-absolute
+	;asma-flush-lit JSR2
 	#0000 ,asma-pad-helper JMP
 
 @asma-pad-relative
+	;asma-flush-lit JSR2
 	;asma/addr LDA2
 	( fall through )
 

@@ -254,11 +254,13 @@ tokenize(char *w, FILE *f)
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr = shex(w + 1);
+		litlast = 0;
 		break;
 	case '$': /* pad-relative */
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr += shex(w + 1);
+		litlast = 0;
 		break;
 	case '@': /* label */
 		if(!makelabel(w + 1))
