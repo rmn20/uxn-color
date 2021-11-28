@@ -156,10 +156,7 @@ JMP2r
 		DUP ( get rocks_y[i] )
 		;rocks_y ROT #00 SWP ADD2 out_screen_y
 
-		( DUP ( get color bitwise ) )
-		( ;r_color LDA SWP get_bit_n #41 ADD .Screen/sprite DEO )
-
-		DUP
+		DUP ( get color )
 		;r_color ROT #00 SWP ADD2 LDA #41 ADD .Screen/sprite DEO
 
 		INC
