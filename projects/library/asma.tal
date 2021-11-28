@@ -222,6 +222,7 @@
 	;asma-read-buffer DUP2 ;asma-read-buffer/end ROT2 SUB2 ( func* line^ filename* buf* size^ )
 	ROT2 ( func* line^ buf* size^ filename* )
 	,file-read-chunks JSR
+	;asma-flush-lit JSR2
 
 	asma-IF-ERROR ,&error JCN
 
@@ -294,7 +295,7 @@
 
 @asma [
 	&pass $1 &state $1 &line $2 &lines $2 &break $1 &eof $1
-	&token $2 &orig-token $2
+	&token $2 &orig-token $2 &lit $1 &lit-present $1
 	&addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
 	&error $2 &log-level $1
@@ -462,7 +463,32 @@
 	,asma-write-byte JSR
 	,asma-write-byte JMP ( tail call )
 
+@asma-write-lit ( byte -- )
+	;asma/lit LDA2 ,&present JCN
+	POP #01 ;asma/lit STA2
+	;asma/addr LDA2k INC2 SWP2 STA2
+	JMP2r
+	&present
+	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	LIT LIT2 ,asma-write-byte/raw JSR
+	,asma-write-byte/raw JSR
+	,asma-write-byte/raw JSR
+	#0000 ;asma/lit STA2
+	JMP2r
+
+@asma-flush-lit ( -- )
+	;asma/lit LDA2 ,&present JCN
+	POP JMP2r
+	&present
+	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	LIT LIT ,asma-write-byte/raw JSR
+	,asma-write-byte/raw JSR
+	#0000 ;asma/lit STA2
+	JMP2r
+
 @asma-write-byte ( byte -- )
+	,asma-flush-lit JSR
+	&raw
 	;asma/addr LDA2 ;asma/written-addr LDA2
 	LTH2k ,&rewound JCN
 	&loop
@@ -574,6 +600,7 @@
 	JMP2r
 
 @asma-label-define
+	;asma-flush-lit JSR2
 	;asma-trees/labels ,asma-label-helper JSR
 	,&already-existed JCN
 
@@ -584,6 +611,7 @@
 	JMP2r
 
 @asma-sublabel-define
+	;asma-flush-lit JSR2
 	;asma-trees/scope LDA2 ,asma-label-helper JSR
 	POP POP2
 	JMP2r
@@ -659,9 +687,8 @@
 	;asma-write-short JMP2 ( tail call )
 
 @asma-literal-zero-addr
-	LIT LIT ;asma-write-byte JSR2
 	,asma-addr-helper JSR
-	;asma-write-byte JSR2
+	;asma-write-lit JSR2
 
 	,&not-zero-page JCN
 	JMP2r
@@ -675,8 +702,7 @@
 	JMP2r
 
 @asma-literal-rel-addr
-	LIT LIT ;asma-write-byte JSR2
-	,asma-addr-helper JSR ;asma/addr LDA2 SUB2 #0002 SUB2
+	,asma-addr-helper JSR ;asma/addr LDA2 SUB2 #0003 SUB2
 
 	DUP2 #0080 LTH2 STH
 	DUP2 #ff7f GTH2 STHr ORA ,&in-bounds JCN
@@ -686,7 +712,7 @@
 	JMP2r
 
 	&in-bounds
-	;asma-write-byte JSR2
+	;asma-write-lit JSR2
 	POP
 	JMP2r
 
@@ -746,7 +772,9 @@
 	JMP2r
 
 @asma-byte-helper ( dummy value -- )
-	LIT LIT ;asma-write-byte JSR2
+	;asma-write-lit JSR2
+	POP
+	JMP2r
 	&raw
 	;asma-write-byte JSR2
 	POP
