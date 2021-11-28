@@ -466,10 +466,10 @@
 @asma-write-lit ( byte -- )
 	;asma/lit LDA2 ,&present JCN
 	POP #01 ;asma/lit STA2
-	;asma/addr LDA2k INC2 SWP2 STA2
+	;asma/addr LDA2k INC2 INC2 SWP2 STA2
 	JMP2r
 	&present
-	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	;asma/addr LDA2k #0002 SUB2 SWP2 STA2
 	LIT LIT2 ,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
@@ -480,7 +480,7 @@
 	;asma/lit LDA2 ,&present JCN
 	POP JMP2r
 	&present
-	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	;asma/addr LDA2k #0002 SUB2 SWP2 STA2
 	LIT LIT ,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	#0000 ;asma/lit STA2
@@ -702,7 +702,9 @@
 	JMP2r
 
 @asma-literal-rel-addr
-	,asma-addr-helper JSR ;asma/addr LDA2 SUB2 #0003 SUB2
+	,asma-addr-helper JSR
+	;asma/addr LDA2 SUB2
+	#0003 ;asma/lit-present LDA SUB SUB2
 
 	DUP2 #0080 LTH2 STH
 	DUP2 #ff7f GTH2 STHr ORA ,&in-bounds JCN
