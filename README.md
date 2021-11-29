@@ -97,4 +97,4 @@ uxnemu orca.rom | shim
 
 ## Need a hand?
 
-Find us in `#uxn`, on irc.esper.net
+Find us in [`#uxn` on irc.esper.net](ircs://irc.esper.net:6697/#uxn).
