@@ -135,14 +135,16 @@ makemacro(char *name, FILE *f)
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Macro name is invalid", name);
 	if(p.mlen == 256)
-		return error("Too many macros", name);
+		return error("Macros limit exceeded", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
 	while(fscanf(f, "%63s", word) == 1) {
 		if(word[0] == '{') continue;
 		if(word[0] == '}') break;
-		if(m->len > 64)
-			return error("Macro too large", name);
+		if(word[0] == '%')
+			return error("Macro error", name);
+		if(m->len >= 64)
+			return error("Macro size exceeded", name);
 		scpy(word, m->items[m->len++], 64);
 	}
 	return 1;
@@ -159,7 +161,7 @@ makelabel(char *name)
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Label name is invalid", name);
 	if(p.llen == 512)
-		return error("Too many labels", name);
+		return error("Labels limit exceeded", name);
 	l = &p.labels[p.llen++];
 	l->addr = p.ptr;
 	l->refs = 0;
@@ -173,7 +175,7 @@ makereference(char *scope, char *label, Uint16 addr)
 	char subw[64];
 	Reference *r;
 	if(p.rlen == 2048)
-		return error("Too many references", label);
+		return error("References limit exceeded", label);
 	r = &p.refs[p.rlen++];
 	if(label[1] == '&')
 		scpy(sublabel(subw, scope, label + 2), r->name, 64);
@@ -187,6 +189,8 @@ makereference(char *scope, char *label, Uint16 addr)
 static void
 writebyte(Uint8 b)
 {
+	if(p.ptr < TRIM)
+		fprintf(stderr, "-- Writing in zero-page: %02x\n", b);
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
@@ -221,7 +225,7 @@ doinclude(const char *filename)
 	FILE *f;
 	char w[64];
 	if(!(f = fopen(filename, "r")))
-		return error("Include failed to open", filename);
+		return error("Include missing", filename);
 	while(fscanf(f, "%63s", w) == 1)
 		if(!tokenize(w, f))
 			return error("Unknown token", w);
@@ -390,8 +394,14 @@ review(char *filename)
 		if(p.labels[i].name[0] >= 'A' && p.labels[i].name[0] <= 'Z')
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)
-			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	fprintf(stderr, "Assembled %s in %d bytes(%.2f%% used), %d labels, %d macros.\n", filename, p.length - TRIM, p.length / 652.80, p.llen, p.mlen);
+			fprintf(stderr, "-- Unused label: %s\n", p.labels[i].name);
+	fprintf(stderr,
+		"Assembled %s in %d bytes(%.2f%% used), %d labels, %d macros.\n",
+		filename,
+		p.length - TRIM,
+		p.length / 652.80,
+		p.llen,
+		p.mlen);
 }
 
 int
@@ -401,7 +411,7 @@ main(int argc, char *argv[])
 	if(argc < 3)
 		return !error("usage", "input.tal output.rom");
 	if(!(src = fopen(argv[1], "r")))
-		return !error("Invalid Input", argv[1]);
+		return !error("Invalid input", argv[1]);
 	if(!assemble(src))
 		return !error("Assembly", "Failed to assemble rom.");
 	if(!(dst = fopen(argv[2], "wb")))
