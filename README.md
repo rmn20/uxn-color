@@ -54,6 +54,8 @@ cd uxn
 ./build.sh
 ```
 
+To run the emulator _outside_ of the MSYS2 environment, download the [SDL runtime binary for Windows](https://libsdl.org/download-2.0.php) and place the `SDL2.dll` file in the same directory as the emulator (`bin/`).
+
 ## Getting Started
 
 ### Emulator
