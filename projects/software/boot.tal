@@ -5,8 +5,10 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
+%8// { #03 SFT2 }
 %10** { #40 SFT2 } %10// { #04 SFT2 }
 
+%MIN2 { LTH2k JMP SWP2 POP2 }
 %MOD { DIVk MUL SUB }
 %DEC { #01 - }
 %RTN { JMP2r }
@@ -60,6 +62,10 @@
 	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
 	#dd .Audio0/volume DEO ( TODO: turn ON )
+
+	( determine max visible file length )
+	.Screen/width DEI2 8// #00ff MIN2 NIP
+	;draw-browser/clear-length STA
 
 	( place )
 	#0088 .browser/x STZ2
@@ -290,7 +296,10 @@ RTN
 
 	&clear ( -- )
 	.Screen/x DEI2k ( Stash the current x pos )
-	#ff00
+
+	( Clear the screen )
+	( Clear length gets set in init )
+	LIT2 &clear-length 00 00
 	&clear-loop
 		#00 .Screen/sprite DEO
 		.Screen/y DEI2k #0008 ++ ROT DEO2
