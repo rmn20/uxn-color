@@ -382,8 +382,7 @@ assemble(FILE *f)
 	while(fscanf(f, "%63s", w) == 1)
 		if(!parse(w, f))
 			return error("Unknown token", w);
-	resolve();
-	return 1;
+	return resolve();
 }
 
 static void
