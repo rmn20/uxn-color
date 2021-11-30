@@ -63,7 +63,7 @@ static char *scat(char *dst, const char *src) { char *ptr = dst + slen(dst); whi
 
 /* clang-format on */
 
-static int tokenize(char *w, FILE *f);
+static int parse(char *w, FILE *f);
 
 static int
 error(const char *name, const char *msg)
@@ -227,14 +227,14 @@ doinclude(const char *filename)
 	if(!(f = fopen(filename, "r")))
 		return error("Include missing", filename);
 	while(fscanf(f, "%63s", w) == 1)
-		if(!tokenize(w, f))
+		if(!parse(w, f))
 			return error("Unknown token", w);
 	fclose(f);
 	return 1;
 }
 
 static int
-tokenize(char *w, FILE *f)
+parse(char *w, FILE *f)
 {
 	int i = 0;
 	char word[64], subw[64], c;
@@ -324,7 +324,7 @@ tokenize(char *w, FILE *f)
 		/* macro */
 		else if((m = findmacro(w))) {
 			for(i = 0; i < m->len; ++i)
-				if(!tokenize(m->items[i], f))
+				if(!parse(m->items[i], f))
 					return 0;
 			return 1;
 		} else
@@ -380,7 +380,7 @@ assemble(FILE *f)
 	char w[64];
 	scpy("on-reset", p.scope, 64);
 	while(fscanf(f, "%63s", w) == 1)
-		if(!tokenize(w, f))
+		if(!parse(w, f))
 			return error("Unknown token", w);
 	resolve();
 	return 1;
