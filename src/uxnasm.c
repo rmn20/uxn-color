@@ -351,6 +351,8 @@ resolve(void)
 			if(!(l = findlabel(r->name)))
 				return error("Unknown relative reference", r->name);
 			p.data[r->addr + 1] = (Sint8)(l->addr - r->addr - 3);
+			if((Sint8)p.data[r->addr + 1] != (l->addr - r->addr - 3))
+				return error("Relative reference is too far", r->name);
 			l->refs++;
 			break;
 		case ';':
