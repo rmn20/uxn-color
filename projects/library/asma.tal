@@ -230,7 +230,59 @@
 	POP2 POP2 POP2 POP2 POP2
 	JMP2r
 
-~projects/library/file-read-chunks.tal
+@file-read-chunks ( func* udata* buf* size* filename* -- func* udata'* buf* size* filename* )
+
+	#0000 DUP2                 ( F* U* B* SZ* FN* OL* OH* / )
+	&resume
+	ROT2 STH2                  ( F* U* B* SZ* OL* OH*     / FN* )
+	ROT2                       ( F* U* B* OL* OH* SZ*     / FN* )
+
+	&loop
+	STH2kr .File/name DEO2     ( F* U* B* OL* OH* SZ*     / FN* )
+	STH2k ,ffwd/length STR2    ( F* U* B* OL* OH*         / FN* SZ* )
+	STH2                       ( F* U* B* OL*             / FN* SZ* OH* )
+	STH2k ,ffwd/offset STR2    ( F* U* B*                 / FN* SZ* OH* OL* )
+	DUP2 ,ffwd/addr STR2
+	,ffwd JSR
+	SWP2                       ( F* B* U*                 / FN* SZ* OH* OL* )
+	ROT2k NIP2                 ( F* B* U* B* F*           / FN* SZ* OH* OL* )
+	OVR2 .File/read DEO2       ( F* B* U* B* F*           / FN* SZ* OH* OL* )
+	.File/success DEI2 SWP2    ( F* B* U* B* length* F*   / FN* SZ* OH* OL* )
+	JSR2                       ( F* B* U'* done-up-to*    / FN* SZ* OH* OL* )
+	ROT2 SWP2                  ( F* U'* B* done-up-to*    / FN* SZ* OH* OL* )
+	SUB2k NIP2                 ( F* U'* B* -done-length*  / FN* SZ* OH* OL* )
+	ORAk ,&not-end JCN         ( F* U'* B* -done-length*  / FN* SZ* OH* OL* )
+
+	POP2 POP2r POP2r           ( F* U'* B*                / FN* SZ* )
+	STH2r STH2r                ( F* U'* B* SZ* FN*        / )
+	JMP2r
+
+	&not-end
+	STH2r SWP2                 ( F* U'* B* OL* -done-length* / FN* SZ* OH* )
+	LTH2k JMP INC2r            ( F* U'* B* OL* -done-length* / FN* SZ* OH'* )
+	SUB2                       ( F* U'* B* OL'*              / FN* SZ* OH'* )
+	STH2r STH2r                ( F* U'* B* OL'* OH'* SZ*     / FN* )
+	,&loop JMP
+
+@ffwd
+	LIT2 &length $2
+	LIT2 &offset $2
+
+	&coarse ( length* offset* )
+	GTH2k ,&fine JCN
+	OVR2 .File/length DEO2
+	,&addr LDR2 .File/read DEO2
+	OVR2 SUB2
+	,&coarse JMP
+
+	&fine ( length* offset* )
+	.File/length DEO2 ( length* )
+	,&addr LDR2 .File/read DEO2
+	.File/length DEO2 ( )
+	JMP2r
+
+	&addr $2
+
 
 (
 	Assemble a chunk of source code, which begins with whitespace or the start
