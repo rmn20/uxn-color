@@ -156,7 +156,7 @@ makelabel(char *name)
 	Label *l;
 	if(findlabel(name))
 		return error("Label duplicate", name);
-	if(sihx(name) && slen(name) % 2 == 0)
+	if(sihx(name) && (slen(name) == 2 || slen(name) == 4))
 		return error("Label name is hex number", name);
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Label name is invalid", name);

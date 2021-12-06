@@ -53,7 +53,7 @@
 
 BRK
 
-@draw-icn ( x* y* width* height* addr* color  -- )
+@draw-icn ( x* y* width* height* addr* color -- )
 	
 	( load ) STH .Screen/addr DEO2 .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
 	.size/height LDZ2 #0000 
@@ -69,6 +69,34 @@ BRK
 		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
 	POPr
+
+RTN
+
+@draw-icn-pixels ( x* y* width* height* addr* color -- )
+
+	( load ) STH .Screen/addr DEO2 .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
+	.size/height LDZ2 #0000
+	&ver
+		( save ) DUP2 .position/y LDZ2 ++ .Screen/y DEO2
+		.size/width LDZ2 #0000
+		&hor
+			( get x,y ) STH2 OVR2 STH2r SWP2 OVR2 SWP2 
+			( save ) OVR2 .position/x LDZ2 ++ .Screen/x DEO2
+			( draw ) ,get-icn-pixel JSR STHkr * .Screen/pixel DEO
+			INC2 GTH2k ,&hor JCN
+		POP2 POP2
+		INC2 GTH2k ,&ver JCN
+	POP2 POP2
+	POPr
+
+RTN
+
+@get-icn-pixel ( x* y* -- color )
+
+	( get row ) OVR2 SWP2 DUP2 8MOD2
+	( get tile ) SWP2 8// 80** ++ SWP2 STEP8 ++ ;source ++ LDA
+	( get mask ) ROT ROT NIP 8MOD 
+	( get pixel ) #07 SWP - SFT #01 AND
 
 RTN
 
