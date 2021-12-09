@@ -1,7 +1,7 @@
 </$objtype/mkfile
 
 TARG=bin/uxncli bin/uxnasm bin/uxnemu
-USM=`{walk -f projects/ | grep '\.tal$' | grep -v blank.tal | grep -v /library/}
+USM=`{walk -f projects/ | grep '\.tal$' | grep -v blank.tal | grep -v /assets/ | grep -v /library/}
 ROM=${USM:%.tal=%.rom}
 CFLAGS=$CFLAGS -D__plan9__ -I/sys/include/npe -I/sys/include/npe/SDL2
 HFILES=\
