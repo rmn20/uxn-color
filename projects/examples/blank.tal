@@ -73,7 +73,7 @@ RTN
 
 @print-str ( string* -- )
 
-	1-- 
+	#0001 --
 	&while
 		INC2 LDAk DUP #18 DEO ,&while JCN 
 	POP2
