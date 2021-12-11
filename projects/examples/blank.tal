@@ -1,14 +1,24 @@
 ( a blank file )
 
-%+  { ADD } %-   { SUB }              %/   { DIV }  
-%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
-%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%DEBUG  { ;print-hex JSR2 #0a .Console/write DEO }
-%DEBUG2 { SWP ;print-hex JSR2 ;print-hex JSR2 #0a .Console/write DEO }
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
 
-%RTN { JMP2r }
+%2MOD  { #01 AND } %2MOD2  { #0001 AND2 }
+%4MOD  { #03 AND } %4MOD2  { #0003 AND2 }
+%8MOD  { #07 AND } %8MOD2  { #0007 AND2 }
+%10MOD { #0f AND } %10MOD2 { #000f AND2 }
+
+%DEBUG      { ;print-hex/byte JSR2 #0a18 DEO }
+%DEBUG2     { ;print-hex JSR2 #0a18 DEO }
+%RTN        { JMP2r }
 
 ( devices )
 
@@ -28,10 +38,6 @@
 
 |0000
 
-@lista $3
-@listb $3
-@listc $3
-
 ( program )
 
 |0100 ( -> )
@@ -41,55 +47,35 @@
 	#0fc5 .System/g DEO2 
 	#0f25 .System/b DEO2
 
-	#01 .lista       STZ
-	#02 .lista INC   STZ
-	#03 .lista #02 + STZ
-
-	#10 .listb       STZ
-	#20 .listb INC   STZ
-	#30 .listb #02 + STZ
-
-	.lista .listb .listc ;add-lists-loop JSR2
-
-	.listc       LDZ DEBUG
-	.listc INC   LDZ DEBUG
-	.listc #02 + LDZ DEBUG
-
 BRK
 
-( Write a Forth word to add together two integer 
-vectors (a.k.a. arrays) of three elements each. )
-
-@add-lists-linear ( a b c -- )
+@print-hex ( value* -- )
 	
-	STH
-	( a[0] b[0] + ) LDZk STH SWP LDZk STHr + STHkr STZ 
-	( a[1] b[1] + ) INC LDZk STH SWP INC LDZk STHr + STHkr INC STZ 
-	( a[2] b[2] + ) INC LDZ SWP INC LDZ + STHr #02 + STZ
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	RTN
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 + RTN 
+	&above #57 + RTN
 
 RTN
 
-@add-lists-loop ( a b c -- )
-	
-	STH
-	#00 #03
-	&loop
-		( get incr ) OVR STH
-		( get a[x] ) OVR2 STHkr ADD LDZ 
-		( get b[x] ) SWP STHkr ADD LDZ 
-		( set c[x] ) ADD STHr STHkr ADD STZ
-		( incr ) SWP INC SWP 
-		LTHk ,&loop JCN
-	POP2 POP2 POPr
+@print-dec ( value* -- )
 
-JMP2r
+	#2710 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
+	#03e8 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
+	#0064 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
+	#000a DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
+	#30 ADD #18 DEO POP
 
-@print-hex ( value -- )
-	
-	STHk #04 SFT ,&parse JSR .Console/write DEO
-	STHr #0f AND ,&parse JSR .Console/write DEO
-	RTN
-	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 ADD RTN &above #09 SUB #60 ADD RTN
+RTN
+
+@print-str ( string* -- )
+
+	1-- 
+	&while
+		INC2 LDAk DUP #18 DEO ,&while JCN 
+	POP2
 
 RTN
