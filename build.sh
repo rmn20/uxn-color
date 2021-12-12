@@ -34,7 +34,7 @@ MSYS_NT*) # MSYS2 on Windows
 	;;
 Darwin) # macOS
 	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"
-	UXNEMU_LDFLAGS="/usr/local/lib/libSDL2.a $(sdl2-config --cflags --static-libs | sed -e 's/-lSDL2 //')"
+	UXNEMU_LDFLAGS="$(brew --prefix)/lib/libSDL2.a $(sdl2-config --cflags --static-libs | sed -e 's/-lSDL2 //')"
 	;;
 Linux|*)
 	UXNEMU_LDFLAGS="-L/usr/local/lib $(sdl2-config --cflags --libs)"
