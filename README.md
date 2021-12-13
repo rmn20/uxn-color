@@ -99,3 +99,7 @@ uxnemu orca.rom | shim
 ## Need a hand?
 
 Find us in [`#uxn` on irc.esper.net](ircs://irc.esper.net:6697/#uxn).
+
+## Contributing
+
+Submit patches using [`git send-email`](https://git-send-email.io/) to the [~rabbits/public-inbox mailing list](https://lists.sr.ht/~rabbits/public-inbox).
