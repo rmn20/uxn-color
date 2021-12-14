@@ -83,8 +83,8 @@ void
 ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
-	for(v = 0; v < 8; v++)
-		for(h = 0; h < 8; h++) {
+	for(v = 0; v < 8; ++v)
+		for(h = 0; h < 8; ++h) {
 			Uint8 ch1 = (sprite[v] >> (7 - h)) & 0x1;
 			if(ch1 || blending[4][color])
 				ppu_write(p,
@@ -99,8 +99,8 @@ void
 ppu_2bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
-	for(v = 0; v < 8; v++)
-		for(h = 0; h < 8; h++) {
+	for(v = 0; v < 8; ++v)
+		for(h = 0; h < 8; ++h) {
 			Uint8 ch1 = ((sprite[v] >> (7 - h)) & 0x1);
 			Uint8 ch2 = ((sprite[v + 8] >> (7 - h)) & 0x1);
 			Uint8 ch = ch1 + ch2 * 2;

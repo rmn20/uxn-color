@@ -58,7 +58,7 @@ static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
 static int   shex(char *s) { int n = 0, i = 0; char c; while((c = s[i++])) if(c >= '0' && c <= '9') n = n * 16 + (c - '0'); else if(c >= 'a' && c <= 'f') n = n * 16 + 10 + (c - 'a'); return n; } /* string to num */
 static int   slen(char *s) { int i = 0; while(s[i]) ++i; return i; } /* string length */
-static char *scpy(char *src, char *dst, int len) { int i = 0; while((dst[i] = src[i]) && i < len - 2) i++; dst[i + 1] = '\0'; return dst; } /* string copy */
+static char *scpy(char *src, char *dst, int len) { int i = 0; while((dst[i] = src[i]) && i < len - 2) ++i; dst[i + 1] = '\0'; return dst; } /* string copy */
 static char *scat(char *dst, const char *src) { char *ptr = dst + slen(dst); while(*src) *ptr++ = *src++; *ptr = '\0'; return dst; } /* string cat */
 
 /* clang-format on */
@@ -116,7 +116,7 @@ findopcode(char *s)
 				i |= (1 << 7); /* mode: keep */
 			else
 				return 0; /* failed to match */
-			m++;
+			++m;
 		}
 		return i;
 	}

@@ -4022,7 +4022,7 @@ uxn_boot(Uxn *u)
 {
 	unsigned int i;
 	char *cptr = (char *)u;
-	for(i = 0; i < sizeof(*u); i++)
+	for(i = 0; i < sizeof(*u); ++i)
 		cptr[i] = 0x00;
 	return 1;
 }
