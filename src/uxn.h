@@ -40,8 +40,6 @@ typedef struct Uxn {
 	Device dev[16];
 } Uxn;
 
-struct Uxn;
-
 void poke16(Uint8 *m, Uint16 a, Uint16 b);
 Uint16 peek16(Uint8 *m, Uint16 a);
 
