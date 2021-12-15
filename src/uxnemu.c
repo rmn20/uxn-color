@@ -193,7 +193,6 @@ quit(void)
 	gRenderer = NULL;
 	SDL_DestroyWindow(gWindow);
 	SDL_Quit();
-	exit(0);
 }
 
 static int
