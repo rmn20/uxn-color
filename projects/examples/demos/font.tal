@@ -1,4 +1,4 @@
-( font )
+(  uxnasm projects/examples/demos/font.tal bin/font.rom && uxnemu bin/font.rom )
 
 %+  { ADD } %-   { SUB }  %*  { MUL }  %/  { DIV }
 %<  { LTH } %>   { GTH }  %=  { EQU }  %!  { NEQ }
@@ -8,10 +8,20 @@
 %RTN { JMP2r }
 %TOS { #00 SWP }
 
+%GET-WIDTH { TOS ;font-data ++ LDA }
+%GET-GLYPH { TOS #50 SFT2 ;font-data/glyphs ++ }
+
+%AUTO-NONE { #00 .Screen/auto DEO }
+%AUTO-X { #01 .Screen/auto DEO }
+%AUTO-Y { #02 .Screen/auto DEO }
+%AUTO-ADDR { #04 .Screen/auto DEO }
+%AUTO-X-ADDR { #05 .Screen/auto DEO }
+%AUTO-Y-ADDR { #06 .Screen/auto DEO }
+
 ( devices )
 
 |00 @System  &vector $2 &pad     $6 &r      $2 &g     $2 &b      $2
-|20 @Screen  &vector $2 &width   $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
+|20 @Screen     &vector $2 &width   $2 &height $2 &auto  $1 &pad   $1 &x     $2 &y $2 &addr $2 &pixel $1 &sprite $1
 |a0 @File    &vector $2 &success $2 &stat   $2 &delete $1 &append $1 &name  $2 &length $2 &read $2 &write $2
 
 ( variables )
@@ -76,41 +86,35 @@ RTN
 	
 	STH 
 	SWP2 .Screen/y DEO2
-	SWP2 DUP2 .Screen/x DEO2 SWP2
-	&loop
-		LDAk 
-		DUP #0a ! ,&no-linebreak JCN
-			( move down ) STH OVR2 .Screen/x DEO2 STHr
-			( incr y ) .Screen/y DEI2 #0010 ++ .Screen/y DEO2 
-			POP ,&continue JMP &no-linebreak
-		STHkr ,&sprite JSR
+	SWP2 .Screen/x DEO2
+	AUTO-Y-ADDR
+	&while
+		LDAk #0a ! ,&no-linebreak JCN
+			( reset ) #0020 .Screen/x DEO2
+			( down ) .Screen/y DEI2k #0010 ++ ROT DEO2 
+			,&continue JMP &no-linebreak
+		LDAk STHkr ,&sprite JSR
 		&continue
-		( incr addr ) INC2
-		LDAk ,&loop JCN
-	POP2 POP2 POPr
+		INC2 LDAk ,&while JCN
+	POP2 POPr
+	AUTO-NONE
 	RTN
 
 	&sprite ( char color -- )
-		STH
-		( get addr ) STHk TOS #50 SFT2 ;font-data #0100 ++ ++ .Screen/addr DEO2
-		( get width ) STHkr TOS ;font-data ++ LDA TOS
-		SWPr
-			( left-top ) STHkr .Screen/sprite DEO
-			.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-			.Screen/addr DEI2 #0010 ++ .Screen/addr DEO2
-			( left-bottom ) STHkr .Screen/sprite DEO
-			.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-			.Screen/y DEI2 #0008 -- .Screen/y DEO2
-			DUP #0a < ,&thin JCN
-			.Screen/addr DEI2 #0008 -- .Screen/addr DEO2
-			( right-top )  STHkr .Screen/sprite DEO
-			.Screen/addr DEI2 #0010 ++ .Screen/addr DEO2
-			.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-			( right-bottom ) STHkr .Screen/sprite DEO
-			.Screen/y DEI2 #0008 -- .Screen/y DEO2 &thin
-		SWPr
-		( use width ) .Screen/x DEI2 ++ #0008 -- .Screen/x DEO2
-		POPr POPr
+		.Screen/x DEI2 STH2 
+		.Screen/y DEI2 STH2 
+		( glyph ) OVR GET-GLYPH .Screen/addr DEO2
+		DUP .Screen/sprite DEOk DEO 
+		STH2kr .Screen/y DEO2
+		SWP GET-WIDTH 
+		DUP #09 < ,&narrow JCN
+			.Screen/x DEI2k #0008 ++ ROT DEO2
+			OVR .Screen/sprite DEOk DEO 
+			STH2kr .Screen/y DEO2
+			&narrow
+		POP2r
+		( width ) TOS STH2r ++ .Screen/x DEO2
+		POP
 	RTN
 
 RTN
@@ -187,4 +191,4 @@ RTN
 @font-path-small  
 	"projects/fonts/atari8.uf1 $1
 
-@font-data
+@font-data $100 &glyphs
