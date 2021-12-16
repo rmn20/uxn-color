@@ -226,6 +226,7 @@ init(void)
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
+	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	return 1;
 }
 
@@ -524,11 +525,16 @@ run(Uxn *u)
 	redraw(u);
 	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
-		double elapsed, start = 0;
+		double elapsed, begin = 0;
 		if(!BENCH)
-			start = SDL_GetPerformanceCounter();
+			begin = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&event) != 0) {
 			switch(event.type) {
+			case SDL_DROPFILE:
+				set_size(WIDTH, HEIGHT, 0);
+				start(u, event.drop.file);
+				SDL_free(event.drop.file);
+				break;
 			case SDL_QUIT:
 				return error("Run", "Quit.");
 			case SDL_TEXTINPUT:
@@ -561,7 +567,7 @@ run(Uxn *u)
 		if(ppu.reqdraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
-			elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
+			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
 			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
 		}
 	}
