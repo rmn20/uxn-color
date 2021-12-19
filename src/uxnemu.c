@@ -526,6 +526,7 @@ run(Uxn *u)
 	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
 		double elapsed, begin = 0;
+		int ksym;
 		if(!BENCH)
 			begin = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&event) != 0) {
@@ -544,6 +545,10 @@ run(Uxn *u)
 				doctrl(u, &event, event.type == SDL_KEYDOWN);
 				uxn_eval(u, devctrl->vector);
 				devctrl->dat[3] = 0;
+
+				ksym = event.key.keysym.sym;
+				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
+					goto breakout;
 				break;
 			case SDL_MOUSEWHEEL:
 			case SDL_MOUSEBUTTONUP:
@@ -563,6 +568,7 @@ run(Uxn *u)
 					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			}
 		}
+breakout:
 		uxn_eval(u, devscreen->vector);
 		if(ppu.reqdraw || devsystem->dat[0xe])
 			redraw(u);
