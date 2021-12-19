@@ -30,7 +30,12 @@ CC="${CC:-cc}"
 CFLAGS="${CFLAGS:--std=c89 -Wall -Wno-unknown-pragmas}"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*|MINGW*) # MSYS2 on Windows
-	UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
+	if [ "${1}" = '--console' ];
+	then
+		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs | sed -e 's/ -mwindows//g')"
+	else
+		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
+	fi
 	;;
 Darwin) # macOS
 	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"

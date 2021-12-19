@@ -55,6 +55,8 @@ cd uxn
 ./build.sh
 ```
 
+If you'd like to work with the Console device in `uxnemu.exe`, run `./build.sh --console` instead: this will bring up an extra window for console I/O unless you run `uxnemu.exe` in Command Prompt or PowerShell.
+
 ## Getting Started
 
 ### Emulator
