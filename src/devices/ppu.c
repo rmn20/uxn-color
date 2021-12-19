@@ -38,7 +38,7 @@ static Uint8 font[][8] = {
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x80, 0x80}};
 
 void
-ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
+ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 {
 	Uint8 *pixels;
 	if(!(pixels = realloc(p->pixels, width * height / 2)))
@@ -49,11 +49,19 @@ ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 	p->height = height;
 }
 
+void
+ppu_clear(Ppu *p, Uint8 mask)
+{
+	Uint32 i, size = p->width * p->height / 2;
+	for(i = 0; i < size; ++i)
+		p->pixels[i] &= mask;
+}
+
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) / 0x2;
+		Uint32 row = (x + y * p->width) / 2;
 		Uint8 shift = !(x & 0x1) << 2;
 		Uint8 pix = p->pixels[row] >> shift;
 		if(pix & 0x0c)
@@ -67,7 +75,7 @@ void
 ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) / 0x2;
+		Uint32 row = (x + y * p->width) / 2;
 		Uint8 shift = (!(x & 0x1) << 2) + (layer << 1);
 		Uint8 pix = p->pixels[row];
 		Uint8 mask = ~(0x3 << shift);

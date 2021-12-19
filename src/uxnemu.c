@@ -127,7 +127,7 @@ set_zoom(Uint8 scale)
 static int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
-	ppu_set_size(&ppu, width, height);
+	ppu_resize(&ppu, width, height);
 	gRect.x = PAD;
 	gRect.y = PAD;
 	gRect.w = ppu.width;
@@ -487,7 +487,7 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
 	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
+	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; ppu_clear(&ppu, CLEAR_FG); break;
 	case SDLK_F3: if(z) capture_screen(); break;
 	case SDLK_AC_BACK:
 	case SDLK_F4: if(z) restart(u); break;
