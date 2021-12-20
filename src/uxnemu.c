@@ -568,7 +568,7 @@ run(Uxn *u)
 					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			}
 		}
-breakout:
+	breakout:
 		uxn_eval(u, devscreen->vector);
 		if(ppu.reqdraw || devsystem->dat[0xe])
 			redraw(u);
