@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 /*
 Copyright (c) 2021 Devine Lu Linvega

@@ -43,10 +43,10 @@ ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 	Uint8 *pixels;
 	if(!(pixels = realloc(p->pixels, width * height / 2)))
 		return;
-	memset(pixels, 0, width * height / 2);
 	p->pixels = pixels;
 	p->width = width;
 	p->height = height;
+	ppu_clear(p, 0x00);
 }
 
 void
