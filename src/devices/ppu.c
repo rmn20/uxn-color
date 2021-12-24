@@ -75,7 +75,7 @@ ppu_clear(Ppu *p, Layer *layer)
 	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; ++i)
 		layer->pixels[i] = 0x00;
-	p->fg.changed = p->bg.changed = 1;
+	layer->changed = 1;
 }
 
 void
