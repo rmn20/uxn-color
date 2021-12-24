@@ -21,14 +21,14 @@ typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 
 typedef struct Layer {
-	Uint8 *p;
-	Uint8 reqdraw;
+	Uint8 *pixels;
+	Uint8 changed;
 } Layer;
 
 typedef struct Ppu {
-	Layer fg, bg;
 	Uint16 width, height;
 	Uint32 palette[16];
+	Layer fg, bg;
 } Ppu;
 
 void ppu_palette(Ppu *p, Uint8 *addr);

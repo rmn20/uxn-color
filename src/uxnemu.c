@@ -105,7 +105,6 @@ set_zoom(Uint8 scale)
 	if(!gWindow)
 		return;
 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	ppu.fg.reqdraw = ppu.bg.reqdraw = 1;
 }
 
 static int
@@ -128,7 +127,6 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 		return error("SDL_UpdateTexture", SDL_GetError());
 	if(is_resize)
 		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	ppu.fg.reqdraw = ppu.bg.reqdraw = 1;
 	return 1;
 }
 
@@ -550,7 +548,7 @@ run(Uxn *u)
 		}
 	breakout:
 		uxn_eval(u, devscreen->vector);
-		if(ppu.fg.reqdraw || ppu.bg.reqdraw || devsystem->dat[0xe])
+		if(ppu.fg.changed || ppu.bg.changed || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;

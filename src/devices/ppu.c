@@ -50,23 +50,24 @@ ppu_palette(Ppu *p, Uint8 *addr)
 	}
 	for(i = 4; i < 16; ++i)
 		p->palette[i] = p->palette[i / 4];
-	p->fg.reqdraw = p->bg.reqdraw = 1;
+	p->fg.changed = p->bg.changed = 1;
 }
 
 void
 ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 {
-	Uint8 
-	*bg = realloc(p->bg.p, width * height),
-	*fg = realloc(p->fg.p, width * height);
+	Uint8
+		*bg = realloc(p->bg.pixels, width * height),
+		*fg = realloc(p->fg.pixels, width * height);
 	if(!bg || !fg)
 		return;
-	p->bg.p = bg;
-	p->fg.p = fg;
+	p->bg.pixels = bg;
+	p->fg.pixels = fg;
 	p->width = width;
 	p->height = height;
 	ppu_clear(p, &p->bg);
 	ppu_clear(p, &p->fg);
+	p->fg.changed = p->bg.changed = 1;
 }
 
 void
@@ -74,7 +75,8 @@ ppu_clear(Ppu *p, Layer *layer)
 {
 	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; ++i)
-		layer->p[i] = 0x00;
+		layer->pixels[i] = 0x00;
+	p->fg.changed = p->bg.changed = 1;
 }
 
 void
@@ -82,8 +84,8 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 {
 	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; ++i)
-		screen[i] = p->palette[p->fg.p[i] ? p->fg.p[i] : p->bg.p[i]];
-	p->fg.reqdraw = p->bg.reqdraw = 0;
+		screen[i] = p->palette[p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]];
+	p->fg.changed = p->bg.changed = 0;
 }
 
 void
@@ -91,10 +93,10 @@ ppu_write(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
 		Uint32 i = (x + y * p->width);
-		Uint8 prev = layer->p[i];
+		Uint8 prev = layer->pixels[i];
 		if(color != prev) {
-			layer->p[i] = color;
-			layer->reqdraw = 1;
+			layer->pixels[i] = color;
+			layer->changed = 1;
 		}
 	}
 }
