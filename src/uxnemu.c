@@ -105,7 +105,7 @@ set_zoom(Uint8 scale)
 	if(!gWindow)
 		return;
 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	ppu.reqdraw = 1;
+	ppu.fg.reqdraw = ppu.bg.reqdraw = 1;
 }
 
 static int
@@ -128,7 +128,7 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 		return error("SDL_UpdateTexture", SDL_GetError());
 	if(is_resize)
 		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	ppu.reqdraw = 1;
+	ppu.fg.reqdraw = ppu.bg.reqdraw = 1;
 	return 1;
 }
 
@@ -293,7 +293,7 @@ screen_deo(Device *d, Uint8 port)
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xe] & 0x40;
-		ppu_write(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
+		ppu_write(&ppu, layer ? &ppu.fg : &ppu.bg, x, y, d->dat[0xe] & 0x3);
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 		break;
@@ -304,10 +304,10 @@ screen_deo(Device *d, Uint8 port)
 		Uint8 layer = d->dat[0xf] & 0x40;
 		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 		if(d->dat[0xf] & 0x80) {
-			ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			ppu_2bpp(&ppu, layer ? &ppu.fg : &ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
 		} else {
-			ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			ppu_1bpp(&ppu, layer ? &ppu.fg : &ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
 		}
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
@@ -467,7 +467,7 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
 	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; ppu_clear(&ppu, ppu.fg); break;
+	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; ppu_clear(&ppu, &ppu.fg); break;
 	case SDLK_F3: if(z) capture_screen(); break;
 	case SDLK_AC_BACK:
 	case SDLK_F4: if(z) restart(u); break;
@@ -550,7 +550,7 @@ run(Uxn *u)
 		}
 	breakout:
 		uxn_eval(u, devscreen->vector);
-		if(ppu.reqdraw || devsystem->dat[0xe])
+		if(ppu.fg.reqdraw || ppu.bg.reqdraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
