@@ -84,19 +84,12 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 {
 	Uint16 x, y;
 	for(y = 0; y < p->height; ++y)
-		for(x = 0; x < p->width; ++x)
-			screen[x + y * p->width] = p->palette[ppu_read(p, x, y)];
+		for(x = 0; x < p->width; ++x) {
+			Uint32 row = (x + y * p->width);
+			Uint8 color = p->fg[row] ? p->fg[row] : p->bg[row];
+			screen[x + y * p->width] = p->palette[color];
+		}
 	p->reqdraw = 0;
-}
-
-Uint8
-ppu_read(Ppu *p, Uint16 x, Uint16 y)
-{
-	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width);
-		return p->fg[row] ? p->fg[row] : p->bg[row];
-	}
-	return 0x0;
 }
 
 void
