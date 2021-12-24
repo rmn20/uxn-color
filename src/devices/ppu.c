@@ -58,21 +58,25 @@ ppu_palette(Ppu *p, Uint8 *addr)
 void
 ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 {
-	Uint8 *pixels;
-	if(!(pixels = realloc(p->pixels, width * height / 2)))
+	Uint8 *bg, *fg;
+	if(!(bg = realloc(p->bg, width * height)))
 		return;
-	p->pixels = pixels;
+	if(!(fg = realloc(p->fg, width * height)))
+		return;
+	p->bg = bg;
+	p->fg = fg;
 	p->width = width;
 	p->height = height;
-	ppu_clear(p, CLEAR_BOTH);
+	ppu_clear(p, p->bg);
+	ppu_clear(p, p->fg);
 }
 
 void
-ppu_clear(Ppu *p, Uint8 mask)
+ppu_clear(Ppu *p, Uint8 *layer)
 {
-	Uint32 i, size = p->width * p->height / 2;
+	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; ++i)
-		p->pixels[i] &= mask;
+		layer[i] = 0x00;
 }
 
 void
@@ -89,34 +93,27 @@ Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) >> 1;
-		Uint8 shift = (x & 0x1) << 2;
-		Uint8 pix = p->pixels[row] >> shift;
-		if(pix & 0x0c)
-			pix >>= 2;
-		return pix & 0x3;
+		Uint32 row = (x + y * p->width);
+		return p->fg[row] ? p->fg[row] : p->bg[row];
 	}
 	return 0x0;
 }
 
 void
-ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
+ppu_write(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) >> 1;
-		Uint8 shift = ((x & 0x1) << 2) + (layer << 1);
-		Uint8 pix = p->pixels[row];
-		Uint8 mask = ~(0x3 << shift);
-		Uint8 pixnew = (pix & mask) + (color << shift);
-		if(pix != pixnew) {
-			p->pixels[row] = pixnew;
+		Uint32 row = (x + y * p->width);
+		Uint8 prev = layer[row];
+		if(color != prev) {
+			layer[row] = color;
 			p->reqdraw = 1;
 		}
 	}
 }
 
 void
-ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; ++v)
@@ -132,7 +129,7 @@ ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Ui
 }
 
 void
-ppu_2bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; ++v)
@@ -156,24 +153,24 @@ ppu_debug(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	for(i = 0; i < 0x20; ++i) {
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
 		/* working stack */
-		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
-		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, p->fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, p->fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
 		y = 0x28 + (i / 8 + 1) * 8;
 		b = memory[i];
 		/* return stack */
-		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
-		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 3, 0, 0);
+		ppu_1bpp(p, p->fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
+		ppu_1bpp(p, p->fg, x + 8, y, font[b & 0xf], 3, 0, 0);
 	}
 	/* return pointer */
-	ppu_1bpp(p, 1, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
-	ppu_1bpp(p, 1, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, p->fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, p->fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
 	/* guides */
 	for(x = 0; x < 0x10; ++x) {
-		ppu_write(p, 1, x, p->height / 2, 2);
-		ppu_write(p, 1, p->width - x, p->height / 2, 2);
-		ppu_write(p, 1, p->width / 2, p->height - x, 2);
-		ppu_write(p, 1, p->width / 2, x, 2);
-		ppu_write(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
-		ppu_write(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
+		ppu_write(p, p->fg, x, p->height / 2, 2);
+		ppu_write(p, p->fg, p->width - x, p->height / 2, 2);
+		ppu_write(p, p->fg, p->width / 2, p->height - x, 2);
+		ppu_write(p, p->fg, p->width / 2, x, 2);
+		ppu_write(p, p->fg, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
+		ppu_write(p, p->fg, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
 	}
 }
