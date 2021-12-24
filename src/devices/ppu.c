@@ -67,7 +67,6 @@ ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 	p->height = height;
 	ppu_clear(p, &p->bg);
 	ppu_clear(p, &p->fg);
-	p->fg.changed = p->bg.changed = 1;
 }
 
 void
