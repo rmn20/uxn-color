@@ -40,6 +40,22 @@ static Uint8 font[][8] = {
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x80, 0x80}};
 
 void
+ppu_palette(Ppu *p, Uint8 *addr)
+{
+	int i;
+	for(i = 0; i < 4; ++i) {
+		Uint8
+			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
+		p->palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
+	}
+	for(i = 4; i < 16; ++i)
+		p->palette[i] = p->palette[i / 4];
+	p->reqdraw = 1;
+}
+
+void
 ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 {
 	Uint8 *pixels;

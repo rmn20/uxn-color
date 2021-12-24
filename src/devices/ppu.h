@@ -23,8 +23,10 @@ typedef unsigned int Uint32;
 typedef struct Ppu {
 	Uint8 *pixels, reqdraw;
 	Uint16 width, height;
+	Uint32 palette[16];
 } Ppu;
 
+void ppu_palette(Ppu *p, Uint8 *addr);
 void ppu_resize(Ppu *p, Uint16 width, Uint16 height);
 void ppu_clear(Ppu *p, Uint8 layer);
 Uint8 ppu_read(Ppu *p, Uint16 x, Uint16 y);

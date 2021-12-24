@@ -39,7 +39,7 @@ static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
-static Uint32 *ppu_screen, stdin_event, audio0_event, palette[16];
+static Uint32 *ppu_screen, stdin_event, audio0_event;
 
 static int
 clamp(int val, int min, int max)
@@ -86,22 +86,6 @@ stdin_handler(void *p)
 		SDL_PushEvent(&event);
 	return 0;
 	(void)p;
-}
-
-void
-set_palette(Uint8 *addr)
-{
-	int i;
-	for(i = 0; i < 4; ++i) {
-		Uint8
-			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
-		palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
-	}
-	for(i = 4; i < 16; ++i)
-		palette[i] = palette[i / 4];
-	ppu.reqdraw = 1;
 }
 
 static void
@@ -173,7 +157,7 @@ redraw(Uxn *u)
 		ppu_debug(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
 	for(y = 0; y < ppu.height; ++y)
 		for(x = 0; x < ppu.width; ++x)
-			ppu_screen[x + y * ppu.width] = palette[ppu_read(&ppu, x, y)];
+			ppu_screen[x + y * ppu.width] = ppu.palette[ppu_read(&ppu, x, y)];
 	if(SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
@@ -277,7 +261,7 @@ system_deo(Device *d, Uint8 port)
 	case 0x3: d->u->rst.ptr = d->dat[port]; break;
 	}
 	if(port > 0x7 && port < 0xe)
-		set_palette(&d->dat[0x8]);
+		ppu_palette(&ppu, &d->dat[0x8]);
 }
 
 static void
