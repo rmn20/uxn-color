@@ -12,8 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-/* byte: p0-bg | p0-fg | p1-bg | p1-fg */
-
 static Uint8 blending[5][16] = {
 	{0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 0, 2, 3, 3, 3, 0},
 	{0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3},
@@ -58,10 +56,10 @@ ppu_palette(Ppu *p, Uint8 *addr)
 void
 ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 {
-	Uint8 *bg, *fg;
-	if(!(bg = realloc(p->bg, width * height)))
-		return;
-	if(!(fg = realloc(p->fg, width * height)))
+	Uint8 
+	*bg = realloc(p->bg, width * height), 
+	*fg = realloc(p->fg, width * height);
+	if(!bg || !fg)
 		return;
 	p->bg = bg;
 	p->fg = fg;
@@ -82,13 +80,9 @@ ppu_clear(Ppu *p, Uint8 *layer)
 void
 ppu_redraw(Ppu *p, Uint32 *screen)
 {
-	Uint16 x, y;
-	for(y = 0; y < p->height; ++y)
-		for(x = 0; x < p->width; ++x) {
-			Uint32 row = (x + y * p->width);
-			Uint8 color = p->fg[row] ? p->fg[row] : p->bg[row];
-			screen[x + y * p->width] = p->palette[color];
-		}
+	Uint32 i, size = p->width * p->height;
+	for(i = 0; i < size; ++i)
+		screen[i] = p->palette[p->fg[i] ? p->fg[i] : p->bg[i]];
 	p->reqdraw = 0;
 }
 
