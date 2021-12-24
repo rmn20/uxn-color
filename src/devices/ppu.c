@@ -12,6 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+/* byte: p0-bg | p0-fg | p1-bg | p1-fg */
+
 static Uint8 blending[5][16] = {
 	{0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 0, 2, 3, 3, 3, 0},
 	{0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3},
@@ -46,7 +48,7 @@ ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 	p->pixels = pixels;
 	p->width = width;
 	p->height = height;
-	ppu_clear(p, 0x00);
+	ppu_clear(p, CLEAR_BOTH);
 }
 
 void
@@ -61,11 +63,11 @@ Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) / 2;
-		Uint8 shift = !(x & 0x1) << 2;
+		Uint32 row = (x + y * p->width) >> 1;
+		Uint8 shift = (x & 0x1) << 2;
 		Uint8 pix = p->pixels[row] >> shift;
 		if(pix & 0x0c)
-			pix = pix >> 2;
+			pix >>= 2;
 		return pix & 0x3;
 	}
 	return 0x0;
@@ -75,8 +77,8 @@ void
 ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 row = (x + y * p->width) / 2;
-		Uint8 shift = (!(x & 0x1) << 2) + (layer << 1);
+		Uint32 row = (x + y * p->width) >> 1;
+		Uint8 shift = ((x & 0x1) << 2) + (layer << 1);
 		Uint8 pix = p->pixels[row];
 		Uint8 mask = ~(0x3 << shift);
 		Uint8 pixnew = (pix & mask) + (color << shift);
