@@ -152,18 +152,14 @@ capture_screen(void)
 static void
 redraw(Uxn *u)
 {
-	Uint16 x, y;
 	if(devsystem->dat[0xe])
 		ppu_debug(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	for(y = 0; y < ppu.height; ++y)
-		for(x = 0; x < ppu.width; ++x)
-			ppu_screen[x + y * ppu.width] = ppu.palette[ppu_read(&ppu, x, y)];
+	ppu_redraw(&ppu, ppu_screen);
 	if(SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 	SDL_RenderPresent(gRenderer);
-	ppu.reqdraw = 0;
 }
 
 static void

@@ -75,6 +75,16 @@ ppu_clear(Ppu *p, Uint8 mask)
 		p->pixels[i] &= mask;
 }
 
+void
+ppu_redraw(Ppu *p, Uint32 *screen)
+{
+	Uint16 x, y;
+	for(y = 0; y < p->height; ++y)
+		for(x = 0; x < p->width; ++x)
+			screen[x + y * p->width] = p->palette[ppu_read(p, x, y)];
+	p->reqdraw = 0;
+}
+
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
