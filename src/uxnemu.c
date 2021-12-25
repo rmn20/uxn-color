@@ -99,8 +99,6 @@ static void
 set_zoom(Uint8 scale)
 {
 	zoom = SDL_clamp(scale, 1, 3);
-	if(!gWindow)
-		return;
 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 }
 
