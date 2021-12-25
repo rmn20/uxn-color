@@ -12,10 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define CLEAR_BG 0xcc
-#define CLEAR_FG 0x33
-#define CLEAR_BOTH 0x00
-
 typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned int Uint32;
