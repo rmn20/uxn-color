@@ -91,7 +91,7 @@ void
 ppu_write(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
-		Uint32 i = (x + y * p->width);
+		Uint32 i = x + y * p->width;
 		Uint8 prev = layer->pixels[i];
 		if(color != prev) {
 			layer->pixels[i] = color;
@@ -101,30 +101,14 @@ ppu_write(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 }
 
 void
-ppu_1bpp(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_blit(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; ++v)
 		for(h = 0; h < 8; ++h) {
-			Uint8 ch1 = (sprite[v] >> (7 - h)) & 0x1;
-			if(ch1 || blending[4][color])
-				ppu_write(p,
-					layer,
-					x + (flipx ? 7 - h : h),
-					y + (flipy ? 7 - v : v),
-					blending[ch1][color]);
-		}
-}
-
-void
-ppu_2bpp(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
-{
-	Uint16 v, h;
-	for(v = 0; v < 8; ++v)
-		for(h = 0; h < 8; ++h) {
-			Uint8 ch1 = ((sprite[v] >> (7 - h)) & 0x1);
-			Uint8 ch2 = ((sprite[v + 8] >> (7 - h)) & 0x1);
-			Uint8 ch = ch1 + ch2 * 2;
+			Uint8 ch = (sprite[v + 0] >> (7 - h)) & 0x1;
+			if(twobpp)
+				ch |= ((sprite[v + 8] >> (7 - h)) & 0x1) << 1;
 			if(ch || blending[4][color])
 				ppu_write(p,
 					layer,
@@ -141,17 +125,17 @@ ppu_debug(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	for(i = 0; i < 0x20; ++i) {
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
 		/* working stack */
-		ppu_1bpp(p, &p->fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
-		ppu_1bpp(p, &p->fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_blit(p, &p->fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0, 0);
+		ppu_blit(p, &p->fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0, 0);
 		y = 0x28 + (i / 8 + 1) * 8;
 		b = memory[i];
 		/* return stack */
-		ppu_1bpp(p, &p->fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
-		ppu_1bpp(p, &p->fg, x + 8, y, font[b & 0xf], 3, 0, 0);
+		ppu_blit(p, &p->fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0, 0);
+		ppu_blit(p, &p->fg, x + 8, y, font[b & 0xf], 3, 0, 0, 0);
 	}
 	/* return pointer */
-	ppu_1bpp(p, &p->fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
-	ppu_1bpp(p, &p->fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
+	ppu_blit(p, &p->fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0, 0);
+	ppu_blit(p, &p->fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0, 0);
 	/* guides */
 	for(x = 0; x < 0x10; ++x) {
 		ppu_write(p, &p->fg, x, p->height / 2, 2);

@@ -37,6 +37,5 @@ void ppu_clear(Ppu *p, Layer *layer);
 void ppu_redraw(Ppu *p, Uint32 *screen);
 
 void ppu_write(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color);
-void ppu_1bpp(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
-void ppu_2bpp(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
+void ppu_blit(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp);
 void ppu_debug(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory);
