@@ -105,7 +105,7 @@ ppu_blit(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, U
 {
 	int v, h, opaque = blending[4][color];
 	for(v = 0; v < 8; ++v) {
-		int c = sprite[v] | (twobpp ? sprite[v + 8] : 0) << 8;
+		Uint16 c = sprite[v] | (twobpp ? sprite[v + 8] : 0) << 8;
 		for(h = 7; h >= 0; --h, c >>= 1) {
 			Uint8 ch = (c & 1) | ((c >> 7) & 2);
 			if(opaque || ch)
