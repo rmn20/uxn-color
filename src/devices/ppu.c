@@ -40,13 +40,14 @@ static Uint8 font[][8] = {
 void
 ppu_palette(Ppu *p, Uint8 *addr)
 {
-	int i;
-	for(i = 0; i < 4; ++i) {
+	int i, shift;
+	for(i = 0, shift = 4; i < 4; ++i, shift ^= 4) {
 		Uint8
-			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
-		p->palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
+			r = (addr[0 + i / 2] >> shift) & 0x0f,
+			g = (addr[2 + i / 2] >> shift) & 0x0f,
+			b = (addr[4 + i / 2] >> shift) & 0x0f;
+		p->palette[i] = 0x0f000000 | r << 16 | g << 8 | b;
+		p->palette[i] |= p->palette[i] << 4;
 	}
 	p->fg.changed = p->bg.changed = 1;
 }
