@@ -82,9 +82,11 @@ ppu_clear(Ppu *p, Layer *layer)
 void
 ppu_redraw(Ppu *p, Uint32 *screen)
 {
-	Uint32 i, size = p->width * p->height;
+	Uint32 i, size = p->width * p->height, palette[16];
+	for(i = 0; i < 16; ++i)
+		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
 	for(i = 0; i < size; ++i)
-		screen[i] = p->palette[p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]];
+		screen[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
 	p->fg.changed = p->bg.changed = 0;
 }
 
