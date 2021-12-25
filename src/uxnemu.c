@@ -4,12 +4,15 @@
 #include "uxn.h"
 
 #pragma GCC diagnostic push
+#pragma clang diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #include <SDL.h>
 #include "devices/ppu.h"
 #include "devices/apu.h"
 #include "devices/file.h"
 #pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 /*
 Copyright (c) 2021 Devine Lu Linvega
