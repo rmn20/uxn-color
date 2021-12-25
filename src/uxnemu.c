@@ -45,12 +45,6 @@ static Uint8 zoom = 1;
 static Uint32 *ppu_screen, stdin_event, audio0_event;
 
 static int
-clamp(int val, int min, int max)
-{
-	return (val >= min) ? (val <= max) ? val : max : min;
-}
-
-static int
 error(char *msg, const char *err)
 {
 	fprintf(stderr, "%s: %s\n", msg, err);
@@ -104,7 +98,7 @@ set_window_size(SDL_Window *window, int w, int h)
 static void
 set_zoom(Uint8 scale)
 {
-	zoom = clamp(scale, 1, 3);
+	zoom = SDL_clamp(scale, 1, 3);
 	if(!gWindow)
 		return;
 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
@@ -215,8 +209,8 @@ static void
 domouse(SDL_Event *event)
 {
 	Uint8 flag = 0x00;
-	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
-	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
+	Uint16 x = SDL_clamp(event->motion.x - PAD, 0, ppu.width - 1);
+	Uint16 y = SDL_clamp(event->motion.y - PAD, 0, ppu.height - 1);
 	if(event->type == SDL_MOUSEWHEEL) {
 		devmouse->dat[7] = event->wheel.y;
 		return;
@@ -551,7 +545,7 @@ run(Uxn *u)
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
-			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
+			SDL_Delay(SDL_clamp(16.666f - elapsed, 0, 1000));
 		}
 	}
 	return error("Run", "Ended.");
