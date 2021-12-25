@@ -120,7 +120,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			/* Arithmetic */
 			case 0x18: /* ADD */ a = pop(u->src), b = pop(u->src); push(u->src, b + a); break;
 			case 0x19: /* SUB */ a = pop(u->src), b = pop(u->src); push(u->src, b - a); break;
-			case 0x1a: /* MUL */ a = pop(u->src), b = pop(u->src); push(u->src, b * a); break;
+			case 0x1a: /* MUL */ a = pop(u->src), b = pop(u->src); push(u->src, (Uint32)b * a); break;
 			case 0x1b: /* DIV */ a = pop(u->src), b = pop(u->src); if(a == 0) { u->src->error = 3; a = 1; } push(u->src, b / a); break;
 			case 0x1c: /* AND */ a = pop(u->src), b = pop(u->src); push(u->src, b & a); break;
 			case 0x1d: /* ORA */ a = pop(u->src), b = pop(u->src); push(u->src, b | a); break;
@@ -138,7 +138,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 int
 uxn_boot(Uxn *u)
 {
-	unsigned int i;
+	Uint32 i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); ++i)
 		cptr[i] = 0x00;
