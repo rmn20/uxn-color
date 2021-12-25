@@ -502,9 +502,11 @@ run(Uxn *u)
 				uxn_eval(u, devctrl->vector);
 				devctrl->dat[3] = 0;
 
-				ksym = event.key.keysym.sym;
-				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
-					goto breakout;
+				if(event.type == SDL_KEYDOWN) {
+					ksym = event.key.keysym.sym;
+					if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
+						goto breakout;
+				}
 				break;
 			case SDL_MOUSEWHEEL:
 			case SDL_MOUSEBUTTONUP:
