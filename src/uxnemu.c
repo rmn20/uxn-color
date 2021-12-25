@@ -155,19 +155,6 @@ redraw(Uxn *u)
 	SDL_RenderPresent(gRenderer);
 }
 
-static void
-quit(void)
-{
-	if(audio_id)
-		SDL_CloseAudioDevice(audio_id);
-	SDL_DestroyTexture(gTexture);
-	gTexture = NULL;
-	SDL_DestroyRenderer(gRenderer);
-	gRenderer = NULL;
-	SDL_DestroyWindow(gWindow);
-	SDL_Quit();
-}
-
 static int
 init(void)
 {
@@ -583,6 +570,6 @@ main(int argc, char **argv)
 	if(!loaded && !start(&u, "boot.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
 	run(&u);
-	quit();
+	SDL_Quit();
 	return 0;
 }
