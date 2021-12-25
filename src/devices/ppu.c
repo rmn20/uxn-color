@@ -48,8 +48,6 @@ ppu_palette(Ppu *p, Uint8 *addr)
 			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
 		p->palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
 	}
-	for(i = 4; i < 16; ++i)
-		p->palette[i] = p->palette[i / 4];
 	p->fg.changed = p->bg.changed = 1;
 }
 
