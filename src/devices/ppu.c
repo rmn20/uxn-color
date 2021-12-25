@@ -103,13 +103,14 @@ ppu_write(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 void
 ppu_blit(Ppu *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
+	Uint8 opaque = blending[4][color];
 	Uint16 v, h;
 	for(v = 0; v < 8; ++v)
 		for(h = 0; h < 8; ++h) {
 			Uint8 ch = (sprite[v + 0] >> (7 - h)) & 0x1;
 			if(twobpp)
 				ch |= ((sprite[v + 8] >> (7 - h)) & 0x1) << 1;
-			if(ch || blending[4][color])
+			if(opaque || ch)
 				ppu_write(p,
 					layer,
 					x + (flipx ? 7 - h : h),
