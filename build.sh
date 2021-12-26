@@ -36,6 +36,7 @@ MSYS_NT*|MINGW*) # MSYS2 on Windows
 	else
 		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
 	fi
+	sed -i -e '/^#pragma weak /d' src/devices/ppu.c
 	;;
 Darwin) # macOS
 	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"
