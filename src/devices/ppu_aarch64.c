@@ -1,3 +1,4 @@
+#ifdef __aarch64__
 #include <arm_neon.h>
 #include "ppu.h"
 
@@ -10,6 +11,12 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 	int i;
 
 	p->fg.changed = p->bg.changed = 0;
+
+#ifdef __has_builtin
+#if __has_builtin(__builtin_assume)
+	__builtin_assume(p->width > 0 && p->height > 0);
+#endif
+#endif
 
 	for(i = 0; i < (p->width * p->height & ~15); i += 16, fg += 16, bg += 16, screen += 16) {
 		uint8x16_t fg8 = vld1q_u8(fg);
@@ -27,3 +34,4 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 	for(; i < p->width * p->height; i++)
 		screen[i] = p->palette[*fg ? *fg : *bg];
 }
+#endif
