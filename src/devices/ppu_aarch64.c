@@ -9,7 +9,9 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 	Uint8 *bg = p->bg.pixels;
 	int i;
 
-	for(i = 0; i < p->width * p->height; i += 16, fg += 16, bg += 16, screen += 16) {
+	p->fg.changed = p->bg.changed = 0;
+
+	for(i = 0; i < (p->width * p->height & ~15); i += 16, fg += 16, bg += 16, screen += 16) {
 		uint8x16_t fg8 = vld1q_u8(fg);
 		uint8x16_t bg8 = vld1q_u8(bg);
 		uint8x16_t px8 = vbslq_u8(vceqzq_u8(fg8), bg8, fg8);
@@ -21,4 +23,7 @@ ppu_redraw(Ppu *p, Uint32 *screen)
 		};
 		vst4q_u8((uint8_t*)screen, px);
 	}
+
+	for(; i < p->width * p->height; i++)
+		screen[i] = p->palette[*fg ? *fg : *bg];
 }
