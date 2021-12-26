@@ -54,6 +54,9 @@ then
 else
 	CFLAGS="${CFLAGS} -DNDEBUG -Os -g0 -s"
 	CORE='src/uxn-fast.c'
+	ARCH=`${CC} -dumpmachine 2> /dev/null || echo nope`
+	ARCH=${ARCH%%-*}
+	CORE="${CORE} `find src -name *_${ARCH}.c 2> /dev/null || true`"
 fi
 
 echo "Building.."
