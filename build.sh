@@ -56,12 +56,12 @@ else
 	CORE='src/uxn-fast.c'
 	ARCH=`${CC} -dumpmachine 2> /dev/null || echo nope`
 	ARCH=${ARCH%%-*}
-	CORE="${CORE} `find src -name *_${ARCH}.c 2> /dev/null || true`"
+	EXTRA=`find src -name *_${ARCH}.c 2> /dev/null || true`
 fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${EXTRA} ${UXNEMU_LDFLAGS} -o bin/uxnemu
 ${CC} ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]
