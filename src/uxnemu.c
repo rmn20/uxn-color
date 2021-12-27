@@ -103,13 +103,6 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
-static void
-set_zoom(Uint8 scale)
-{
-	zoom = clamp(scale, 1, 3);
-	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-}
-
 static int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
@@ -128,23 +121,6 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	if(is_resize)
 		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	return 1;
-}
-
-static void
-capture_screen(void)
-{
-	const Uint32 format = SDL_PIXELFORMAT_RGB24;
-	time_t t = time(NULL);
-	char fname[64];
-	int w, h;
-	SDL_Surface *surface;
-	SDL_GetRendererOutputSize(gRenderer, &w, &h);
-	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
-	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
-	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(surface, fname);
-	SDL_FreeSurface(surface);
-	fprintf(stderr, "Saved %s\n", fname);
 }
 
 static void
@@ -391,6 +367,37 @@ start(Uxn *u, char *rom)
 }
 
 static void
+set_zoom(Uint8 scale)
+{
+	zoom = clamp(scale, 1, 3);
+	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+}
+
+static void
+toggle_debugger(void)
+{
+	devsystem->dat[0xe] = !devsystem->dat[0xe];
+	ppu_clear(&ppu, &ppu.fg);
+}
+
+static void
+capture_screen(void)
+{
+	const Uint32 format = SDL_PIXELFORMAT_RGB24;
+	time_t t = time(NULL);
+	char fname[64];
+	int w, h;
+	SDL_Surface *surface;
+	SDL_GetRendererOutputSize(gRenderer, &w, &h);
+	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
+	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
+	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
+	SDL_SaveBMP(surface, fname);
+	SDL_FreeSurface(surface);
+	fprintf(stderr, "Saved %s\n", fname);
+}
+
+static void
 restart(Uxn *u)
 {
 	set_size(WIDTH, HEIGHT, 1);
@@ -445,10 +452,9 @@ do_shortcut(Uxn *u, SDL_Event *event)
 {
 	if(event->key.keysym.sym == SDLK_F1)
 		set_zoom(zoom > 2 ? 1 : zoom + 1);
-	else if(event->key.keysym.sym == SDLK_F2) {
-		devsystem->dat[0xe] = !devsystem->dat[0xe];
-		ppu_clear(&ppu, &ppu.fg);
-	} else if(event->key.keysym.sym == SDLK_F3)
+	else if(event->key.keysym.sym == SDLK_F2)
+		toggle_debugger();
+	else if(event->key.keysym.sym == SDLK_F3)
 		capture_screen();
 	else if(event->key.keysym.sym == SDLK_F4)
 		restart(u);
@@ -510,7 +516,7 @@ run(Uxn *u)
 					controller_key(devctrl, event.text.text[0]);
 				else if(get_key(&event))
 					controller_key(devctrl, get_key(&event));
-				else if(get_button(&event)) 
+				else if(get_button(&event))
 					controller_down(devctrl, get_button(&event));
 				else
 					do_shortcut(u, &event);
