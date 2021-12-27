@@ -163,6 +163,7 @@ redraw(Uxn *u)
 static int
 init(void)
 {
+	SDL_Joystick *gGameController;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -171,7 +172,7 @@ init(void)
 	as.callback = audio_callback;
 	as.samples = 512;
 	as.userdata = NULL;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
 		error("sdl", SDL_GetError());
 		if(SDL_Init(SDL_INIT_VIDEO) < 0)
 			return error("sdl", SDL_GetError());
@@ -186,13 +187,17 @@ init(void)
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
+	if(SDL_NumJoysticks()) {
+		gGameController = SDL_JoystickOpen(0);
+		if(gGameController == NULL)
+			return error("sdl_joystick", SDL_GetError());
+	}
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-	SDL_GameControllerEventState(SDL_ENABLE);
 	return 1;
 }
 
@@ -409,20 +414,19 @@ get_button(SDL_Event *event)
 }
 
 static Uint8
-get_button_dpad(SDL_Event *e)
+get_button_joystick(SDL_Event *event)
 {
-	switch(e->cbutton.button) {
-	case SDL_CONTROLLER_BUTTON_A: return 0x01;
-	case SDL_CONTROLLER_BUTTON_B: return 0x02;
-	case SDL_CONTROLLER_BUTTON_X: return 0x04;
-	case SDL_CONTROLLER_BUTTON_Y:
-	case SDL_CONTROLLER_BUTTON_START: return 0x08;
-	case SDL_CONTROLLER_BUTTON_DPAD_UP: return 0x10;
-	case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return 0x20;
-	case SDL_CONTROLLER_BUTTON_DPAD_LEFT: return 0x40;
-	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return 0x80;
-	}
-	return 0x00;
+	return 0x01 << (event->jbutton.button & 0x3);
+}
+
+static Uint8
+get_vector_joystick(SDL_Event *event)
+{
+	if(event->jaxis.value < -3200)
+		return 1;
+	if(event->jaxis.value > 3200)
+		return 2;
+	return 0;
 }
 
 static Uint8
@@ -509,10 +513,17 @@ run(Uxn *u)
 				controller_up(devctrl, get_button(&event));
 			else if(event.type == SDL_TEXTINPUT)
 				controller_key(devctrl, event.text.text[0]);
-			else if(event.type == SDL_CONTROLLERBUTTONDOWN)
-				controller_down(devctrl, get_button_dpad(&event));
-			else if(event.type == SDL_CONTROLLERBUTTONUP)
-				controller_up(devctrl, get_button_dpad(&event));
+			else if(event.type == SDL_JOYBUTTONDOWN)
+				controller_down(devctrl, get_button_joystick(&event));
+			else if(event.type == SDL_JOYBUTTONUP)
+				controller_up(devctrl, get_button_joystick(&event));
+			else if(event.type == SDL_JOYAXISMOTION) {
+				Uint8 vec = get_vector_joystick(&event);
+				if(!vec)
+					controller_up(devctrl, (0x03 << (!event.jaxis.axis * 2)) << 4);
+				else
+					controller_down(devctrl, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
+			}
 			/* Console */
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);
