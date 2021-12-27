@@ -96,6 +96,13 @@ uxnemu orca.rom | shim
 - `F3` capture screen
 - `F4` load boot.rom
 
+### Buttons
+
+- `LCTRL` A
+- `LALT` B
+- `LSHIFT` SEL 
+- `HOME` START
+
 ## Need a hand?
 
 Find us in [`#uxn` on irc.esper.net](ircs://irc.esper.net:6697/#uxn).

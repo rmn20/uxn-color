@@ -404,7 +404,7 @@ get_button(SDL_Event *event)
 	case SDLK_LCTRL: return 0x01;
 	case SDLK_LALT: return 0x02;
 	case SDLK_LSHIFT: return 0x04;
-	case SDLK_ESCAPE: return 0x08;
+	case SDLK_HOME: return 0x08;
 	case SDLK_UP: return 0x10;
 	case SDLK_DOWN: return 0x20;
 	case SDLK_LEFT: return 0x40;
