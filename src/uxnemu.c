@@ -393,22 +393,42 @@ restart(Uxn *u)
 	start(u, "boot.rom");
 }
 
+Uint8
+get_button(SDL_Event event)
+{
+	switch(event.key.keysym.sym) {
+	case SDLK_LCTRL: return 0x01;
+	case SDLK_LALT: return 0x02;
+	case SDLK_LSHIFT: return 0x04;
+	case SDLK_ESCAPE: return 0x08;
+	case SDLK_UP: return 0x10;
+	case SDLK_DOWN: return 0x20;
+	case SDLK_LEFT: return 0x40;
+	case SDLK_RIGHT: return 0x80;
+	}
+	return 0x00;
+}
+
+void
+controller_down(Device *d, Uint8 mask)
+{
+	d->dat[2] |= mask;
+	uxn_eval(d->u, d->vector);
+}
+
+void
+controller_up(Device *d, Uint8 mask)
+{
+	d->dat[2] &= (~mask);
+	uxn_eval(d->u, d->vector);
+}
+
 static void
 doctrl(Uxn *u, SDL_Event *event, int z)
 {
-	Uint8 flag = 0x00;
 	SDL_Keymod mods = SDL_GetModState();
-	devctrl->dat[2] &= 0xf8;
-	if(mods & KMOD_CTRL) devctrl->dat[2] |= 0x01;
-	if(mods & KMOD_ALT) devctrl->dat[2] |= 0x02;
-	if(mods & KMOD_SHIFT) devctrl->dat[2] |= 0x04;
 	/* clang-format off */
 	switch(event->key.keysym.sym) {
-	case SDLK_ESCAPE: flag = 0x08; break;
-	case SDLK_UP: flag = 0x10; break;
-	case SDLK_DOWN: flag = 0x20; break;
-	case SDLK_LEFT: flag = 0x40; break;
-	case SDLK_RIGHT: flag = 0x80; break;
 	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
 	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; ppu_clear(&ppu, &ppu.fg); break;
 	case SDLK_F3: if(z) capture_screen(); break;
@@ -417,13 +437,11 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	}
 	/* clang-format on */
 	if(z) {
-		devctrl->dat[2] |= flag;
 		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
 			devctrl->dat[3] = event->key.keysym.sym;
 		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
 			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
-	} else
-		devctrl->dat[2] &= ~flag;
+	}
 }
 
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
@@ -453,6 +471,22 @@ run(Uxn *u)
 		if(!BENCH)
 			begin = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&event) != 0) {
+			/* new handlers */
+			if(event.type == SDL_MOUSEWHEEL)
+				mouse_z(devmouse, event.wheel.y);
+			else if(event.type == SDL_MOUSEBUTTONUP)
+				mouse_up(devmouse, 0x1 << (event.button.button - 1));
+			else if(event.type == SDL_MOUSEBUTTONDOWN)
+				mouse_down(devmouse, 0x1 << (event.button.button - 1));
+			else if(event.type == SDL_MOUSEMOTION)
+				mouse_xy(devmouse,
+					clamp(event.motion.x - PAD, 0, ppu.width - 1),
+					clamp(event.motion.y - PAD, 0, ppu.height - 1));
+			else if(event.type == SDL_KEYDOWN)
+				controller_down(devctrl, get_button(event));
+			else if(event.type == SDL_KEYUP)
+				controller_up(devctrl, get_button(event));
+			/* continue */
 			switch(event.type) {
 			case SDL_DROPFILE:
 				set_size(WIDTH, HEIGHT, 0);
@@ -473,20 +507,6 @@ run(Uxn *u)
 					if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 						goto breakout;
 				}
-				break;
-			case SDL_MOUSEWHEEL:
-				mouse_z(devmouse, event.wheel.y);
-				break;
-			case SDL_MOUSEBUTTONUP:
-				mouse_up(devmouse, 0x1 << (event.button.button - 1));
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				mouse_down(devmouse, 0x1 << (event.button.button - 1));
-				break;
-			case SDL_MOUSEMOTION:
-				mouse_xy(devmouse,
-					clamp(event.motion.x - PAD, 0, ppu.width - 1),
-					clamp(event.motion.y - PAD, 0, ppu.height - 1));
 				break;
 			case SDL_WINDOWEVENT:
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
