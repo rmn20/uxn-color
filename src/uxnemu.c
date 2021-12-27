@@ -11,6 +11,7 @@
 #include "devices/ppu.h"
 #include "devices/apu.h"
 #include "devices/file.h"
+#include "devices/mouse.h"
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
@@ -194,33 +195,6 @@ init(void)
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	return 1;
-}
-
-static void
-domouse(SDL_Event *event)
-{
-	Uint8 flag = 0x00;
-	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
-	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
-	if(event->type == SDL_MOUSEWHEEL) {
-		devmouse->dat[7] = event->wheel.y;
-		return;
-	}
-	poke16(devmouse->dat, 0x2, x);
-	poke16(devmouse->dat, 0x4, y);
-	devmouse->dat[7] = 0x00;
-	switch(event->button.button) {
-	case SDL_BUTTON_LEFT: flag = 0x01; break;
-	case SDL_BUTTON_RIGHT: flag = 0x10; break;
-	}
-	switch(event->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		devmouse->dat[6] |= flag;
-		break;
-	case SDL_MOUSEBUTTONUP:
-		devmouse->dat[6] &= (~flag);
-		break;
-	}
 }
 
 #pragma mark - Devices
@@ -494,7 +468,6 @@ run(Uxn *u)
 				doctrl(u, &event, event.type == SDL_KEYDOWN);
 				uxn_eval(u, devctrl->vector);
 				devctrl->dat[3] = 0;
-
 				if(event.type == SDL_KEYDOWN) {
 					ksym = event.key.keysym.sym;
 					if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
@@ -502,11 +475,18 @@ run(Uxn *u)
 				}
 				break;
 			case SDL_MOUSEWHEEL:
+				mouse_z(devmouse, event.wheel.y);
+				break;
 			case SDL_MOUSEBUTTONUP:
+				mouse_up(devmouse, 0x1 << (event.button.button - 1));
+				break;
 			case SDL_MOUSEBUTTONDOWN:
+				mouse_down(devmouse, 0x1 << (event.button.button - 1));
+				break;
 			case SDL_MOUSEMOTION:
-				domouse(&event);
-				uxn_eval(u, devmouse->vector);
+				mouse_xy(devmouse,
+					clamp(event.motion.x - PAD, 0, ppu.width - 1),
+					clamp(event.motion.y - PAD, 0, ppu.height - 1));
 				break;
 			case SDL_WINDOWEVENT:
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
