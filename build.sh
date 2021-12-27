@@ -22,6 +22,8 @@ then
 	clang-format -i src/devices/file.c
 	clang-format -i src/devices/mouse.h
 	clang-format -i src/devices/mouse.c
+	clang-format -i src/devices/controller.h
+	clang-format -i src/devices/controller.c
 	clang-format -i src/uxnasm.c
 	clang-format -i src/uxnemu.c
 	clang-format -i src/uxncli.c
@@ -60,7 +62,7 @@ fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/mouse.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/mouse.c src/devices/controller.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
 ${CC} ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]

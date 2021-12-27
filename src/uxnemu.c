@@ -11,6 +11,7 @@
 #include "devices/ppu.h"
 #include "devices/apu.h"
 #include "devices/file.h"
+#include "devices/controller.h"
 #include "devices/mouse.h"
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
@@ -409,39 +410,29 @@ get_button(SDL_Event *event)
 	return 0x00;
 }
 
-void
-controller_down(Device *d, Uint8 mask)
+Uint8
+get_key(SDL_Event *event)
 {
-	d->dat[2] |= mask;
-	uxn_eval(d->u, d->vector);
-}
-
-void
-controller_up(Device *d, Uint8 mask)
-{
-	d->dat[2] &= (~mask);
-	uxn_eval(d->u, d->vector);
+	SDL_Keymod mods = SDL_GetModState();
+	if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
+		return event->key.keysym.sym;
+	if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
+		return event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
+	return 0x00;
 }
 
 static void
-doctrl(Uxn *u, SDL_Event *event, int z)
+do_shortcut(Uxn *u, SDL_Event *event)
 {
-	SDL_Keymod mods = SDL_GetModState();
-	/* clang-format off */
-	switch(event->key.keysym.sym) {
-	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; ppu_clear(&ppu, &ppu.fg); break;
-	case SDLK_F3: if(z) capture_screen(); break;
-	case SDLK_AC_BACK:
-	case SDLK_F4: if(z) restart(u); break;
-	}
-	/* clang-format on */
-	if(z) {
-		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
-			devctrl->dat[3] = event->key.keysym.sym;
-		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
-			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
-	}
+	if(event->key.keysym.sym == SDLK_F1)
+		set_zoom(zoom > 2 ? 1 : zoom + 1);
+	else if(event->key.keysym.sym == SDLK_F2) {
+		devsystem->dat[0xe] = !devsystem->dat[0xe];
+		ppu_clear(&ppu, &ppu.fg);
+	} else if(event->key.keysym.sym == SDLK_F3)
+		capture_screen();
+	else if(event->key.keysym.sym == SDLK_F4)
+		restart(u);
 }
 
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
@@ -467,12 +458,24 @@ run(Uxn *u)
 	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
 		double elapsed, begin = 0;
-		int ksym;
 		if(!BENCH)
 			begin = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&event) != 0) {
-			/* new handlers */
-			if(event.type == SDL_MOUSEWHEEL)
+			/* Window */
+			if(event.type == SDL_QUIT)
+				return error("Run", "Quit.");
+			else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
+				redraw(u);
+			else if(event.type == SDL_DROPFILE) {
+				set_size(WIDTH, HEIGHT, 0);
+				start(u, event.drop.file);
+				SDL_free(event.drop.file);
+			}
+			/* Audio */
+			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
+				uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
+			/* Mouse */
+			else if(event.type == SDL_MOUSEWHEEL)
 				mouse_z(devmouse, event.wheel.y);
 			else if(event.type == SDL_MOUSEBUTTONUP)
 				mouse_up(devmouse, 0x1 << (event.button.button - 1));
@@ -482,44 +485,19 @@ run(Uxn *u)
 				mouse_xy(devmouse,
 					clamp(event.motion.x - PAD, 0, ppu.width - 1),
 					clamp(event.motion.y - PAD, 0, ppu.height - 1));
-			else if(event.type == SDL_KEYDOWN)
+			/* Controller */
+			else if(event.type == SDL_KEYDOWN) {
 				controller_down(devctrl, get_button(&event));
-			else if(event.type == SDL_KEYUP)
+				controller_key(devctrl, get_key(&event));
+				do_shortcut(u, &event);
+			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
-			/* continue */
-			switch(event.type) {
-			case SDL_DROPFILE:
-				set_size(WIDTH, HEIGHT, 0);
-				start(u, event.drop.file);
-				SDL_free(event.drop.file);
-				break;
-			case SDL_QUIT:
-				return error("Run", "Quit.");
-			case SDL_TEXTINPUT:
-				devctrl->dat[3] = event.text.text[0]; /* fall-thru */
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				doctrl(u, &event, event.type == SDL_KEYDOWN);
-				uxn_eval(u, devctrl->vector);
-				devctrl->dat[3] = 0;
-				if(event.type == SDL_KEYDOWN) {
-					ksym = event.key.keysym.sym;
-					if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
-						goto breakout;
-				}
-				break;
-			case SDL_WINDOWEVENT:
-				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
-					redraw(u);
-				break;
-			default:
-				if(event.type == stdin_event) {
-					console_input(u, event.cbutton.button);
-				} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
-					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
-			}
+			else if(event.type == SDL_TEXTINPUT)
+				controller_key(devctrl, event.text.text[0]);
+			/* Console */
+			else if(event.type == stdin_event)
+				console_input(u, event.cbutton.button);
 		}
-	breakout:
 		uxn_eval(u, devscreen->vector);
 		if(ppu.fg.changed || ppu.bg.changed || devsystem->dat[0xe])
 			redraw(u);
