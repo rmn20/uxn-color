@@ -16,21 +16,25 @@ WITH REGARD TO THIS SOFTWARE.
 void
 controller_down(Device *d, Uint8 mask)
 {
-	d->dat[2] |= mask;
-	uxn_eval(d->u, d->vector);
+	if(mask) {
+		d->dat[2] |= mask;
+		uxn_eval(d->u, d->vector);
+	}
 }
 
 void
 controller_up(Device *d, Uint8 mask)
 {
-	d->dat[2] &= (~mask);
-	uxn_eval(d->u, d->vector);
+	if(mask) {
+		d->dat[2] &= (~mask);
+		uxn_eval(d->u, d->vector);
+	}
 }
 
 void
 controller_key(Device *d, Uint8 key)
 {
-	if(!key) {
+	if(key) {
 		d->dat[3] = key;
 		uxn_eval(d->u, d->vector);
 		d->dat[3] = 0x00;

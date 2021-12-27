@@ -505,14 +505,17 @@ run(Uxn *u)
 					clamp(event.motion.x - PAD, 0, ppu.width - 1),
 					clamp(event.motion.y - PAD, 0, ppu.height - 1));
 			/* Controller */
-			else if(event.type == SDL_KEYDOWN) {
-				controller_down(devctrl, get_button(&event));
-				controller_key(devctrl, get_key(&event));
-				do_shortcut(u, &event);
+			else if(event.type == SDL_KEYDOWN || event.type == SDL_TEXTINPUT) {
+				if(event.type == SDL_TEXTINPUT)
+					controller_key(devctrl, event.text.text[0]);
+				else if(get_key(&event))
+					controller_key(devctrl, get_key(&event));
+				else if(get_button(&event)) {
+					controller_down(devctrl, get_button(&event));
+					do_shortcut(u, &event);
+				}
 			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
-			else if(event.type == SDL_TEXTINPUT)
-				controller_key(devctrl, event.text.text[0]);
 			else if(event.type == SDL_JOYBUTTONDOWN)
 				controller_down(devctrl, get_button_joystick(&event));
 			else if(event.type == SDL_JOYBUTTONUP)
