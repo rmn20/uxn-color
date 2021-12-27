@@ -171,7 +171,7 @@ init(void)
 	as.callback = audio_callback;
 	as.samples = 512;
 	as.userdata = NULL;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 		error("sdl", SDL_GetError());
 		if(SDL_Init(SDL_INIT_VIDEO) < 0)
 			return error("sdl", SDL_GetError());
@@ -192,6 +192,7 @@ init(void)
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+	SDL_GameControllerEventState(SDL_ENABLE);
 	return 1;
 }
 
@@ -391,7 +392,7 @@ restart(Uxn *u)
 	start(u, "boot.rom");
 }
 
-Uint8
+static Uint8
 get_button(SDL_Event *event)
 {
 	switch(event->key.keysym.sym) {
@@ -407,7 +408,24 @@ get_button(SDL_Event *event)
 	return 0x00;
 }
 
-Uint8
+static Uint8
+get_button_dpad(SDL_Event *e)
+{
+	switch(e->cbutton.button) {
+	case SDL_CONTROLLER_BUTTON_A: return 0x01;
+	case SDL_CONTROLLER_BUTTON_B: return 0x02;
+	case SDL_CONTROLLER_BUTTON_X: return 0x04;
+	case SDL_CONTROLLER_BUTTON_Y:
+	case SDL_CONTROLLER_BUTTON_START: return 0x08;
+	case SDL_CONTROLLER_BUTTON_DPAD_UP: return 0x10;
+	case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return 0x20;
+	case SDL_CONTROLLER_BUTTON_DPAD_LEFT: return 0x40;
+	case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return 0x80;
+	}
+	return 0x00;
+}
+
+static Uint8
 get_key(SDL_Event *event)
 {
 	SDL_Keymod mods = SDL_GetModState();
@@ -491,6 +509,10 @@ run(Uxn *u)
 				controller_up(devctrl, get_button(&event));
 			else if(event.type == SDL_TEXTINPUT)
 				controller_key(devctrl, event.text.text[0]);
+			else if(event.type == SDL_CONTROLLERBUTTONDOWN)
+				controller_down(devctrl, get_button_dpad(&event));
+			else if(event.type == SDL_CONTROLLERBUTTONUP)
+				controller_up(devctrl, get_button_dpad(&event));
 			/* Console */
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);
