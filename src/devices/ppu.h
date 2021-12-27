@@ -22,7 +22,7 @@ typedef struct Layer {
 } Layer;
 
 typedef struct Ppu {
-	Uint32 palette[4];
+	Uint32 palette[4], *screen;
 	Uint16 width, height;
 	Layer fg, bg;
 } Ppu;

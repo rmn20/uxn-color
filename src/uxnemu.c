@@ -44,7 +44,7 @@ static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
-static Uint32 *ppu_screen, stdin_event, audio0_event;
+static Uint32 stdin_event, audio0_event;
 
 static int
 clamp(int val, int min, int max)
@@ -118,15 +118,12 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	gRect.y = PAD;
 	gRect.w = ppu.width;
 	gRect.h = ppu.height;
-	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
-		return error("ppu_screen", "Memory failure");
-	memset(ppu_screen, 0, ppu.width * ppu.height * sizeof(Uint32));
 	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
 	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("gTexture", SDL_GetError());
-	if(SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32)) != 0)
+	if(SDL_UpdateTexture(gTexture, NULL, ppu.screen, sizeof(Uint32)) != 0)
 		return error("SDL_UpdateTexture", SDL_GetError());
 	if(is_resize)
 		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
@@ -155,8 +152,8 @@ redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
 		ppu_debug(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	ppu_redraw(&ppu, ppu_screen);
-	if(SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32)) != 0)
+	ppu_redraw(&ppu, ppu.screen);
+	if(SDL_UpdateTexture(gTexture, &gRect, ppu.screen, ppu.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);

@@ -58,11 +58,15 @@ ppu_resize(Ppu *p, Uint16 width, Uint16 height)
 	Uint8
 		*bg = realloc(p->bg.pixels, width * height),
 		*fg = realloc(p->fg.pixels, width * height);
+	Uint32
+		*screen = realloc(p->screen, width * height * sizeof(Uint32));
 	if(bg) p->bg.pixels = bg;
 	if(fg) p->fg.pixels = fg;
-	if(bg && fg) {
+	if(screen) p->screen = screen;
+	if(bg && fg && screen) {
 		p->width = width;
 		p->height = height;
+		p->screen = screen;
 		ppu_clear(p, &p->bg);
 		ppu_clear(p, &p->fg);
 	}
