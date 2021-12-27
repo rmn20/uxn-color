@@ -77,7 +77,6 @@ ppu_clear(Ppu *p, Layer *layer)
 	layer->changed = 1;
 }
 
-#pragma weak ppu_redraw
 void
 ppu_redraw(Ppu *p, Uint32 *screen)
 {

@@ -38,7 +38,6 @@ MSYS_NT*|MINGW*) # MSYS2 on Windows
 	else
 		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
 	fi
-	sed -i -e '/^#pragma weak /d' src/devices/ppu.c
 	;;
 Darwin) # macOS
 	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"
@@ -57,14 +56,11 @@ then
 else
 	CFLAGS="${CFLAGS} -DNDEBUG -Os -g0 -s"
 	CORE='src/uxn-fast.c'
-	ARCH=`${CC} -dumpmachine 2> /dev/null || echo nope`
-	ARCH=${ARCH%%-*}
-	EXTRA=`find src -name *_${ARCH}.c 2> /dev/null || true`
 fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/mouse.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${EXTRA} ${UXNEMU_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/file.c src/devices/mouse.c src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
 ${CC} ${CFLAGS} ${CORE} src/devices/file.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]
