@@ -394,9 +394,9 @@ restart(Uxn *u)
 }
 
 Uint8
-get_button(SDL_Event event)
+get_button(SDL_Event *event)
 {
-	switch(event.key.keysym.sym) {
+	switch(event->key.keysym.sym) {
 	case SDLK_LCTRL: return 0x01;
 	case SDLK_LALT: return 0x02;
 	case SDLK_LSHIFT: return 0x04;
@@ -483,9 +483,9 @@ run(Uxn *u)
 					clamp(event.motion.x - PAD, 0, ppu.width - 1),
 					clamp(event.motion.y - PAD, 0, ppu.height - 1));
 			else if(event.type == SDL_KEYDOWN)
-				controller_down(devctrl, get_button(event));
+				controller_down(devctrl, get_button(&event));
 			else if(event.type == SDL_KEYUP)
-				controller_up(devctrl, get_button(event));
+				controller_up(devctrl, get_button(&event));
 			/* continue */
 			switch(event.type) {
 			case SDL_DROPFILE:
