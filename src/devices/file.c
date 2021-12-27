@@ -24,11 +24,12 @@ WITH REGARD TO THIS SOFTWARE.
 static FILE *f;
 static DIR *d;
 static char *current_filename = "";
+static struct dirent *de;
+
 static enum { IDLE,
 	FILE_READ,
 	FILE_WRITE,
 	DIR_READ } state;
-static struct dirent *de;
 
 static void
 reset(void)
@@ -80,7 +81,7 @@ file_read_dir(char *dest, Uint16 len)
 	return p - dest;
 }
 
-Uint16
+static Uint16
 file_init(void *filename)
 {
 	reset();
@@ -88,7 +89,7 @@ file_init(void *filename)
 	return 0;
 }
 
-Uint16
+static Uint16
 file_read(void *dest, Uint16 len)
 {
 	if(state != FILE_READ && state != DIR_READ) {
@@ -105,7 +106,7 @@ file_read(void *dest, Uint16 len)
 	return 0;
 }
 
-Uint16
+static Uint16
 file_write(void *src, Uint16 len, Uint8 flags)
 {
 	Uint16 ret = 0;
@@ -121,7 +122,7 @@ file_write(void *src, Uint16 len, Uint8 flags)
 	return ret;
 }
 
-Uint16
+static Uint16
 file_stat(void *dest, Uint16 len)
 {
 	char *basename = strrchr(current_filename, '/');
@@ -132,8 +133,23 @@ file_stat(void *dest, Uint16 len)
 	return get_entry(dest, len, current_filename, basename, 0);
 }
 
-Uint16
+static Uint16
 file_delete(void)
 {
 	return unlink(current_filename);
+}
+
+/* API */
+
+void
+file_deo(Device *d, Uint8 port)
+{
+	switch(port) {
+	case 0x1: d->vector = peek16(d->dat, 0x0); break;
+	case 0x9: poke16(d->dat, 0x2, file_init(&d->mem[peek16(d->dat, 0x8)])); break;
+	case 0xd: poke16(d->dat, 0x2, file_read(&d->mem[peek16(d->dat, 0xc)], peek16(d->dat, 0xa))); break;
+	case 0xf: poke16(d->dat, 0x2, file_write(&d->mem[peek16(d->dat, 0xe)], peek16(d->dat, 0xa), d->dat[0x7])); break;
+	case 0x5: poke16(d->dat, 0x2, file_stat(&d->mem[peek16(d->dat, 0x4)], peek16(d->dat, 0xa))); break;
+	case 0x6: poke16(d->dat, 0x2, file_delete()); break;
+	}
 }

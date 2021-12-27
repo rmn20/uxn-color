@@ -10,8 +10,4 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-Uint16 file_init(void *filename);
-Uint16 file_read(void *dest, Uint16 len);
-Uint16 file_write(void *src, Uint16 len, Uint8 flags);
-Uint16 file_stat(void *dest, Uint16 len);
-Uint16 file_delete(void);
+void file_deo(Device *d, Uint8 port);
