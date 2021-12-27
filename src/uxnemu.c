@@ -510,10 +510,10 @@ run(Uxn *u)
 					controller_key(devctrl, event.text.text[0]);
 				else if(get_key(&event))
 					controller_key(devctrl, get_key(&event));
-				else if(get_button(&event)) {
+				else if(get_button(&event)) 
 					controller_down(devctrl, get_button(&event));
+				else
 					do_shortcut(u, &event);
-				}
 			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
 			else if(event.type == SDL_JOYBUTTONDOWN)
