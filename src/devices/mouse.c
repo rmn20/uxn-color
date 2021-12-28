@@ -36,7 +36,7 @@ mouse_pos(Device *d, Uint16 x, Uint16 y)
 }
 
 void
-mouse_mod(Device *d, Uint16 x, Uint16 y)
+mouse_scroll(Device *d, Uint16 x, Uint16 y)
 {
 	poke16(d->dat, 0xa, x);
 	poke16(d->dat, 0xc, -y);

@@ -500,16 +500,16 @@ run(Uxn *u)
 			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
 				uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			/* Mouse */
-			else if(event.type == SDL_MOUSEWHEEL)
-				mouse_mod(devmouse, event.wheel.x, event.wheel.y);
-			else if(event.type == SDL_MOUSEBUTTONUP)
-				mouse_up(devmouse, 0x1 << (event.button.button - 1));
-			else if(event.type == SDL_MOUSEBUTTONDOWN)
-				mouse_down(devmouse, 0x1 << (event.button.button - 1));
 			else if(event.type == SDL_MOUSEMOTION)
 				mouse_pos(devmouse,
 					clamp(event.motion.x - PAD, 0, ppu.width - 1),
 					clamp(event.motion.y - PAD, 0, ppu.height - 1));
+			else if(event.type == SDL_MOUSEBUTTONUP)
+				mouse_up(devmouse, 0x1 << (event.button.button - 1));
+			else if(event.type == SDL_MOUSEBUTTONDOWN)
+				mouse_down(devmouse, 0x1 << (event.button.button - 1));
+			else if(event.type == SDL_MOUSEWHEEL)
+				mouse_scroll(devmouse, event.wheel.x, event.wheel.y);
 			/* Controller */
 			else if(event.type == SDL_KEYDOWN || event.type == SDL_TEXTINPUT) {
 				if(event.type == SDL_TEXTINPUT)
@@ -522,17 +522,16 @@ run(Uxn *u)
 					do_shortcut(u, &event);
 			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
-			else if(event.type == SDL_JOYBUTTONDOWN)
-				controller_down(devctrl, get_button_joystick(&event));
-			else if(event.type == SDL_JOYBUTTONUP)
-				controller_up(devctrl, get_button_joystick(&event));
 			else if(event.type == SDL_JOYAXISMOTION) {
 				Uint8 vec = get_vector_joystick(&event);
 				if(!vec)
 					controller_up(devctrl, (0x03 << (!event.jaxis.axis * 2)) << 4);
 				else
 					controller_down(devctrl, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
-			}
+			} else if(event.type == SDL_JOYBUTTONDOWN)
+				controller_down(devctrl, get_button_joystick(&event));
+			else if(event.type == SDL_JOYBUTTONUP)
+				controller_up(devctrl, get_button_joystick(&event));
 			/* Console */
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);

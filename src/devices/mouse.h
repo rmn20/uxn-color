@@ -13,4 +13,4 @@ WITH REGARD TO THIS SOFTWARE.
 void mouse_down(Device *d, Uint8 mask);
 void mouse_up(Device *d, Uint8 mask);
 void mouse_pos(Device *d, Uint16 x, Uint16 y);
-void mouse_mod(Device *d, Uint16 x, Uint16 y);
+void mouse_scroll(Device *d, Uint16 x, Uint16 y);
