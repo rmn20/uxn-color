@@ -13,6 +13,7 @@ WITH REGARD TO THIS SOFTWARE.
 typedef signed int Sint32;
 
 #define SAMPLE_FREQUENCY 44100
+#define POLYPHONY 4
 
 typedef struct {
 	Uint8 *addr;
@@ -20,9 +21,11 @@ typedef struct {
 	Uint16 i, len;
 	Sint8 volume[2];
 	Uint8 pitch, repeat;
-} Apu;
+} Audio;
 
-int apu_render(Apu *c, Sint16 *sample, Sint16 *end);
-void apu_start(Apu *c, Uint16 adsr, Uint8 pitch);
-Uint8 apu_get_vu(Apu *c);
-void apu_finished_handler(Apu *c);
+extern Audio audio[POLYPHONY];
+
+int audio_render(Audio *c, Sint16 *sample, Sint16 *end);
+void audio_start(Audio *c, Uint16 adsr, Uint8 pitch);
+Uint8 audio_get_vu(Audio *c);
+void audio_finished_handler(Audio *c);

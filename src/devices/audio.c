@@ -1,5 +1,5 @@
 #include "../uxn.h"
-#include "apu.h"
+#include "audio.h"
 
 /*
 Copyright (c) 2021 Devine Lu Linvega
@@ -23,10 +23,12 @@ static Uint32 advances[12] = {
 	0xb504f, 0xbfc88, 0xcb2ff, 0xd7450, 0xe411f, 0xf1a1c
 };
 
+Audio audio[POLYPHONY];
+
 /* clang-format on */
 
 static Sint32
-envelope(Apu *c, Uint32 age)
+envelope(Audio *c, Uint32 age)
 {
 	if(!c->r) return 0x0888;
 	if(age < c->a) return 0x0888 * age / c->a;
@@ -38,7 +40,7 @@ envelope(Apu *c, Uint32 age)
 }
 
 int
-apu_render(Apu *c, Sint16 *sample, Sint16 *end)
+audio_render(Audio *c, Sint16 *sample, Sint16 *end)
 {
 	Sint32 s;
 	if(!c->advance || !c->period) return 0;
@@ -57,12 +59,12 @@ apu_render(Apu *c, Sint16 *sample, Sint16 *end)
 		*sample++ += s * c->volume[0] / 0x180;
 		*sample++ += s * c->volume[1] / 0x180;
 	}
-	if(!c->advance) apu_finished_handler(c);
+	if(!c->advance) audio_finished_handler(c);
 	return 1;
 }
 
 void
-apu_start(Apu *c, Uint16 adsr, Uint8 pitch)
+audio_start(Audio *c, Uint16 adsr, Uint8 pitch)
 {
 	if(pitch < 108 && c->len)
 		c->advance = advances[pitch % 12] >> (8 - pitch / 12);
@@ -83,7 +85,7 @@ apu_start(Apu *c, Uint16 adsr, Uint8 pitch)
 }
 
 Uint8
-apu_get_vu(Apu *c)
+audio_get_vu(Audio *c)
 {
 	int i;
 	Sint32 sum[2] = {0, 0};

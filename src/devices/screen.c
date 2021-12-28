@@ -45,8 +45,7 @@ screen_write(Screen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
 		Uint32 i = x + y * p->width;
-		Uint8 prev = layer->pixels[i];
-		if(color != prev) {
+		if(color != layer->pixels[i]) {
 			layer->pixels[i] = color;
 			layer->changed = 1;
 		}

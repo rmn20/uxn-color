@@ -9,7 +9,7 @@
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #include <SDL.h>
 #include "devices/screen.h"
-#include "devices/apu.h"
+#include "devices/audio.h"
 #include "devices/file.h"
 #include "devices/controller.h"
 #include "devices/mouse.h"
@@ -30,7 +30,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
-#define POLYPHONY 4
 #define BENCH 0
 
 static SDL_Window *gWindow;
@@ -41,7 +40,6 @@ static SDL_Rect gRect;
 
 /* devices */
 
-static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
@@ -68,17 +66,17 @@ audio_callback(void *u, Uint8 *stream, int len)
 	Sint16 *samples = (Sint16 *)stream;
 	SDL_memset(stream, 0, len);
 	for(i = 0; i < POLYPHONY; ++i)
-		running += apu_render(&apu[i], samples, samples + len / 2);
+		running += audio_render(&audio[i], samples, samples + len / 2);
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
 	(void)u;
 }
 
 void
-apu_finished_handler(Apu *c)
+audio_finished_handler(Audio *c)
 {
 	SDL_Event event;
-	event.type = audio0_event + (c - apu);
+	event.type = audio0_event + (c - audio);
 	SDL_PushEvent(&event);
 }
 
@@ -212,10 +210,10 @@ console_deo(Device *d, Uint8 port)
 static Uint8
 audio_dei(Device *d, Uint8 port)
 {
-	Apu *c = &apu[d - devaudio0];
+	Audio *c = &audio[d - devaudio0];
 	if(!audio_id) return d->dat[port];
 	switch(port) {
-	case 0x4: return apu_get_vu(c);
+	case 0x4: return audio_get_vu(c);
 	case 0x2: poke16(d->dat, 0x2, c->i); /* fall through */
 	default: return d->dat[port];
 	}
@@ -224,7 +222,7 @@ audio_dei(Device *d, Uint8 port)
 static void
 audio_deo(Device *d, Uint8 port)
 {
-	Apu *c = &apu[d - devaudio0];
+	Audio *c = &audio[d - devaudio0];
 	if(!audio_id) return;
 	if(port == 0xf) {
 		SDL_LockAudioDevice(audio_id);
@@ -233,7 +231,7 @@ audio_deo(Device *d, Uint8 port)
 		c->volume[0] = d->dat[0xe] >> 4;
 		c->volume[1] = d->dat[0xe] & 0xf;
 		c->repeat = !(d->dat[0xf] & 0x80);
-		apu_start(c, peek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
+		audio_start(c, peek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
