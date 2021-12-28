@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-void mouse_xy(Device *d, Uint16 x, Uint16 y);
-void mouse_z(Device *d, Uint8 z);
 void mouse_down(Device *d, Uint8 mask);
 void mouse_up(Device *d, Uint8 mask);
+void mouse_pos(Device *d, Uint16 x, Uint16 y);
+void mouse_mod(Device *d, Uint16 x, Uint16 y);

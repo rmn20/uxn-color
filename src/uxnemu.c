@@ -501,13 +501,13 @@ run(Uxn *u)
 				uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			/* Mouse */
 			else if(event.type == SDL_MOUSEWHEEL)
-				mouse_z(devmouse, event.wheel.y);
+				mouse_mod(devmouse, event.wheel.x, event.wheel.y);
 			else if(event.type == SDL_MOUSEBUTTONUP)
 				mouse_up(devmouse, 0x1 << (event.button.button - 1));
 			else if(event.type == SDL_MOUSEBUTTONDOWN)
 				mouse_down(devmouse, 0x1 << (event.button.button - 1));
 			else if(event.type == SDL_MOUSEMOTION)
-				mouse_xy(devmouse,
+				mouse_pos(devmouse,
 					clamp(event.motion.x - PAD, 0, ppu.width - 1),
 					clamp(event.motion.y - PAD, 0, ppu.height - 1));
 			/* Controller */
