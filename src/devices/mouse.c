@@ -39,7 +39,7 @@ void
 mouse_mod(Device *d, Uint16 x, Uint16 y)
 {
 	poke16(d->dat, 0xa, x);
-	poke16(d->dat, 0xc, y);
+	poke16(d->dat, 0xc, -y);
 	uxn_eval(d->u, d->vector);
 	poke16(d->dat, 0xa, 0);
 	poke16(d->dat, 0xc, 0);

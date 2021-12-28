@@ -22,7 +22,7 @@ WITH REGARD TO THIS SOFTWARE.
 #include <unistd.h>
 
 static FILE *f;
-static DIR *d;
+static DIR *dir;
 static char *current_filename = "";
 static struct dirent *de;
 
@@ -38,9 +38,9 @@ reset(void)
 		fclose(f);
 		f = NULL;
 	}
-	if(d != NULL) {
-		closedir(d);
-		d = NULL;
+	if(dir != NULL) {
+		closedir(dir);
+		dir = NULL;
 	}
 	de = NULL;
 	state = IDLE;
@@ -67,8 +67,8 @@ file_read_dir(char *dest, Uint16 len)
 {
 	static char pathname[4096];
 	char *p = dest;
-	if(de == NULL) de = readdir(d);
-	for(; de != NULL; de = readdir(d)) {
+	if(de == NULL) de = readdir(dir);
+	for(; de != NULL; de = readdir(dir)) {
 		Uint16 n;
 		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
 			continue;
@@ -94,7 +94,7 @@ file_read(void *dest, Uint16 len)
 {
 	if(state != FILE_READ && state != DIR_READ) {
 		reset();
-		if((d = opendir(current_filename)) != NULL)
+		if((dir = opendir(current_filename)) != NULL)
 			state = DIR_READ;
 		else if((f = fopen(current_filename, "rb")) != NULL)
 			state = FILE_READ;
