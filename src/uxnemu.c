@@ -8,7 +8,7 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #include <SDL.h>
-#include "devices/ppu.h"
+#include "devices/screen.h"
 #include "devices/apu.h"
 #include "devices/file.h"
 #include "devices/controller.h"
@@ -30,7 +30,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
-#define FIXED_SIZE 0
 #define POLYPHONY 4
 #define BENCH 0
 
@@ -39,8 +38,9 @@ static SDL_Texture *gTexture;
 static SDL_Renderer *gRenderer;
 static SDL_AudioDeviceID audio_id;
 static SDL_Rect gRect;
+
 /* devices */
-static Ppu ppu;
+
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
@@ -106,20 +106,20 @@ set_window_size(SDL_Window *window, int w, int h)
 static int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
-	ppu_resize(&ppu, width, height);
+	screen_resize(&screen, width, height);
 	gRect.x = PAD;
 	gRect.y = PAD;
-	gRect.w = ppu.width;
-	gRect.h = ppu.height;
+	gRect.w = screen.width;
+	gRect.h = screen.height;
 	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	SDL_RenderSetLogicalSize(gRenderer, screen.width + PAD * 2, screen.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, screen.width + PAD * 2, screen.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("gTexture", SDL_GetError());
-	if(SDL_UpdateTexture(gTexture, NULL, ppu.screen, sizeof(Uint32)) != 0)
+	if(SDL_UpdateTexture(gTexture, NULL, screen.pixels, sizeof(Uint32)) != 0)
 		return error("SDL_UpdateTexture", SDL_GetError());
 	if(is_resize)
-		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+		set_window_size(gWindow, (screen.width + PAD * 2) * zoom, (screen.height + PAD * 2) * zoom);
 	return 1;
 }
 
@@ -127,9 +127,9 @@ static void
 redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
-		ppu_debug(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	ppu_redraw(&ppu, ppu.screen);
-	if(SDL_UpdateTexture(gTexture, &gRect, ppu.screen, ppu.width * sizeof(Uint32)) != 0)
+		screen_debug(&screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
+	screen_redraw(&screen, screen.pixels);
+	if(SDL_UpdateTexture(gTexture, &gRect, screen.pixels, screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
@@ -197,7 +197,7 @@ system_deo(Device *d, Uint8 port)
 	case 0x3: d->u->rst.ptr = d->dat[port]; break;
 	}
 	if(port > 0x7 && port < 0xe)
-		ppu_palette(&ppu, &d->dat[0x8]);
+		screen_palette(&screen, &d->dat[0x8]);
 }
 
 static void
@@ -207,50 +207,6 @@ console_deo(Device *d, Uint8 port)
 		d->vector = peek16(d->dat, 0x0);
 	if(port > 0x7)
 		write(port - 0x7, (char *)&d->dat[port], 1);
-}
-
-static Uint8
-screen_dei(Device *d, Uint8 port)
-{
-	switch(port) {
-	case 0x2: return ppu.width >> 8;
-	case 0x3: return ppu.width;
-	case 0x4: return ppu.height >> 8;
-	case 0x5: return ppu.height;
-	default: return d->dat[port];
-	}
-}
-
-static void
-screen_deo(Device *d, Uint8 port)
-{
-	switch(port) {
-	case 0x1: d->vector = peek16(d->dat, 0x0); break;
-	case 0x5:
-		if(!FIXED_SIZE) set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4), 1);
-		break;
-	case 0xe: {
-		Uint16 x = peek16(d->dat, 0x8);
-		Uint16 y = peek16(d->dat, 0xa);
-		Uint8 layer = d->dat[0xe] & 0x40;
-		ppu_write(&ppu, layer ? &ppu.fg : &ppu.bg, x, y, d->dat[0xe] & 0x3);
-		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
-		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
-		break;
-	}
-	case 0xf: {
-		Uint16 x = peek16(d->dat, 0x8);
-		Uint16 y = peek16(d->dat, 0xa);
-		Layer *layer = (d->dat[0xf] & 0x40) ? &ppu.fg : &ppu.bg;
-		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
-		Uint8 twobpp = !!(d->dat[0xf] & 0x80);
-		ppu_blit(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
-		if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8 + twobpp * 8); /* auto addr+8 / auto addr+16 */
-		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8);                                /* auto x+8 */
-		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 8);                                /* auto y+8 */
-		break;
-	}
-	}
 }
 
 static Uint8
@@ -370,14 +326,14 @@ static void
 set_zoom(Uint8 scale)
 {
 	zoom = clamp(scale, 1, 3);
-	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	set_window_size(gWindow, (screen.width + PAD * 2) * zoom, (screen.height + PAD * 2) * zoom);
 }
 
 static void
 toggle_debugger(void)
 {
 	devsystem->dat[0xe] = !devsystem->dat[0xe];
-	ppu_clear(&ppu, &ppu.fg);
+	screen_clear(&screen, &screen.fg);
 }
 
 static void
@@ -502,8 +458,8 @@ run(Uxn *u)
 			/* Mouse */
 			else if(event.type == SDL_MOUSEMOTION)
 				mouse_pos(devmouse,
-					clamp(event.motion.x - PAD, 0, ppu.width - 1),
-					clamp(event.motion.y - PAD, 0, ppu.height - 1));
+					clamp(event.motion.x - PAD, 0, screen.width - 1),
+					clamp(event.motion.y - PAD, 0, screen.height - 1));
 			else if(event.type == SDL_MOUSEBUTTONUP)
 				mouse_up(devmouse, 0x1 << (event.button.button - 1));
 			else if(event.type == SDL_MOUSEBUTTONDOWN)
@@ -537,7 +493,7 @@ run(Uxn *u)
 				console_input(u, event.cbutton.button);
 		}
 		uxn_eval(u, devscreen->vector);
-		if(ppu.fg.changed || ppu.bg.changed || devsystem->dat[0xe])
+		if(screen.fg.changed || screen.bg.changed || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
