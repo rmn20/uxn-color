@@ -466,6 +466,11 @@ run(Uxn *u)
 					controller_down(devctrl, get_button(&event));
 				else
 					do_shortcut(u, &event);
+				if(event.type == SDL_KEYDOWN) {
+					int ksym = event.key.keysym.sym;
+					if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
+						break;
+				}
 			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
 			else if(event.type == SDL_JOYAXISMOTION) {
