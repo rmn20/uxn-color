@@ -931,10 +931,10 @@
 	&3b         :&3a        $2          '; 00          :asma-literal-abs-addr
 	&40         :&3b       :&5b         '@ 00          :asma-label-define
 	&5b          $2         $2          '[ 00          :asma-ignore
-	&5d         :&40       :&7c         '] 00          :asma-ignore
+	&5d         :&40       :&7d         '] 00          :asma-ignore
 	&7b          $2         $2          '{ 00          :asma-ignore
-	&7c         :&7b       :&7d         '| 00          :asma-pad-absolute
-	&7d          $2        :&7e         '} 00          :asma-ignore
+	&7c         :&7b        $2          '| 00          :asma-pad-absolute
+	&7d         :&7c       :&7e         '} 00          :asma-ignore
 	&7e          $2         $2          '~ 00          :asma-include
 
 @asma-opcodes

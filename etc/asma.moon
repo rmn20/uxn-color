@@ -1,7 +1,7 @@
 --
 -- Asma tree helper script
 --
--- This script updates the trees at the end of projects/software/asma.tal when
+-- This script updates the trees at the end of projects/library/asma.tal when
 -- Uxn's opcode set changes or new runes (first character of tokens) are
 -- created, so that new changes in the C assembler can be incorporated rapidly
 -- into asma.
@@ -80,6 +80,7 @@ do -- first characters
 		']': 'asma-ignore'
 		'(': 'asma-comment-start'
 		')': 'asma-comment-end'
+		'~': 'asma-include'
 	process 'asma-first-char-macro',
 		'(': 'asma-comment-start'
 		')': 'asma-comment-end'
@@ -122,8 +123,8 @@ printout = true
 fmt = (...) ->
 	('\t%-11s %-10s %-12s %-14s %s '\format(...)\gsub ' +$', '\n')
 
-with assert io.open 'projects/software/asma.tal.tmp', 'w'
-	for l in assert io.lines 'projects/software/asma.tal'
+with assert io.open 'projects/library/asma.tal.tmp', 'w'
+	for l in assert io.lines 'projects/library/asma.tal'
 		if l\match '--- cut here ---'
 			break
 		\write l
@@ -155,43 +156,6 @@ with assert io.open 'projects/software/asma.tal.tmp', 'w'
 				''
 			\write fmt label, lefts[k] or ' $2', rights[k] or ' $2', unpack v
 		\write '\n'
-	\write [[(
-	Heap, a large temporary area for keeping track of labels. More complex
-	programs need more of this space. If there's insufficient space then the
-	assembly process will fail, but having extra space above what the most
-	complex program needs provides no benefit.
-
-	This heap, and the buffers below, are free to be used to hold temporary
-	data between assembly runs, and do not need to be initialized with any
-	particular contents to use the assembler.
-)
-
-@asma-heap
-
-|e000 &end
-
-(
-	Buffer for use with loading source code.
-	The minimum size is the length of the longest token plus one, which is
-	0x21 to keep the same capability of the C assembler.
-	Larger sizes are more efficient, provided there is enough
-	heap space to keep track of all the labels.
-)
-
-@asma-read-buffer
-
-|f800 &end
-
-(
-	Buffer for use with writing output.
-	The minimum size is 1, and larger sizes are more efficient.
-)
-
-@asma-write-buffer
-
-|ffff &end
-
-]]
 	\close!
-os.execute 'mv projects/software/asma.tal.tmp projects/software/asma.tal'
+os.execute 'mv projects/library/asma.tal.tmp projects/library/asma.tal'
 
