@@ -146,26 +146,19 @@ init(void)
 	as.callback = audio_callback;
 	as.samples = 512;
 	as.userdata = NULL;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
-		error("sdl", SDL_GetError());
-		if(SDL_Init(SDL_INIT_VIDEO) < 0)
-			return error("sdl", SDL_GetError());
-	} else {
-		audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
-		if(!audio_id)
-			error("sdl_audio", SDL_GetError());
-	}
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
+		return error("sdl", SDL_GetError());
 	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
-	if(SDL_NumJoysticks()) {
-		gGameController = SDL_JoystickOpen(0);
-		if(gGameController == NULL)
-			return error("sdl_joystick", SDL_GetError());
-	}
+	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
+	if(!audio_id)
+		error("sdl_audio", SDL_GetError());
+	if(SDL_NumJoysticks() > 0 && !(gGameController = SDL_JoystickOpen(0)))
+		error("sdl_joystick", SDL_GetError());
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
