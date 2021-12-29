@@ -451,9 +451,9 @@ run(Uxn *u)
 					clamp(event.motion.x - PAD, 0, uxn_screen.width - 1),
 					clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
 			else if(event.type == SDL_MOUSEBUTTONUP)
-				mouse_up(devmouse, 0x1 << (event.button.button - 1));
+				mouse_up(devmouse, SDL_BUTTON(event.button.button));
 			else if(event.type == SDL_MOUSEBUTTONDOWN)
-				mouse_down(devmouse, 0x1 << (event.button.button - 1));
+				mouse_down(devmouse, SDL_BUTTON(event.button.button));
 			else if(event.type == SDL_MOUSEWHEEL)
 				mouse_scroll(devmouse, event.wheel.x, event.wheel.y);
 			/* Controller */
