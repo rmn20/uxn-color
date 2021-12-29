@@ -246,9 +246,12 @@ parse(char *w, FILE *f)
 		if(slen(w) != 1) fprintf(stderr, "-- Malformed comment: %s\n", w);
 		i = 1; /* track nested comment depth */
 		while(fscanf(f, "%63s", word) == 1) {
-			if(slen(word) != 1) continue;
-			else if(word[0] == '(') i++;
-			else if(word[0] == ')' && --i < 1) break;
+			if(slen(word) != 1)
+				continue;
+			else if(word[0] == '(')
+				i++;
+			else if(word[0] == ')' && --i < 1)
+				break;
 		}
 		break;
 	case '~': /* include */

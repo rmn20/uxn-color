@@ -66,17 +66,17 @@ audio_callback(void *u, Uint8 *stream, int len)
 	Sint16 *samples = (Sint16 *)stream;
 	SDL_memset(stream, 0, len);
 	for(i = 0; i < POLYPHONY; ++i)
-		running += audio_render(&audio[i], samples, samples + len / 2);
+		running += audio_render(&uxn_audio[i], samples, samples + len / 2);
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
 	(void)u;
 }
 
 void
-audio_finished_handler(Audio *c)
+audio_finished_handler(UxnAudio *c)
 {
 	SDL_Event event;
-	event.type = audio0_event + (c - audio);
+	event.type = audio0_event + (c - uxn_audio);
 	SDL_PushEvent(&event);
 }
 
@@ -104,20 +104,20 @@ set_window_size(SDL_Window *window, int w, int h)
 int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
-	screen_resize(&screen, width, height);
+	screen_resize(&uxn_screen, width, height);
 	gRect.x = PAD;
 	gRect.y = PAD;
-	gRect.w = screen.width;
-	gRect.h = screen.height;
+	gRect.w = uxn_screen.width;
+	gRect.h = uxn_screen.height;
 	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, screen.width + PAD * 2, screen.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, screen.width + PAD * 2, screen.height + PAD * 2);
+	SDL_RenderSetLogicalSize(gRenderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("gTexture", SDL_GetError());
-	if(SDL_UpdateTexture(gTexture, NULL, screen.pixels, sizeof(Uint32)) != 0)
+	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return error("SDL_UpdateTexture", SDL_GetError());
 	if(is_resize)
-		set_window_size(gWindow, (screen.width + PAD * 2) * zoom, (screen.height + PAD * 2) * zoom);
+		set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	return 1;
 }
 
@@ -125,9 +125,9 @@ static void
 redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
-		screen_debug(&screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	screen_redraw(&screen, screen.pixels);
-	if(SDL_UpdateTexture(gTexture, &gRect, screen.pixels, screen.width * sizeof(Uint32)) != 0)
+		screen_debug(&uxn_screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
+	screen_redraw(&uxn_screen, uxn_screen.pixels);
+	if(SDL_UpdateTexture(gTexture, &gRect, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
@@ -188,7 +188,7 @@ system_deo(Device *d, Uint8 port)
 	case 0x3: d->u->rst.ptr = d->dat[port]; break;
 	}
 	if(port > 0x7 && port < 0xe)
-		screen_palette(&screen, &d->dat[0x8]);
+		screen_palette(&uxn_screen, &d->dat[0x8]);
 }
 
 static void
@@ -203,7 +203,7 @@ console_deo(Device *d, Uint8 port)
 static Uint8
 audio_dei(Device *d, Uint8 port)
 {
-	Audio *c = &audio[d - devaudio0];
+	UxnAudio *c = &uxn_audio[d - devaudio0];
 	if(!audio_id) return d->dat[port];
 	switch(port) {
 	case 0x4: return audio_get_vu(c);
@@ -215,7 +215,7 @@ audio_dei(Device *d, Uint8 port)
 static void
 audio_deo(Device *d, Uint8 port)
 {
-	Audio *c = &audio[d - devaudio0];
+	UxnAudio *c = &uxn_audio[d - devaudio0];
 	if(!audio_id) return;
 	if(port == 0xf) {
 		SDL_LockAudioDevice(audio_id);
@@ -317,14 +317,14 @@ static void
 set_zoom(Uint8 scale)
 {
 	zoom = clamp(scale, 1, 3);
-	set_window_size(gWindow, (screen.width + PAD * 2) * zoom, (screen.height + PAD * 2) * zoom);
+	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 }
 
 static void
 toggle_debugger(void)
 {
 	devsystem->dat[0xe] = !devsystem->dat[0xe];
-	screen_clear(&screen, &screen.fg);
+	screen_clear(&uxn_screen, &uxn_screen.fg);
 }
 
 static void
@@ -449,8 +449,8 @@ run(Uxn *u)
 			/* Mouse */
 			else if(event.type == SDL_MOUSEMOTION)
 				mouse_pos(devmouse,
-					clamp(event.motion.x - PAD, 0, screen.width - 1),
-					clamp(event.motion.y - PAD, 0, screen.height - 1));
+					clamp(event.motion.x - PAD, 0, uxn_screen.width - 1),
+					clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
 			else if(event.type == SDL_MOUSEBUTTONUP)
 				mouse_up(devmouse, 0x1 << (event.button.button - 1));
 			else if(event.type == SDL_MOUSEBUTTONDOWN)
@@ -484,7 +484,7 @@ run(Uxn *u)
 				console_input(u, event.cbutton.button);
 		}
 		uxn_eval(u, devscreen->vector);
-		if(screen.fg.changed || screen.bg.changed || devsystem->dat[0xe])
+		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;

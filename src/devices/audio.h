@@ -21,11 +21,11 @@ typedef struct {
 	Uint16 i, len;
 	Sint8 volume[2];
 	Uint8 pitch, repeat;
-} Audio;
+} UxnAudio;
 
-extern Audio audio[POLYPHONY];
+extern UxnAudio uxn_audio[POLYPHONY];
 
-Uint8 audio_get_vu(Audio *c);
-int audio_render(Audio *c, Sint16 *sample, Sint16 *end);
-void audio_start(Audio *c, Uint16 adsr, Uint8 pitch);
-void audio_finished_handler(Audio *c);
+Uint8 audio_get_vu(UxnAudio *c);
+int audio_render(UxnAudio *c, Sint16 *sample, Sint16 *end);
+void audio_start(UxnAudio *c, Uint16 adsr, Uint8 pitch);
+void audio_finished_handler(UxnAudio *c);

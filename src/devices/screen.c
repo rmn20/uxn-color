@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-Screen screen;
+UxnScreen uxn_screen;
 
 static Uint8 blending[5][16] = {
 	{0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 0, 2, 3, 3, 3, 0},
@@ -41,7 +41,7 @@ static Uint8 font[][8] = {
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x80, 0x80}};
 
 static void
-screen_write(Screen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
+screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	if(x < p->width && y < p->height) {
 		Uint32 i = x + y * p->width;
@@ -53,7 +53,7 @@ screen_write(Screen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 }
 
 static void
-screen_blit(Screen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
+screen_blit(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
 	int v, h, opaque = blending[4][color];
 	for(v = 0; v < 8; ++v) {
@@ -71,7 +71,7 @@ screen_blit(Screen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 co
 }
 
 void
-screen_palette(Screen *p, Uint8 *addr)
+screen_palette(UxnScreen *p, Uint8 *addr)
 {
 	int i, shift;
 	for(i = 0, shift = 4; i < 4; ++i, shift ^= 4) {
@@ -86,7 +86,7 @@ screen_palette(Screen *p, Uint8 *addr)
 }
 
 void
-screen_resize(Screen *p, Uint16 width, Uint16 height)
+screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 {
 	Uint8
 		*bg = realloc(p->bg.pixels, width * height),
@@ -106,7 +106,7 @@ screen_resize(Screen *p, Uint16 width, Uint16 height)
 }
 
 void
-screen_clear(Screen *p, Layer *layer)
+screen_clear(UxnScreen *p, Layer *layer)
 {
 	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; ++i)
@@ -115,7 +115,7 @@ screen_clear(Screen *p, Layer *layer)
 }
 
 void
-screen_redraw(Screen *p, Uint32 *pixels)
+screen_redraw(UxnScreen *p, Uint32 *pixels)
 {
 	Uint32 i, size = p->width * p->height, palette[16];
 	for(i = 0; i < 16; ++i)
@@ -126,7 +126,7 @@ screen_redraw(Screen *p, Uint32 *pixels)
 }
 
 void
-screen_debug(Screen *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
+screen_debug(UxnScreen *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 {
 	Uint8 i, x, y, b;
 	for(i = 0; i < 0x20; ++i) {
@@ -160,10 +160,10 @@ Uint8
 screen_dei(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x2: return screen.width >> 8;
-	case 0x3: return screen.width;
-	case 0x4: return screen.height >> 8;
-	case 0x5: return screen.height;
+	case 0x2: return uxn_screen.width >> 8;
+	case 0x3: return uxn_screen.width;
+	case 0x4: return uxn_screen.height >> 8;
+	case 0x5: return uxn_screen.height;
 	default: return d->dat[port];
 	}
 }
@@ -180,7 +180,7 @@ screen_deo(Device *d, Uint8 port)
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xe] & 0x40;
-		screen_write(&screen, layer ? &screen.fg : &screen.bg, x, y, d->dat[0xe] & 0x3);
+		screen_write(&uxn_screen, layer ? &uxn_screen.fg : &uxn_screen.bg, x, y, d->dat[0xe] & 0x3);
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 		break;
@@ -188,10 +188,10 @@ screen_deo(Device *d, Uint8 port)
 	case 0xf: {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
-		Layer *layer = (d->dat[0xf] & 0x40) ? &screen.fg : &screen.bg;
+		Layer *layer = (d->dat[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
 		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 		Uint8 twobpp = !!(d->dat[0xf] & 0x80);
-		screen_blit(&screen, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
+		screen_blit(&uxn_screen, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
 		if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8 + twobpp * 8); /* auto addr+8 / auto addr+16 */
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8);                                /* auto x+8 */
 		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 8);                                /* auto y+8 */

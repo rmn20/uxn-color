@@ -23,12 +23,12 @@ static Uint32 advances[12] = {
 	0xb504f, 0xbfc88, 0xcb2ff, 0xd7450, 0xe411f, 0xf1a1c
 };
 
-Audio audio[POLYPHONY];
+UxnAudio uxn_audio[POLYPHONY];
 
 /* clang-format on */
 
 static Sint32
-envelope(Audio *c, Uint32 age)
+envelope(UxnAudio *c, Uint32 age)
 {
 	if(!c->r) return 0x0888;
 	if(age < c->a) return 0x0888 * age / c->a;
@@ -40,7 +40,7 @@ envelope(Audio *c, Uint32 age)
 }
 
 int
-audio_render(Audio *c, Sint16 *sample, Sint16 *end)
+audio_render(UxnAudio *c, Sint16 *sample, Sint16 *end)
 {
 	Sint32 s;
 	if(!c->advance || !c->period) return 0;
@@ -64,7 +64,7 @@ audio_render(Audio *c, Sint16 *sample, Sint16 *end)
 }
 
 void
-audio_start(Audio *c, Uint16 adsr, Uint8 pitch)
+audio_start(UxnAudio *c, Uint16 adsr, Uint8 pitch)
 {
 	if(pitch < 108 && c->len)
 		c->advance = advances[pitch % 12] >> (8 - pitch / 12);
@@ -85,7 +85,7 @@ audio_start(Audio *c, Uint16 adsr, Uint8 pitch)
 }
 
 Uint8
-audio_get_vu(Audio *c)
+audio_get_vu(UxnAudio *c)
 {
 	int i;
 	Sint32 sum[2] = {0, 0};
