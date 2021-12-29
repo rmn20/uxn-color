@@ -236,7 +236,7 @@ doinclude(const char *filename)
 static int
 parse(char *w, FILE *f)
 {
-	int i = 0;
+	int i;
 	char word[64], subw[64], c;
 	Macro *m;
 	if(slen(w) >= 63)

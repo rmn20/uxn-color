@@ -137,7 +137,6 @@ redraw(Uxn *u)
 static int
 init(void)
 {
-	SDL_Joystick *gGameController;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -157,7 +156,7 @@ init(void)
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
 		error("sdl_audio", SDL_GetError());
-	if(SDL_NumJoysticks() > 0 && !(gGameController = SDL_JoystickOpen(0)))
+	if(SDL_NumJoysticks() > 0 && SDL_JoystickOpen(0) == NULL)
 		error("sdl_joystick", SDL_GetError());
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
@@ -429,7 +428,7 @@ run(Uxn *u)
 	redraw(u);
 	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
-		double elapsed, begin = 0;
+		double elapsed, begin;
 		if(!BENCH)
 			begin = SDL_GetPerformanceCounter();
 		while(SDL_PollEvent(&event) != 0) {
