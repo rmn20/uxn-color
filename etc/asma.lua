@@ -89,7 +89,8 @@ do
     ['}'] = 'asma-macro-end'
   })
   process('asma-first-char-comment', {
-    [')'] = 'asma-comment-end'
+    ['('] = 'asma-comment-more',
+    [')'] = 'asma-comment-less'
   })
 end
 local traverse_node

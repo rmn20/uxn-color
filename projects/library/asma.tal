@@ -347,6 +347,7 @@
 
 @asma [
 	&pass $1 &state $1 &line $2 &lines $2 &break $1 &eof $1
+	&comment-level $1
 	&token $2 &orig-token $2 &lit $1 &lit-present $1
 	&addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
@@ -610,11 +611,17 @@
 %asma-STATE-SET { ;asma/state LDA ORA ;asma/state STA }
 %asma-STATE-CLEAR { #ff EOR ;asma/state LDA AND ;asma/state STA }
 
+@asma-comment-more
+	;asma/token LDA2 ;strlen JSR2 ORA ,asma-ignore JCN
 @asma-comment-start
+	;asma/comment-level LDAk INC ROT ROT STA
 	#02 asma-STATE-SET
 @asma-ignore
 	JMP2r
 
+@asma-comment-less
+	;asma/token LDA2 ;strlen JSR2 ORA ,asma-ignore JCN
+	;asma/comment-level LDAk #01 SUB DUP SWP2 STA ,asma-ignore JCN
 @asma-comment-end
 	#02 asma-STATE-CLEAR
 	JMP2r
@@ -908,7 +915,8 @@
 	            than       than         string         data )
 
 @asma-first-char-comment
-	&_entry      $2         $2          ') 00          :asma-comment-end
+	&28          $2         $2          '( 00          :asma-comment-more
+	&_entry     :&28        $2          ') 00          :asma-comment-less
 
 @asma-first-char-macro
 	&28          $2         $2          '( 00          :asma-comment-start

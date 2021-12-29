@@ -87,7 +87,8 @@ do -- first characters
 		'{': 'asma-ignore'
 		'}': 'asma-macro-end'
 	process 'asma-first-char-comment',
-		')': 'asma-comment-end'
+		'(': 'asma-comment-more'
+		')': 'asma-comment-less'
 
 traverse_node = (t, min, max, lefts, rights) ->
 	i = math.ceil (min + max) / 2
