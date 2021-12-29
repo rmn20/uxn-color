@@ -139,7 +139,7 @@ file_delete(void)
 	return unlink(current_filename);
 }
 
-/* API */
+/* IO */
 
 void
 file_deo(Device *d, Uint8 port)

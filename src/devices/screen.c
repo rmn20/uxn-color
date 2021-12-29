@@ -154,7 +154,7 @@ screen_debug(Screen *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	}
 }
 
-/* APIs */
+/* IO */
 
 Uint8
 screen_dei(Device *d, Uint8 port)
@@ -174,7 +174,7 @@ screen_deo(Device *d, Uint8 port)
 	switch(port) {
 	case 0x1: d->vector = peek16(d->dat, 0x0); break;
 	case 0x5:
-		/* TODO: if(!FIXED_SIZE) set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4), 1); */
+		if(!FIXED_SIZE) set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4), 1);
 		break;
 	case 0xe: {
 		Uint16 x = peek16(d->dat, 0x8);

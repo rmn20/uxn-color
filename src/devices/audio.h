@@ -25,7 +25,7 @@ typedef struct {
 
 extern Audio audio[POLYPHONY];
 
+Uint8 audio_get_vu(Audio *c);
 int audio_render(Audio *c, Sint16 *sample, Sint16 *end);
 void audio_start(Audio *c, Uint16 adsr, Uint8 pitch);
-Uint8 audio_get_vu(Audio *c);
 void audio_finished_handler(Audio *c);

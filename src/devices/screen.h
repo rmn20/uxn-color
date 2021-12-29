@@ -27,6 +27,9 @@ typedef struct Screen {
 
 extern Screen screen;
 
+/* this should probably be done differently */
+int set_size(Uint16 width, Uint16 height, int is_resize);
+
 void screen_palette(Screen *p, Uint8 *addr);
 void screen_resize(Screen *p, Uint16 width, Uint16 height);
 void screen_clear(Screen *p, Layer *layer);

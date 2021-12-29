@@ -101,7 +101,7 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
-static int
+int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
 	screen_resize(&screen, width, height);
