@@ -4018,12 +4018,13 @@ error:
 }
 
 int
-uxn_boot(Uxn *u)
+uxn_boot(Uxn *u, Uint8 *memory)
 {
 	unsigned int i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); ++i)
 		cptr[i] = 0x00;
+	u->ram.dat = memory;
 	return 1;
 }
 

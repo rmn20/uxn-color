@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 #include "uxn.h"
@@ -147,7 +148,7 @@ load(Uxn *u, char *filepath)
 	FILE *f;
 	int r;
 	if(!(f = fopen(filepath, "rb"))) return 0;
-	r = fread(u->ram.dat + PAGE_PROGRAM, 1, sizeof(u->ram.dat) - PAGE_PROGRAM, f);
+	r = fread(u->ram.dat + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM, f);
 	fclose(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", filepath);
@@ -160,7 +161,7 @@ main(int argc, char **argv)
 	Uxn u;
 	int i, loaded = 0;
 
-	if(!uxn_boot(&u))
+	if(!uxn_boot(&u, (Uint8 *)calloc(0xffff, sizeof(Uint8))))
 		return error("Boot", "Failed");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);

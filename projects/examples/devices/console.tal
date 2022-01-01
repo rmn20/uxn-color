@@ -1,7 +1,9 @@
 ( dev/console )
 
-|00 @System $e &debug
-|10 @Console $8 &write
+%HALT   { #010f DEO }
+%EMIT   { #18 DEO }
+%DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
+%DEBUG2 { ;print-hex JSR2 #0a EMIT }
 
 ( init )
 
@@ -9,11 +11,28 @@
 
 	;hello-word 
 	&while
-		( send ) LDAk .Console/write DEO
+		( send ) LDAk EMIT
+		#20 EMIT
+		DUP2 ;print-hex JSR2
+		#20 EMIT
+		LDAk ;print-hex/byte JSR2
+		#0a EMIT
 		INC2 LDAk ,&while JCN
 	POP2
-	( show debugger ) #01 .System/debug DEO
+	( stop ) HALT
 
 BRK
+
+@print-hex ( value* -- )
+
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+JMP2r
 
 @hello-word "Hello 20 "Uxn!

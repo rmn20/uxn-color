@@ -273,7 +273,7 @@ load(Uxn *u, char *rom)
 	SDL_RWops *f;
 	int r;
 	if(!(f = SDL_RWFromFile(rom, "rb"))) return 0;
-	r = f->read(f, u->ram.dat + PAGE_PROGRAM, 1, sizeof(u->ram.dat) - PAGE_PROGRAM);
+	r = f->read(f, u->ram.dat + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM);
 	f->close(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", rom);
@@ -284,7 +284,8 @@ load(Uxn *u, char *rom)
 static int
 start(Uxn *u, char *rom)
 {
-	if(!uxn_boot(u))
+	Uint8 *memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+	if(!uxn_boot(u, memory))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");

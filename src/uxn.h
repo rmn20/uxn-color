@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
 	Uint16 ptr;
-	Uint8 dat[65536];
+	Uint8 *dat;
 } Memory;
 
 typedef struct Device {
@@ -44,7 +44,7 @@ typedef struct Uxn {
 void poke16(Uint8 *m, Uint16 a, Uint16 b);
 Uint16 peek16(Uint8 *m, Uint16 a);
 
-int uxn_boot(Uxn *c);
+int uxn_boot(Uxn *c, Uint8 *memory);
 int uxn_eval(Uxn *u, Uint16 vec);
 int uxn_halt(Uxn *u, Uint8 error, char *name, int id);
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));
