@@ -57,7 +57,7 @@ then
 	CORE='src/uxn.c'
 else
 	CFLAGS="${CFLAGS} -DNDEBUG -Os -g0 -s"
-	CORE='src/uxn-fast.c'
+	CORE='src/uxn.c'
 fi
 
 echo "Building.."
