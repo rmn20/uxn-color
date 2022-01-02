@@ -18,7 +18,7 @@ typedef unsigned int Uint32;
 #define PAGE_PROGRAM 0x0100
 
 typedef struct {
-	Uint8 ptr, kptr, error;
+	Uint8 ptr;
 	Uint8 dat[256];
 } Stack;
 
@@ -36,7 +36,7 @@ typedef struct Device {
 } Device;
 
 typedef struct Uxn {
-	Stack wst, rst, *src, *dst;
+	Stack wst, rst;
 	Memory ram;
 	Device dev[16];
 } Uxn;
