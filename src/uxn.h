@@ -17,6 +17,13 @@ typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
 
+/* clang-format off */
+
+#define DEVPEEK16(o, x) { (o) = (d->dat[(x)] << 8) + d->dat[(x) + 1]; }
+#define DEVPOKE16(x, y) { d->dat[(x)] = (y) >> 8; d->dat[(x) + 1] = (y); }
+
+/* clang-format on */
+
 typedef struct {
 	Uint8 ptr;
 	Uint8 dat[256];
@@ -41,7 +48,6 @@ typedef struct Uxn {
 	Device dev[16];
 } Uxn;
 
-void poke16(Uint8 *m, Uint16 a, Uint16 b);
 Uint16 peek16(Uint8 *m, Uint16 a);
 
 int uxn_boot(Uxn *c, Uint8 *memory);

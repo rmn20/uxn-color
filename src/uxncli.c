@@ -72,7 +72,7 @@ static void
 console_deo(Device *d, Uint8 port)
 {
 	if(port == 0x1)
-		d->vector = peek16(d->dat, 0x0);
+		DEVPEEK16(d->vector, 0x0);
 	if(port > 0x7)
 		write(port - 0x7, (char *)&d->dat[port], 1);
 }
@@ -110,7 +110,7 @@ nil_dei(Device *d, Uint8 port)
 static void
 nil_deo(Device *d, Uint8 port)
 {
-	if(port == 0x1) d->vector = peek16(d->dat, 0x0);
+	if(port == 0x1) DEVPEEK16(d->vector, 0x0);
 }
 
 #pragma mark - Generics
@@ -135,8 +135,9 @@ static void
 run(Uxn *u)
 {
 	Uint16 vec;
+	Device *d = devconsole;
 	while((!u->dev[0].dat[0xf]) && (read(0, &devconsole->dat[0x2], 1) > 0)) {
-		vec = peek16(devconsole->dat, 0);
+		DEVPEEK16(vec, 0);
 		if(!vec) vec = u->ram.ptr; /* continue after last BRK */
 		uxn_eval(u, vec);
 	}

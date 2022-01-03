@@ -30,17 +30,17 @@ mouse_up(Device *d, Uint8 mask)
 void
 mouse_pos(Device *d, Uint16 x, Uint16 y)
 {
-	poke16(d->dat, 0x2, x);
-	poke16(d->dat, 0x4, y);
+	DEVPOKE16(0x2, x);
+	DEVPOKE16(0x4, y);
 	uxn_eval(d->u, d->vector);
 }
 
 void
 mouse_scroll(Device *d, Uint16 x, Uint16 y)
 {
-	poke16(d->dat, 0xa, x);
-	poke16(d->dat, 0xc, -y);
+	DEVPOKE16(0xa, x);
+	DEVPOKE16(0xc, -y);
 	uxn_eval(d->u, d->vector);
-	poke16(d->dat, 0xa, 0);
-	poke16(d->dat, 0xc, 0);
+	DEVPOKE16(0xa, 0);
+	DEVPOKE16(0xc, 0);
 }

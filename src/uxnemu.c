@@ -194,7 +194,7 @@ static void
 console_deo(Device *d, Uint8 port)
 {
 	if(port == 0x1)
-		d->vector = peek16(d->dat, 0x0);
+		DEVPEEK16(d->vector, 0x0);
 	if(port > 0x7)
 		write(port - 0x7, (char *)&d->dat[port], 1);
 }
@@ -206,7 +206,7 @@ audio_dei(Device *d, Uint8 port)
 	if(!audio_id) return d->dat[port];
 	switch(port) {
 	case 0x4: return audio_get_vu(c);
-	case 0x2: poke16(d->dat, 0x2, c->i); /* fall through */
+	case 0x2: DEVPOKE16(0x2, c->i); /* fall through */
 	default: return d->dat[port];
 	}
 }
@@ -262,7 +262,7 @@ nil_dei(Device *d, Uint8 port)
 static void
 nil_deo(Device *d, Uint8 port)
 {
-	if(port == 0x1) d->vector = peek16(d->dat, 0x0);
+	if(port == 0x1) DEVPEEK16(d->vector, 0x0);
 }
 
 /* Boot */
