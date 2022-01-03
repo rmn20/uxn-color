@@ -217,13 +217,16 @@ audio_deo(Device *d, Uint8 port)
 	UxnAudio *c = &uxn_audio[d - devaudio0];
 	if(!audio_id) return;
 	if(port == 0xf) {
+		Uint16 addr, adsr;
 		SDL_LockAudioDevice(audio_id);
-		c->len = peek16(d->dat, 0xa);
-		c->addr = &d->mem[peek16(d->dat, 0xc)];
+		DEVPEEK16(adsr, 0x8);
+		DEVPEEK16(c->len, 0xa);
+		DEVPEEK16(addr, 0xc);
+		c->addr = &d->mem[addr];
 		c->volume[0] = d->dat[0xe] >> 4;
 		c->volume[1] = d->dat[0xe] & 0xf;
 		c->repeat = !(d->dat[0xf] & 0x80);
-		audio_start(c, peek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
+		audio_start(c, adsr, d->dat[0xf] & 0x7f);
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
@@ -444,8 +447,12 @@ run(Uxn *u)
 				SDL_free(event.drop.file);
 			}
 			/* Audio */
-			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
-				uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
+			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
+				Device *d = devaudio0 + (event.type - audio0_event);
+				Uint16 res;
+				DEVPEEK16(res, 0x00);
+				uxn_eval(u, res);
+			}
 			/* Mouse */
 			else if(event.type == SDL_MOUSEMOTION)
 				mouse_pos(devmouse,

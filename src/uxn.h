@@ -48,8 +48,6 @@ typedef struct Uxn {
 	Device dev[16];
 } Uxn;
 
-Uint16 peek16(Uint8 *m, Uint16 a);
-
 int uxn_boot(Uxn *c, Uint8 *memory);
 int uxn_eval(Uxn *u, Uint16 vec);
 int uxn_halt(Uxn *u, Uint8 error, char *name, int id);

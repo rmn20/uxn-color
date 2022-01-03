@@ -31,8 +31,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEVW(d, x, y) { dev = (d); if(bs) { DEVW8((x), (y) >> 8); DEVW8((x) + 1, (y)); } else { DEVW8((x), (y)) } }
 #define WARP(x) { if(bs) u->ram.ptr = (x); else u->ram.ptr += (Sint8)(x); }
 
-Uint16 peek16(Uint8 *m, Uint16 a) { Uint16 r = m[a] << 8; return r + m[a + 1]; }
-
 int
 uxn_eval(Uxn *u, Uint16 vec)
 {
