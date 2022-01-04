@@ -125,7 +125,7 @@ static void
 redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
-		screen_debug(&uxn_screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
+		screen_debug(&uxn_screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram);
 	screen_redraw(&uxn_screen, uxn_screen.pixels);
 	if(SDL_UpdateTexture(gTexture, &gRect, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
@@ -276,7 +276,7 @@ load(Uxn *u, char *rom)
 	SDL_RWops *f;
 	int r;
 	if(!(f = SDL_RWFromFile(rom, "rb"))) return 0;
-	r = f->read(f, u->ram.dat + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM);
+	r = f->read(f, u->ram + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM);
 	f->close(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", rom);
@@ -413,9 +413,9 @@ do_shortcut(Uxn *u, SDL_Event *event)
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
 
 int
-uxn_halt(Uxn *u, Uint8 error, char *name, int id)
+uxn_halt(Uxn *u, Uint8 error, char *name, Uint16 addr)
 {
-	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], id, u->ram.ptr);
+	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], u->ram[addr], addr);
 	return 0;
 }
 

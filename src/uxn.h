@@ -29,11 +29,6 @@ typedef struct {
 	Uint8 dat[256];
 } Stack;
 
-typedef struct {
-	Uint16 ptr;
-	Uint8 *dat;
-} Memory;
-
 typedef struct Device {
 	struct Uxn *u;
 	Uint8 addr, dat[16], *mem;
@@ -44,11 +39,11 @@ typedef struct Device {
 
 typedef struct Uxn {
 	Stack wst, rst;
-	Memory ram;
+	Uint8 *ram;
 	Device dev[16];
 } Uxn;
 
 int uxn_boot(Uxn *c, Uint8 *memory);
-int uxn_eval(Uxn *u, Uint16 vec);
-int uxn_halt(Uxn *u, Uint8 error, char *name, int id);
+int uxn_eval(Uxn *u, Uint16 pc);
+int uxn_halt(Uxn *u, Uint8 error, char *name, Uint16 addr);
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));

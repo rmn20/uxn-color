@@ -118,9 +118,9 @@ nil_deo(Device *d, Uint8 port)
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
 
 int
-uxn_halt(Uxn *u, Uint8 error, char *name, int id)
+uxn_halt(Uxn *u, Uint8 error, char *name, Uint16 addr)
 {
-	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], id, u->ram.ptr);
+	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], u->ram[addr], addr);
 	return 0;
 }
 
@@ -138,7 +138,6 @@ run(Uxn *u)
 	Device *d = devconsole;
 	while((!u->dev[0].dat[0xf]) && (read(0, &devconsole->dat[0x2], 1) > 0)) {
 		DEVPEEK16(vec, 0);
-		if(!vec) vec = u->ram.ptr; /* continue after last BRK */
 		uxn_eval(u, vec);
 	}
 }
@@ -149,7 +148,7 @@ load(Uxn *u, char *filepath)
 	FILE *f;
 	int r;
 	if(!(f = fopen(filepath, "rb"))) return 0;
-	r = fread(u->ram.dat + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM, f);
+	r = fread(u->ram + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM, f);
 	fclose(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", filepath);
