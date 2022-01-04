@@ -65,7 +65,7 @@ audio_callback(void *u, Uint8 *stream, int len)
 	int i, running = 0;
 	Sint16 *samples = (Sint16 *)stream;
 	SDL_memset(stream, 0, len);
-	for(i = 0; i < POLYPHONY; ++i)
+	for(i = 0; i < POLYPHONY; i++)
 		running += audio_render(&uxn_audio[i], samples, samples + len / 2);
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
@@ -520,7 +520,7 @@ main(int argc, char **argv)
 	/* set default zoom */
 	if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);
-	for(i = 1; i < argc; ++i) {
+	for(i = 1; i < argc; i++) {
 		/* get default zoom from flags */
 		if(strcmp(argv[i], "-s") == 0) {
 			if(i < argc - 1)

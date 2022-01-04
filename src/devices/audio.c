@@ -90,7 +90,7 @@ audio_get_vu(UxnAudio *c)
 	int i;
 	Sint32 sum[2] = {0, 0};
 	if(!c->advance || !c->period) return 0;
-	for(i = 0; i < 2; ++i) {
+	for(i = 0; i < 2; i++) {
 		if(!c->volume[i]) continue;
 		sum[i] = 1 + envelope(c, c->age) * c->volume[i] / 0x800;
 		if(sum[i] > 0xf) sum[i] = 0xf;

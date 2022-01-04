@@ -56,7 +56,7 @@ static void
 screen_blit(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
 	int v, h, opaque = blending[4][color];
-	for(v = 0; v < 8; ++v) {
+	for(v = 0; v < 8; v++) {
 		Uint16 c = sprite[v] | (twobpp ? sprite[v + 8] : 0) << 8;
 		for(h = 7; h >= 0; --h, c >>= 1) {
 			Uint8 ch = (c & 1) | ((c >> 7) & 2);
@@ -109,7 +109,7 @@ void
 screen_clear(UxnScreen *p, Layer *layer)
 {
 	Uint32 i, size = p->width * p->height;
-	for(i = 0; i < size; ++i)
+	for(i = 0; i < size; i++)
 		layer->pixels[i] = 0x00;
 	layer->changed = 1;
 }
@@ -118,9 +118,9 @@ void
 screen_redraw(UxnScreen *p, Uint32 *pixels)
 {
 	Uint32 i, size = p->width * p->height, palette[16];
-	for(i = 0; i < 16; ++i)
+	for(i = 0; i < 16; i++)
 		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
-	for(i = 0; i < size; ++i)
+	for(i = 0; i < size; i++)
 		pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
 	p->fg.changed = p->bg.changed = 0;
 }
@@ -129,7 +129,7 @@ void
 screen_debug(UxnScreen *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 {
 	Uint8 i, x, y, b;
-	for(i = 0; i < 0x20; ++i) {
+	for(i = 0; i < 0x20; i++) {
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
 		/* working stack */
 		screen_blit(p, &p->fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0, 0);
@@ -144,7 +144,7 @@ screen_debug(UxnScreen *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	screen_blit(p, &p->fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0, 0);
 	screen_blit(p, &p->fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0, 0);
 	/* guides */
-	for(x = 0; x < 0x10; ++x) {
+	for(x = 0; x < 0x10; x++) {
 		screen_write(p, &p->fg, x, p->height / 2, 2);
 		screen_write(p, &p->fg, p->width - x, p->height / 2, 2);
 		screen_write(p, &p->fg, p->width / 2, p->height - x, 2);

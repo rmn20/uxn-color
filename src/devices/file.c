@@ -127,7 +127,7 @@ file_stat(void *dest, Uint16 len)
 {
 	char *basename = strrchr(current_filename, '/');
 	if(basename != NULL)
-		++basename;
+		basename++;
 	else
 		basename = current_filename;
 	return get_entry(dest, len, current_filename, basename, 0);

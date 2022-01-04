@@ -57,8 +57,8 @@ static char ops[][4] = {
 static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if(!a[i] || ++i >= len) return 1; return 0; } /* string compare */
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
 static int   shex(char *s) { int n = 0, i = 0; char c; while((c = s[i++])) if(c >= '0' && c <= '9') n = n * 16 + (c - '0'); else if(c >= 'a' && c <= 'f') n = n * 16 + 10 + (c - 'a'); return n; } /* string to num */
-static int   slen(char *s) { int i = 0; while(s[i]) ++i; return i; } /* string length */
-static char *scpy(char *src, char *dst, int len) { int i = 0; while((dst[i] = src[i]) && i < len - 2) ++i; dst[i + 1] = '\0'; return dst; } /* string copy */
+static int   slen(char *s) { int i = 0; while(s[i]) i++; return i; } /* string length */
+static char *scpy(char *src, char *dst, int len) { int i = 0; while((dst[i] = src[i]) && i < len - 2) i++; dst[i + 1] = '\0'; return dst; } /* string copy */
 static char *scat(char *dst, const char *src) { char *ptr = dst + slen(dst); while(*src) *ptr++ = *src++; *ptr = '\0'; return dst; } /* string cat */
 
 /* clang-format on */
@@ -82,7 +82,7 @@ static Macro *
 findmacro(char *name)
 {
 	int i;
-	for(i = 0; i < p.mlen; ++i)
+	for(i = 0; i < p.mlen; i++)
 		if(scmp(p.macros[i].name, name, 64))
 			return &p.macros[i];
 	return NULL;
@@ -92,7 +92,7 @@ static Label *
 findlabel(char *name)
 {
 	int i;
-	for(i = 0; i < p.llen; ++i)
+	for(i = 0; i < p.llen; i++)
 		if(scmp(p.labels[i].name, name, 64))
 			return &p.labels[i];
 	return NULL;
@@ -102,7 +102,7 @@ static Uint8
 findopcode(char *s)
 {
 	int i;
-	for(i = 0; i < 0x20; ++i) {
+	for(i = 0; i < 0x20; i++) {
 		int m = 0;
 		if(!scmp(ops[i], s, 3))
 			continue;
@@ -116,7 +116,7 @@ findopcode(char *s)
 				i |= (1 << 7); /* mode: keep */
 			else
 				return 0; /* failed to match */
-			++m;
+			m++;
 		}
 		return i;
 	}
@@ -331,7 +331,7 @@ parse(char *w, FILE *f)
 			writeshort(shex(w), 0);
 		/* macro */
 		else if((m = findmacro(w))) {
-			for(i = 0; i < m->len; ++i)
+			for(i = 0; i < m->len; i++)
 				if(!parse(m->items[i], f))
 					return 0;
 			return 1;
@@ -346,7 +346,7 @@ resolve(void)
 {
 	Label *l;
 	int i;
-	for(i = 0; i < p.rlen; ++i) {
+	for(i = 0; i < p.rlen; i++) {
 		Reference *r = &p.refs[i];
 		switch(r->rune) {
 		case '.':
@@ -399,7 +399,7 @@ static void
 review(char *filename)
 {
 	int i;
-	for(i = 0; i < p.llen; ++i)
+	for(i = 0; i < p.llen; i++)
 		if(p.labels[i].name[0] >= 'A' && p.labels[i].name[0] <= 'Z')
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)

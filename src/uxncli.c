@@ -32,8 +32,8 @@ inspect(Stack *s, char *name)
 {
 	Uint8 x, y;
 	fprintf(stderr, "\n%s\n", name);
-	for(y = 0; y < 0x04; ++y) {
-		for(x = 0; x < 0x08; ++x) {
+	for(y = 0; y < 0x04; y++) {
+		for(x = 0; x < 0x08; x++) {
 			Uint8 p = y * 0x08 + x;
 			fprintf(stderr,
 				p == s->ptr ? "[%02x]" : " %02x ",
@@ -181,7 +181,7 @@ main(int argc, char **argv)
 	/* empty    */ uxn_port(&u, 0xe, nil_dei, nil_deo);
 	/* empty    */ uxn_port(&u, 0xf, nil_dei, nil_deo);
 
-	for(i = 1; i < argc; ++i) {
+	for(i = 1; i < argc; i++) {
 		if(!loaded++) {
 			if(!load(&u, argv[i]))
 				return error("Load", "Failed");

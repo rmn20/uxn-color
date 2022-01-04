@@ -60,7 +60,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 		switch(instr & 0x1f) {
 		/* Stack */
 		case 0x00: /* LIT */ if(bs) { PEEK16(a, pc) PUSH16(src, a) pc += 2; }
-		                     else   { a = u->ram[pc]; PUSH8(src, a) ++pc; } break;
+		                     else   { a = u->ram[pc]; PUSH8(src, a) pc++; } break;
 		case 0x01: /* INC */ POP(a) PUSH(src, a + 1) break;
 		case 0x02: /* POP */ POP(a) break;
 		case 0x03: /* DUP */ POP(a) PUSH(src, a) PUSH(src, a) break;
@@ -110,7 +110,7 @@ uxn_boot(Uxn *u, Uint8 *memory)
 {
 	Uint32 i;
 	char *cptr = (char *)u;
-	for(i = 0; i < sizeof(*u); ++i)
+	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
 	u->ram = memory;
 	return 1;
