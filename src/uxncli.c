@@ -133,13 +133,16 @@ load(Uxn *u, char *filepath)
 	return 1;
 }
 
+static Uint8 *memory;
+
 int
 main(int argc, char **argv)
 {
 	Uxn u;
 	int i, loaded = 0;
 
-	if(!uxn_boot(&u, (Uint8 *)calloc(0xffff, sizeof(Uint8))))
+	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+	if(!uxn_boot(&u, memory))
 		return error("Boot", "Failed");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);

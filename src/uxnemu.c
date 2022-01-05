@@ -271,10 +271,12 @@ load(Uxn *u, char *rom)
 	return 1;
 }
 
+static Uint8 *memory;
+
 static int
 start(Uxn *u, char *rom)
 {
-	Uint8 *memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 	if(!uxn_boot(u, memory))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
