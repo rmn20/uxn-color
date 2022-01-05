@@ -115,15 +115,6 @@ nil_deo(Device *d, Uint8 port)
 
 #pragma mark - Generics
 
-static const char *errors[] = {"underflow", "overflow", "division by zero"};
-
-int
-uxn_halt(Uxn *u, Uint8 error, char *name, Uint16 addr)
-{
-	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], u->ram[addr], addr);
-	return 0;
-}
-
 static int
 console_input(Uxn *u, char c)
 {
