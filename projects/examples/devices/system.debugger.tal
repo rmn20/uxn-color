@@ -1,0 +1,16 @@
+( devices )
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
+|10 @Console    &vector $2 &read     $1 &pad    $5 &write  $1 &error  $1
+
+( program )
+
+|0100 @Reset ( -> )
+	~projects/library/debugger.tal
+	#0123 #4567 #89ab #cdef
+	LIT2r 1234 LIT2r 5678 LIT2r 9abc LIT2r def0
+	( BREAKPOINT )
+	( LIT2r 0000 DIVr )
+	&loop INCk ,&loop JMP
+	BRK
+

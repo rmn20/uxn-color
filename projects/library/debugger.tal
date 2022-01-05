@@ -1,0 +1,180 @@
+( in-Uxn debugger )
+
+( To use, include this file just before the BRK in the program reset routine, e.g.:
+
+	|0100 ( -> )
+		( theme )
+		#0fe5 .System/r DEO2
+		#0fc5 .System/g DEO2
+		#0f25 .System/b DEO2
+	~projects/library/debugger.tal
+	BRK
+
+The debugger will catch stack errors that arise after that point.
+
+)
+
+%BREAKPOINT { LIT2r :debug JSR2r }
+
+@debug-start
+;debug-vector .System/vector DEO2
+;debug-end JMP2
+
+@debug ( pc* -- )
+	#0001 SUB2 .System/eaddr DEO2
+	.System/ecode DEIk #f8 AND #06 EOR SWP DEO
+	,debug-vector/main JMP
+
+@debug-vector ( -> )
+	STH STH STH STH ( <- only run in case of working stack overflow )
+	&main
+
+	( flush the working stack )
+	.System/wst DEI ;debug-wst/ptr STA
+	&flush-wst
+	.System/wst DEI #00 EQU ,&end-flush-wst JCN
+	#00 .System/wst DEI #0002 SUB2 ;debug-wst/dat ADD2 STA
+	,&flush-wst JMP
+	&end-flush-wst
+
+	( in case of working stack overflow, we need to append the four return stack bytes )
+	.System/ecode DEI #02 NEQ ,&skip-wst-append JCN
+	#00 ;debug-wst/ptr LDAk ( 00 ptr-hi ptr-lo ptr / ... z y x w )
+		DUP #04 ADD OVR2 STA
+		ROT ROT ADD2 ( start* / ... z y x w )
+		INC2 DUP2 #0004 ADD2 SWP2 ( end* start* / ... z y x w )
+		&loop
+		DUP2 STHr ROT ROT STA
+		INC2
+		GTH2k ,&loop JCN
+		POP2 POP2
+	&skip-wst-append
+
+	( flush the return stack )
+	.System/rst DEI ;debug-rst/ptr STA
+	&flush-rst
+	.System/rst DEI #00 EQU ,&end-flush-rst JCN
+	STHr #00 .System/rst DEI ;debug-rst/dat ADD2 STA
+	,&flush-rst JMP
+	&end-flush-rst
+
+	( Version 0.1 functionality: print the error and exit )
+	;debug-print-error JSR2
+	#01 .System/halt DEO
+	BRK
+
+@debug-print-opcode ( instr -- )
+	DUP ,&not-brk JCN
+	POP ;&brk-msg ;debug-print JMP2 ( tail call )
+	&brk-msg "BRK 00
+	&not-brk
+	#00 OVR #1f AND #03 MUL ;&opcode-names ADD2 ( instr addr* )
+	LDAk .Console/write DEO INC2
+	LDAk .Console/write DEO INC2
+	LDA  .Console/write DEO
+	DUP #1f AND ,&not-lit JCN
+	#7f AND
+	&not-lit
+	DUP #20 AND #00 EQU ,&not-2 JCN
+	LIT '2 .Console/write DEO
+	&not-2
+	DUP #80 AND #00 EQU ,&not-k JCN
+	LIT 'k .Console/write DEO
+	&not-k
+	    #40 AND #00 EQU ,&not-r JCN
+	LIT 'r .Console/write DEO
+	&not-r
+	JMP2r
+
+	&opcode-names
+		"LITINCPOPDUPNIPSWPOVRROT
+		"EQUNEQGTHLTHJMPJCNJSRSTH
+		"LDZSTZLDRSTRLDASTADEIDEO
+		"ADDSUBMULDIVANDORAEORSFT
+
+@debug-print ( addr* -- )
+	LDAk #00 EQU ,&end JCN
+	LDAk .Console/write DEO
+	INC2
+	,debug-print JMP
+	&end POP2 JMP2r
+
+@debug-print-error
+	;&halted-msg ,debug-print JSR
+	#00 .System/ecode DEI #07 AND #20 SFT2 ;&messages-table ADD2
+	LDA2k ,debug-print JSR
+	INC2 INC2 LDA2 ,debug-print JSR
+	;&executing-msg ,debug-print JSR
+	.System/eaddr DEI2 LDA ;debug-print-opcode JSR2
+	;&at-msg ,debug-print JSR
+	.System/eaddr DEI2 ;debug-print-hex-short JSR2
+	#0a .Console/write DEO
+	;&wst-msg ,debug-print JSR
+	;&contents-msg ,debug-print JSR
+	;debug-wst ;debug-print-stack JSR2
+	#0a .Console/write DEO
+	;&rst-msg ,debug-print JSR
+	;&contents-msg ,debug-print JSR
+	;debug-rst ;debug-print-stack JSR2
+	#0a .Console/write DEO
+	JMP2r
+
+	&messages-table
+		:&wst-msg :&underflow-msg
+		:&rst-msg :&underflow-msg
+		:&wst-msg :&overflow-msg
+		:&rst-msg :&overflow-msg
+		:&wst-msg :&divzero-msg
+		:&rst-msg :&divzero-msg
+		:&userdef-msg :&breakpoint-msg
+		:&userdef-msg :&custom-msg
+
+	&halted-msg "Halted: 2000 ( #0002, at 0x0100 )
+	&wst-msg "Working-stack 2000
+	&rst-msg "Return-stack 2000
+	&userdef-msg "User-defined 2000
+	&underflow-msg "underflow 00
+	&overflow-msg "overflow 00
+	&divzero-msg "division 20 "by 20 "zero 00
+	&breakpoint-msg "breakpoint 00
+	&custom-msg "custom 20 "error 00
+	&executing-msg 20 "executing 2000
+	&at-msg 20 "at 20 "0x 00
+	&contents-msg "contents: 00
+
+@debug-print-hex-short ( value* -- )
+	SWP ,debug-print-hex-byte JSR
+	( fall through )
+
+@debug-print-hex-byte ( value -- )
+	DUP #04 SFT ,debug-print-hex-nibble JSR
+	#0f AND
+	( fall through )
+
+@debug-print-hex-nibble ( value -- )
+	#30 ADD DUP #39 GTH #27 MUL ADD
+	.Console/write DEO
+	JMP2r
+
+@debug-print-stack ( addr* -- )
+	LDAk ,&not-empty JCN
+	POP2 ;&empty-msg ;debug-print JMP2 ( tail call )
+	&not-empty
+	LDAk STH INC2 ( dat* / count )
+	&loop
+		STHkr #00 EQU ,&end JCN
+		#20 .Console/write DEO
+		LDAk ,debug-print-hex-byte JSR
+		INC2
+		LITr 01 SUBr
+		,&loop JMP
+	&end
+	POP2 POPr
+	JMP2r
+	
+	&empty-msg 20 "(empty) 00
+
+@debug-wst &ptr $1 &dat $ff
+@debug-rst &ptr $1 &dat $ff
+@debug-end
+
