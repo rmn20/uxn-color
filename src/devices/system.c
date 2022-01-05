@@ -13,11 +13,17 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-static const char *errors[] = {"underflow", "overflow", "division by zero"};
+static const char *errors[] = {
+	"Working-stack underflow",
+	"Return-stack underflow",
+	"Working-stack overflow",
+	"Return-stack overflow",
+	"Working-stack division by zero",
+	"Return-stack division by zero"};
 
 int
-uxn_halt(Uxn *u, Uint8 error, char *name, Uint16 addr)
+uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 {
-	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], u->ram[addr], addr);
+	fprintf(stderr, "Halted: %s#%04x, at 0x%04x\n", errors[error], u->ram[addr], addr);
 	return 0;
 }
