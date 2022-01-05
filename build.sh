@@ -14,6 +14,7 @@ then
 	echo "Formatting.."
 	clang-format -i src/uxn.h
 	clang-format -i src/uxn.c
+	clang-format -i src/devices/system.h
 	clang-format -i src/devices/system.c
 	clang-format -i src/devices/screen.h
 	clang-format -i src/devices/screen.c

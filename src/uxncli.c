@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "uxn.h"
+#include "devices/system.h"
 #include "devices/file.h"
 
 /*
@@ -45,26 +46,12 @@ inspect(Stack *s, char *name)
 
 #pragma mark - Devices
 
-static Uint8
-system_dei(Device *d, Uint8 port)
+void
+system_deo_special(Device *d, Uint8 port)
 {
-	switch(port) {
-	case 0x2: return d->u->wst.ptr;
-	case 0x3: return d->u->rst.ptr;
-	default: return d->dat[port];
-	}
-}
-
-static void
-system_deo(Device *d, Uint8 port)
-{
-	switch(port) {
-	case 0x2: d->u->wst.ptr = d->dat[port]; break;
-	case 0x3: d->u->rst.ptr = d->dat[port]; break;
-	case 0xe:
+	if(port == 0xe) {
 		inspect(&d->u->wst, "Working-stack");
 		inspect(&d->u->rst, "Return-stack");
-		break;
 	}
 }
 

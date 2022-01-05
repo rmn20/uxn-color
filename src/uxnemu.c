@@ -8,6 +8,7 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #include <SDL.h>
+#include "devices/system.h"
 #include "devices/screen.h"
 #include "devices/audio.h"
 #include "devices/file.h"
@@ -169,23 +170,9 @@ init(void)
 
 #pragma mark - Devices
 
-static Uint8
-system_dei(Device *d, Uint8 port)
+void
+system_deo_special(Device *d, Uint8 port)
 {
-	switch(port) {
-	case 0x2: return d->u->wst.ptr;
-	case 0x3: return d->u->rst.ptr;
-	default: return d->dat[port];
-	}
-}
-
-static void
-system_deo(Device *d, Uint8 port)
-{
-	switch(port) {
-	case 0x2: d->u->wst.ptr = d->dat[port]; break;
-	case 0x3: d->u->rst.ptr = d->dat[port]; break;
-	}
 	if(port > 0x7 && port < 0xe)
 		screen_palette(&uxn_screen, &d->dat[0x8]);
 }
