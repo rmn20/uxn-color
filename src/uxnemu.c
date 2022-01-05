@@ -112,7 +112,7 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	gRect.h = uxn_screen.height;
 	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
 	SDL_RenderSetLogicalSize(gRenderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("gTexture", SDL_GetError());
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
@@ -128,10 +128,10 @@ redraw(Uxn *u)
 	if(devsystem->dat[0xe])
 		screen_debug(&uxn_screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram);
 	screen_redraw(&uxn_screen, uxn_screen.pixels);
-	if(SDL_UpdateTexture(gTexture, &gRect, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
+	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
-	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+	SDL_RenderCopy(gRenderer, gTexture, NULL, &gRect);
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -154,6 +154,7 @@ init(void)
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
+	SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xff);
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
 		error("sdl_audio", SDL_GetError());
