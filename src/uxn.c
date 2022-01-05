@@ -100,8 +100,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 
 err:
 	/* set 1 in errcode if it involved the return stack instead of the working stack */
-	/*        (stack overflow & (opcode was STH / JSR)) ^ Return Mode */
-	errcode |= ((errcode >> 1 & (instr & 0x1e) == 0x0e) ^ instr >> 6) & 1;
+	/*        (stack overflow & ( opcode was STH / JSR )) ^ Return Mode */
+	errcode |= ((errcode >> 1 & ((instr & 0x1e) == 0x0e)) ^ instr >> 6) & 1;
 	return uxn_halt(u, errcode, pc - 1);
 }
 
