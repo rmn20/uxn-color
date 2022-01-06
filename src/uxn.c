@@ -39,13 +39,13 @@ uxn_eval(Uxn *u, Uint16 pc)
 	Stack *src, *dst;
 	Device *dev;
 	if(!pc || u->dev[0].dat[0xf]) return 0;
-	if(u->wst.ptr > 0xf8) u->wst.ptr = 0xf8;
+	if(u->wst->ptr > 0xf8) u->wst->ptr = 0xf8;
 	while((instr = u->ram[pc++])) {
 		/* Return Mode */
 		if(instr & 0x40) {
-			src = &u->rst; dst = &u->wst;
+			src = u->rst; dst = u->wst;
 		} else {
-			src = &u->wst; dst = &u->rst;
+			src = u->wst; dst = u->rst;
 		}
 		/* Keep Mode */
 		if(instr & 0x80) {
@@ -108,12 +108,14 @@ err:
 /* clang-format on */
 
 int
-uxn_boot(Uxn *u, Uint8 *memory)
+uxn_boot(Uxn *u, Stack *wst, Stack *rst, Uint8 *memory)
 {
 	Uint32 i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
+	u->wst = wst;
+	u->rst = rst;
 	u->ram = memory;
 	return 1;
 }

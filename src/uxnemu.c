@@ -44,6 +44,7 @@ static SDL_Rect gRect;
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
+static Uxn hypervisor;
 
 static int
 clamp(int val, int min, int max)
@@ -126,7 +127,7 @@ static void
 redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
-		screen_debug(&uxn_screen, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram);
+		screen_debug(&uxn_screen, u->wst->dat, u->wst->ptr, u->rst->ptr, u->ram);
 	screen_redraw(&uxn_screen, uxn_screen.pixels);
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
@@ -272,13 +273,17 @@ load(Uxn *u, char *rom)
 	return 1;
 }
 
-static Uint8 *memory;
+static Uint8 *shadow, *memory;
 
 static int
 start(Uxn *u, char *rom)
 {
 	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
-	if(!uxn_boot(u, memory))
+	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+
+	if(!uxn_boot(&hypervisor, (Stack *)(shadow + 0x600), (Stack *)(shadow + 0x800), shadow))
+		return error("Boot", "Failed to start uxn.");
+	if(!uxn_boot(u, (Stack *)(shadow + 0x200), (Stack *)(shadow + 0x400), memory))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");

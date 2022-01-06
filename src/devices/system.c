@@ -45,8 +45,8 @@ Uint8
 system_dei(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x2: return d->u->wst.ptr;
-	case 0x3: return d->u->rst.ptr;
+	case 0x2: return d->u->wst->ptr;
+	case 0x3: return d->u->rst->ptr;
 	default: return d->dat[port];
 	}
 }
@@ -56,8 +56,8 @@ system_deo(Device *d, Uint8 port)
 {
 	switch(port) {
 	case 0x1: DEVPEEK16(d->vector, 0x0); break;
-	case 0x2: d->u->wst.ptr = d->dat[port]; break;
-	case 0x3: d->u->rst.ptr = d->dat[port]; break;
+	case 0x2: d->u->wst->ptr = d->dat[port]; break;
+	case 0x3: d->u->rst->ptr = d->dat[port]; break;
 	default: system_deo_special(d, port);
 	}
 }
