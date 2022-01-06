@@ -1,5 +1,37 @@
 #!/bin/sh -e
 
+format=0
+console=0
+debug=0
+norun=0
+
+while [ $# -gt 0 ]; do
+	case $1 in
+		--format)
+			format=1
+			shift
+			;;
+
+		--console)
+			console=1
+			shift
+			;;
+
+		--debug)
+			debug=1
+			shift
+			;;
+
+		--no-run)
+			norun=1
+			shift
+			;;
+
+		*)
+			shift
+	esac
+done
+
 echo "Cleaning.."
 rm -f ./bin/uxnasm
 rm -f ./bin/uxnemu
@@ -10,7 +42,7 @@ rm -f ./bin/asma.rom
 
 # When clang-format is present
 
-if [ "${1}" = '--format' ]; 
+if [ $format = 1 ];
 then
 	echo "Formatting.."
 	clang-format -i src/uxn.h
@@ -37,7 +69,7 @@ CC="${CC:-cc}"
 CFLAGS="${CFLAGS:--std=c89 -Wall -Wno-unknown-pragmas}"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*|MINGW*) # MSYS2 on Windows
-	if [ "${1}" = '--console' ];
+	if [ $console = 1 ];
 	then
 		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs | sed -e 's/ -mwindows//g')"
 	else
@@ -53,7 +85,7 @@ Linux|*)
 	;;
 esac
 
-if [ "${1}" = '--debug' ]; 
+if [ $debug = 1 ];
 then
 	echo "[debug]"
 	CFLAGS="${CFLAGS} -DDEBUG -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla -g -Og -fsanitize=address -fsanitize=undefined"
@@ -80,7 +112,7 @@ echo "Assembling(boot+hypervisor).."
 echo "Assembling(asma).."
 ./bin/uxnasm projects/software/asma.tal bin/asma.rom
 
-if [ "${1}" = '--no-run' ]; then exit; fi
+if [ $norun = 1 ]; then exit; fi
 
 echo "Assembling(piano).."
 bin/uxncli bin/asma.rom projects/examples/demos/piano.tal bin/piano.rom 2> bin/piano.log
