@@ -124,10 +124,8 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 }
 
 static void
-redraw(Uxn *u)
+redraw(void)
 {
-	if(devsystem->dat[0xe])
-		screen_debug(&uxn_screen, u->wst->dat, u->wst->ptr, u->rst->ptr, u->ram);
 	screen_redraw(&uxn_screen, uxn_screen.pixels);
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
@@ -281,12 +279,14 @@ start(Uxn *u, char *rom)
 	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 
-	if(!uxn_boot(&hypervisor, (Stack *)(shadow + 0x600), (Stack *)(shadow + 0x800), shadow))
+	if(!uxn_boot(&hypervisor, (Stack *)(shadow + 0xfc00), (Stack *)(shadow + 0xfd00), shadow))
 		return error("Boot", "Failed to start uxn.");
-	if(!uxn_boot(u, (Stack *)(shadow + 0x200), (Stack *)(shadow + 0x400), memory))
+	if(!uxn_boot(u, (Stack *)(shadow + 0xfe00), (Stack *)(shadow + 0xff00), memory))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
+	if(!load(&hypervisor, "hypervisor.rom"))
+		error("Hypervisor", "No debugger found.");
 
 	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
@@ -304,6 +304,10 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
+
+	/* Hypervisor */
+	uxn_port(&hypervisor, 0x1, nil_dei, console_deo);
+	uxn_port(&hypervisor, 0x2, screen_dei, screen_deo);
 
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
@@ -415,7 +419,7 @@ console_input(Uxn *u, char c)
 static int
 run(Uxn *u)
 {
-	redraw(u);
+	redraw();
 	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
 		double elapsed, begin;
@@ -426,7 +430,7 @@ run(Uxn *u)
 			if(event.type == SDL_QUIT)
 				return error("Run", "Quit.");
 			else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
-				redraw(u);
+				redraw();
 			else if(event.type == SDL_DROPFILE) {
 				set_size(WIDTH, HEIGHT, 0);
 				start(u, event.drop.file);
@@ -480,9 +484,11 @@ run(Uxn *u)
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);
 		}
+		if(devsystem->dat[0xe])
+			uxn_eval(&hypervisor, PAGE_PROGRAM);
 		uxn_eval(u, devscreen->vector);
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
-			redraw(u);
+			redraw();
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
 			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));

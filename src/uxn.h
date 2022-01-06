@@ -26,7 +26,7 @@ typedef unsigned int Uint32;
 
 typedef struct {
 	Uint8 ptr;
-	Uint8 dat[256];
+	Uint8 dat[255];
 } Stack;
 
 typedef struct Device {
