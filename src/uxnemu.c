@@ -44,7 +44,6 @@ static SDL_Rect gRect;
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
-static Uxn hypervisor;
 
 static int
 clamp(int val, int min, int max)
@@ -283,10 +282,10 @@ start(Uxn *u, char *rom)
 		return error("Boot", "Failed to start uxn.");
 	if(!uxn_boot(u, (Stack *)(shadow + 0xfe00), (Stack *)(shadow + 0xff00), memory))
 		return error("Boot", "Failed to start uxn.");
-	if(!load(u, rom))
-		return error("Boot", "Failed to load rom.");
 	if(!load(&hypervisor, "hypervisor.rom"))
 		error("Hypervisor", "No debugger found.");
+	if(!load(u, rom))
+		return error("Boot", "Failed to load rom.");
 
 	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
@@ -306,6 +305,7 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 
 	/* Hypervisor */
+	uxn_port(&hypervisor, 0x0, system_dei, system_deo);
 	uxn_port(&hypervisor, 0x1, nil_dei, console_deo);
 	uxn_port(&hypervisor, 0x2, screen_dei, screen_deo);
 
