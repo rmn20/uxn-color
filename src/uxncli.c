@@ -124,22 +124,22 @@ main(int argc, char **argv)
 	if(!uxn_boot(&u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
 		return error("Boot", "Failed");
 
-	/* system   */ devsystem = uxn_port(&u, 0x0, 0xffff, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(&u, 0x1, 0xffff, nil_dei, console_deo);
-	/* empty    */ uxn_port(&u, 0x2, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x3, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x4, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x5, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x6, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x7, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x8, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x9, 0xffff, nil_dei, nil_deo);
-	/* file     */ uxn_port(&u, 0xa, 0xffff, nil_dei, file_deo);
-	/* datetime */ uxn_port(&u, 0xb, 0xffff, datetime_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xc, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xd, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xe, 0xffff, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xf, 0xffff, nil_dei, nil_deo);
+	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);
+	/* console  */ devconsole = uxn_port(&u, 0x1, nil_dei, console_deo);
+	/* empty    */ uxn_port(&u, 0x2, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x3, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x4, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x5, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x6, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x7, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x8, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x9, nil_dei, nil_deo);
+	/* file     */ uxn_port(&u, 0xa, nil_dei, file_deo);
+	/* datetime */ uxn_port(&u, 0xb, datetime_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xc, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xd, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xe, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xf, nil_dei, nil_deo);
 
 	for(i = 1; i < argc; i++) {
 		if(!loaded++) {

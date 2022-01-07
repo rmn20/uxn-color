@@ -264,28 +264,28 @@ start(Uxn *u, char *rom)
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
 
-	/* system   */ devsystem = uxn_port(u, 0x0, 0xffff, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(u, 0x1, 0xffff, nil_dei, console_deo);
-	/* screen   */ devscreen = uxn_port(u, 0x2, 0xffff, screen_dei, screen_deo);
-	/* audio0   */ devaudio0 = uxn_port(u, 0x3, 0xffff, audio_dei, audio_deo);
-	/* audio1   */ uxn_port(u, 0x4, 0xffff, audio_dei, audio_deo);
-	/* audio2   */ uxn_port(u, 0x5, 0xffff, audio_dei, audio_deo);
-	/* audio3   */ uxn_port(u, 0x6, 0xffff, audio_dei, audio_deo);
-	/* unused   */ uxn_port(u, 0x7, 0xffff, nil_dei, nil_deo);
-	/* control  */ devctrl = uxn_port(u, 0x8, 0x0000, nil_dei, nil_deo);
-	/* mouse    */ devmouse = uxn_port(u, 0x9, 0x0000, nil_dei, nil_deo);
-	/* file     */ uxn_port(u, 0xa, 0xffff, nil_dei, file_deo);
-	/* datetime */ uxn_port(u, 0xb, 0xffff, datetime_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xc, 0xffff, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xd, 0xffff, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xe, 0xffff, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xf, 0xffff, nil_dei, nil_deo);
+	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
+	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
+	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
+	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
+	/* audio1   */ uxn_port(u, 0x4, audio_dei, audio_deo);
+	/* audio2   */ uxn_port(u, 0x5, audio_dei, audio_deo);
+	/* audio3   */ uxn_port(u, 0x6, audio_dei, audio_deo);
+	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
+	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
+	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
+	/* file     */ uxn_port(u, 0xa, nil_dei, file_deo);
+	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 
 	/* Supervisor */
-	uxn_port(&supervisor, 0x0, 0xffff, system_dei, system_deo);
-	uxn_port(&supervisor, 0x1, 0xffff, nil_dei, console_deo);
-	uxn_port(&supervisor, 0x2, 0xffff, screen_dei, screen_deo);
-	uxn_port(&supervisor, 0x8, 0x0000, nil_dei, nil_deo);
+	uxn_port(&supervisor, 0x0, system_dei, system_deo);
+	uxn_port(&supervisor, 0x1, nil_dei, console_deo);
+	uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
+	uxn_port(&supervisor, 0x8, nil_dei, nil_deo);
 
 	uxn_eval(&supervisor, PAGE_PROGRAM);
 

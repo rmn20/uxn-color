@@ -122,11 +122,10 @@ uxn_boot(Uxn *u, Uint8 *ram, Uint8 *devpage, Stack *wst, Stack *rst)
 }
 
 Device *
-uxn_port(Uxn *u, Uint8 id, Uint16 mask, Uint8 (*deifn)(Device *d, Uint8 port), void (*deofn)(Device *d, Uint8 port))
+uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *d, Uint8 port), void (*deofn)(Device *d, Uint8 port))
 {
 	Device *d = &u->dev[id];
 	d->u = u;
-	d->mask = mask;
 	d->mem = u->ram;
 	d->dei = deifn;
 	d->deo = deofn;
