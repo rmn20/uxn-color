@@ -36,14 +36,13 @@
 
 @center
 	&x $2 &y $2
-
 @modal
 	&x $2 &y $2
 
 ( init )
 
 |0100 ( -> )
-
+	
 	.Screen/width DEI2 2// 
 		DUP2 .center/x STZ2
 		MODALW #31 SFT2 -- .modal/x STZ2
@@ -51,10 +50,16 @@
 		DUP2 .center/y STZ2
 		MODALH #31 SFT2 -- .modal/y STZ2
 
+	( vectors )
+	;on-error .System/vector DEO2
+	;on-frame .Screen/vector DEO2
+
+BRK
+
+@on-frame ( -> )
+
 	;draw-cross JSR2
 	;draw-stacks JSR2
-
-	EADDR LDA2 #0000 !! ;on-error JCN2
 
 BRK
 

@@ -309,6 +309,8 @@ start(Uxn *u, char *rom)
 	uxn_port(&supervisor, 0x1, nil_dei, console_deo);
 	uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
 
+	uxn_eval(&supervisor, PAGE_PROGRAM);
+
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
 
@@ -485,7 +487,7 @@ run(Uxn *u)
 				console_input(u, event.cbutton.button);
 		}
 		if(devsystem->dat[0xe])
-			uxn_eval(&supervisor, PAGE_PROGRAM);
+			uxn_eval(&supervisor, supervisor.dev[2].vector);
 		uxn_eval(u, devscreen->vector);
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
 			redraw();

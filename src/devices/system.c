@@ -31,7 +31,7 @@ uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 	Uint16 vec = d->vector;
 	DEVPOKE16(0x4, addr);
 	d->dat[0x6] = error;
-	uxn_eval(&supervisor, PAGE_PROGRAM);
+	uxn_eval(&supervisor, supervisor.dev[0].vector);
 	if(vec) {
 		d->vector = 0; /* need to rearm to run System/vector again */
 		if(error != 2) /* working stack overflow has special treatment */
