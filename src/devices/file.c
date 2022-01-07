@@ -149,6 +149,16 @@ file_deo(Device *d, Uint8 port)
 	case 0x1:
 		DEVPEEK16(d->vector, 0x0);
 		break;
+	case 0x5:
+		DEVPEEK16(a, 0x4);
+		DEVPEEK16(b, 0xa);
+		res = file_stat(&d->mem[a], b);
+		DEVPOKE16(0x2, res);
+		break;
+	case 0x6:
+		res = file_delete();
+		DEVPOKE16(0x2, res);
+		break;
 	case 0x9:
 		DEVPEEK16(a, 0x8);
 		res = file_init(&d->mem[a]);
@@ -164,16 +174,6 @@ file_deo(Device *d, Uint8 port)
 		DEVPEEK16(a, 0xe);
 		DEVPEEK16(b, 0xa);
 		res = file_write(&d->mem[a], b, d->dat[0x7]);
-		DEVPOKE16(0x2, res);
-		break;
-	case 0x5:
-		DEVPEEK16(a, 0x4);
-		DEVPEEK16(b, 0xa);
-		res = file_stat(&d->mem[a], b);
-		DEVPOKE16(0x2, res);
-		break;
-	case 0x6:
-		res = file_delete();
 		DEVPOKE16(0x2, res);
 		break;
 	}

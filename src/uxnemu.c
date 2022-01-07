@@ -14,6 +14,7 @@
 #include "devices/file.h"
 #include "devices/controller.h"
 #include "devices/mouse.h"
+#include "devices/datetime.h"
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
@@ -219,30 +220,6 @@ audio_deo(Device *d, Uint8 port)
 }
 
 static Uint8
-datetime_dei(Device *d, Uint8 port)
-{
-	time_t seconds = time(NULL);
-	struct tm zt = {0};
-	struct tm *t = localtime(&seconds);
-	if(t == NULL)
-		t = &zt;
-	switch(port) {
-	case 0x0: return (t->tm_year + 1900) >> 8;
-	case 0x1: return (t->tm_year + 1900);
-	case 0x2: return t->tm_mon;
-	case 0x3: return t->tm_mday;
-	case 0x4: return t->tm_hour;
-	case 0x5: return t->tm_min;
-	case 0x6: return t->tm_sec;
-	case 0x7: return t->tm_wday;
-	case 0x8: return t->tm_yday >> 8;
-	case 0x9: return t->tm_yday;
-	case 0xa: return t->tm_isdst;
-	default: return d->dat[port];
-	}
-}
-
-static Uint8
 nil_dei(Device *d, Uint8 port)
 {
 	return d->dat[port];
@@ -287,27 +264,27 @@ start(Uxn *u, char *rom)
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
 
-	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
-	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
-	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
-	/* audio1   */ uxn_port(u, 0x4, audio_dei, audio_deo);
-	/* audio2   */ uxn_port(u, 0x5, audio_dei, audio_deo);
-	/* audio3   */ uxn_port(u, 0x6, audio_dei, audio_deo);
-	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
-	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
-	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file     */ uxn_port(u, 0xa, nil_dei, file_deo);
-	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
+	/* system   */ devsystem = uxn_port(u, 0x0, 0xffff, system_dei, system_deo);
+	/* console  */ devconsole = uxn_port(u, 0x1, 0xffff, nil_dei, console_deo);
+	/* screen   */ devscreen = uxn_port(u, 0x2, 0xffff, screen_dei, screen_deo);
+	/* audio0   */ devaudio0 = uxn_port(u, 0x3, 0xffff, audio_dei, audio_deo);
+	/* audio1   */ uxn_port(u, 0x4, 0xffff, audio_dei, audio_deo);
+	/* audio2   */ uxn_port(u, 0x5, 0xffff, audio_dei, audio_deo);
+	/* audio3   */ uxn_port(u, 0x6, 0xffff, audio_dei, audio_deo);
+	/* unused   */ uxn_port(u, 0x7, 0xffff, nil_dei, nil_deo);
+	/* control  */ devctrl = uxn_port(u, 0x8, 0xffff, nil_dei, nil_deo);
+	/* mouse    */ devmouse = uxn_port(u, 0x9, 0xffff, nil_dei, nil_deo);
+	/* file     */ uxn_port(u, 0xa, 0xffff, nil_dei, file_deo);
+	/* datetime */ uxn_port(u, 0xb, 0xffff, datetime_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xc, 0xffff, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xd, 0xffff, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xe, 0xffff, nil_dei, nil_deo);
+	/* unused   */ uxn_port(u, 0xf, 0xffff, nil_dei, nil_deo);
 
 	/* Supervisor */
-	uxn_port(&supervisor, 0x0, system_dei, system_deo);
-	uxn_port(&supervisor, 0x1, nil_dei, console_deo);
-	uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
+	uxn_port(&supervisor, 0x0, 0xffff, system_dei, system_deo);
+	uxn_port(&supervisor, 0x1, 0xffff, nil_dei, console_deo);
+	uxn_port(&supervisor, 0x2, 0xffff, screen_dei, screen_deo);
 
 	uxn_eval(&supervisor, PAGE_PROGRAM);
 

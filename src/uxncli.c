@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+
 #include "uxn.h"
 #include "devices/system.h"
 #include "devices/file.h"
+#include "devices/datetime.h"
 
 /*
 Copyright (c) 2021 Devine Lu Linvega
@@ -65,30 +67,6 @@ console_deo(Device *d, Uint8 port)
 }
 
 static Uint8
-datetime_dei(Device *d, Uint8 port)
-{
-	time_t seconds = time(NULL);
-	struct tm zt = {0};
-	struct tm *t = localtime(&seconds);
-	if(t == NULL)
-		t = &zt;
-	switch(port) {
-	case 0x0: return (t->tm_year + 1900) >> 8;
-	case 0x1: return (t->tm_year + 1900);
-	case 0x2: return t->tm_mon;
-	case 0x3: return t->tm_mday;
-	case 0x4: return t->tm_hour;
-	case 0x5: return t->tm_min;
-	case 0x6: return t->tm_sec;
-	case 0x7: return t->tm_wday;
-	case 0x8: return t->tm_yday >> 8;
-	case 0x9: return t->tm_yday;
-	case 0xa: return t->tm_isdst;
-	default: return d->dat[port];
-	}
-}
-
-static Uint8
 nil_dei(Device *d, Uint8 port)
 {
 	return d->dat[port];
@@ -146,22 +124,22 @@ main(int argc, char **argv)
 	if(!uxn_boot(&u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
 		return error("Boot", "Failed");
 
-	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(&u, 0x1, nil_dei, console_deo);
-	/* empty    */ uxn_port(&u, 0x2, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x3, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x4, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x5, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x6, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x7, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x8, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x9, nil_dei, nil_deo);
-	/* file     */ uxn_port(&u, 0xa, nil_dei, file_deo);
-	/* datetime */ uxn_port(&u, 0xb, datetime_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xc, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xd, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xe, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xf, nil_dei, nil_deo);
+	/* system   */ devsystem = uxn_port(&u, 0x0, 0xffff, system_dei, system_deo);
+	/* console  */ devconsole = uxn_port(&u, 0x1, 0xffff, nil_dei, console_deo);
+	/* empty    */ uxn_port(&u, 0x2, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x3, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x4, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x5, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x6, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x7, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x8, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0x9, 0xffff, nil_dei, nil_deo);
+	/* file     */ uxn_port(&u, 0xa, 0xffff, nil_dei, file_deo);
+	/* datetime */ uxn_port(&u, 0xb, 0xffff, datetime_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xc, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xd, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xe, 0xffff, nil_dei, nil_deo);
+	/* empty    */ uxn_port(&u, 0xf, 0xffff, nil_dei, nil_deo);
 
 	for(i = 1; i < argc; i++) {
 		if(!loaded++) {
