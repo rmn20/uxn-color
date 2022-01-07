@@ -16,6 +16,7 @@ typedef signed short Sint16;
 typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
+#define PAGE_DEV 0xfd00
 #define PAGE_WST 0xfe00
 #define PAGE_RST 0xff00
 
@@ -45,7 +46,7 @@ typedef struct Uxn {
 	Device dev[16];
 } Uxn;
 
-int uxn_boot(Uxn *u, Stack *wst, Stack *rst, Uint8 *memory);
+int uxn_boot(Uxn *u, Uint8 *ram, Uint8 *dev, Stack *wst, Stack *rst);
 int uxn_eval(Uxn *u, Uint16 pc);
 int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));

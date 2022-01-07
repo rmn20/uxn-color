@@ -278,9 +278,9 @@ start(Uxn *u, char *rom)
 	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 
-	if(!uxn_boot(&hypervisor, (Stack *)(shadow + 0xfc00), (Stack *)(shadow + 0xfd00), shadow))
+	if(!uxn_boot(&hypervisor, shadow, shadow + PAGE_DEV, (Stack *)(shadow + 0xfb00), (Stack *)(shadow + 0xfc00)))
 		return error("Boot", "Failed to start uxn.");
-	if(!uxn_boot(u, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST), memory))
+	if(!uxn_boot(u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(&hypervisor, "hypervisor.rom"))
 		error("Hypervisor", "No debugger found.");
