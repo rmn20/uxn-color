@@ -11,6 +11,7 @@ HFILES=\
 	src/devices/file.h\
 	src/devices/mouse.h\
 	src/devices/screen.h\
+	src/devices/system.h\
 	src/uxn.h\
 
 CLEANFILES=$TARG $ROM
@@ -31,19 +32,19 @@ bin:
 %.rom:Q: %.tal bin/uxnasm
 	bin/uxnasm $stem.tal $target >/dev/null
 
-bin/uxncli: file.$O uxncli.$O uxn.$O
+bin/uxncli: file.$O system.$O uxncli.$O uxn.$O
 	$LD $LDFLAGS -o $target $prereq
 
 bin/uxnasm: uxnasm.$O
 	$LD $LDFLAGS -o $target $prereq
 
-bin/uxnemu: uxnemu.$O audio.$O controller.$O file.$O mouse.$O screen.$O uxn.$O
+bin/uxnemu: audio.$O controller.$O file.$O mouse.$O screen.$O system.$O uxn.$O uxnemu.$O 
 	$LD $LDFLAGS -o $target $prereq
 
 (uxnasm|uxncli|uxnemu|uxn)\.$O:R: src/\1.c
 	$CC $CFLAGS -Isrc -o $target src/$stem1.c
 
-(audio|controller|file|mouse|screen)\.$O:R: src/devices/\1.c
+(audio|controller|file|mouse|screen|system)\.$O:R: src/devices/\1.c
 	$CC $CFLAGS -Isrc -o $target src/devices/$stem1.c
 
 nuke:V: clean
