@@ -57,7 +57,7 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 	else if(S_ISDIR(st.st_mode))
 		return snprintf(p, len, "---- %s\n", basename);
 	else if(st.st_size < 0x10000)
-		return snprintf(p, len, "%04x %s\n", (Uint16)st.st_size, basename);
+		return snprintf(p, len, "%04x %s\n", (unsigned int)st.st_size, basename);
 	else
 		return snprintf(p, len, "???? %s\n", basename);
 }
