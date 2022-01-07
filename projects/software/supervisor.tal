@@ -22,6 +22,9 @@
 %2//  { #01 SFT2 }
 %8**  { #30 SFT2 }
 
+%EADDR { #fd04 }
+%ECODE { #fd06 }
+
 ( devices )
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
@@ -51,7 +54,7 @@
 	;draw-cross JSR2
 	;draw-stacks JSR2
 
-	.System/eaddr DEI2 #0000 !! ;on-error JCN2
+	EADDR LDA2 #0000 !! ;on-error JCN2
 
 BRK
 
@@ -93,9 +96,9 @@ BRK
 
 	;at-txt #4f ;draw-str JSR2
 
-	.System/eaddr DEI2 #47 ;draw-short JSR2
+	EADDR LDA2 #47 ;draw-short JSR2
 
-	#0000 .System/eaddr DEO2
+	#0000 EADDR STA2
 
 BRK
 

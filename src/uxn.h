@@ -16,6 +16,9 @@ typedef signed short Sint16;
 typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
+#define VISOR_DEV 0xfa00
+#define VISOR_WST 0xfb00
+#define VISOR_RST 0xfc00
 #define PAGE_DEV 0xfd00
 #define PAGE_WST 0xfe00
 #define PAGE_RST 0xff00
@@ -28,25 +31,24 @@ typedef unsigned int Uint32;
 /* clang-format on */
 
 typedef struct {
-	Uint8 ptr;
-	Uint8 dat[255];
+	Uint8 ptr, dat[255];
 } Stack;
 
 typedef struct Device {
 	struct Uxn *u;
-	Uint8 addr, dat[16], *mem;
+	Uint8 *dat, *mem;
 	Uint16 vector;
 	Uint8 (*dei)(struct Device *d, Uint8);
 	void (*deo)(struct Device *d, Uint8);
 } Device;
 
 typedef struct Uxn {
+	Uint8 *ram, *devpage;
 	Stack *wst, *rst;
-	Uint8 *ram;
 	Device dev[16];
 } Uxn;
 
-int uxn_boot(Uxn *u, Uint8 *ram, Uint8 *dev, Stack *wst, Stack *rst);
+int uxn_boot(Uxn *u, Uint8 *ram, Uint8 *devpage, Stack *wst, Stack *rst);
 int uxn_eval(Uxn *u, Uint16 pc);
 int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));
