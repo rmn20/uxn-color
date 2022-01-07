@@ -38,7 +38,7 @@ bin/uxncli: file.$O system.$O uxncli.$O uxn.$O
 bin/uxnasm: uxnasm.$O
 	$LD $LDFLAGS -o $target $prereq
 
-bin/uxnemu: audio.$O controller.$O file.$O mouse.$O screen.$O system.$O uxn.$O uxnemu.$O 
+bin/uxnemu: audio.$O controller.$O file.$O mouse.$O screen.$O system.$O uxn.$O uxnemu.$O
 	$LD $LDFLAGS -o $target $prereq
 
 (uxnasm|uxncli|uxnemu|uxn)\.$O:R: src/\1.c
