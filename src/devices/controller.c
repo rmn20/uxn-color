@@ -40,3 +40,13 @@ controller_key(Device *d, Uint8 key)
 		d->dat[3] = 0x00;
 	}
 }
+
+void
+controller_special(Device *d, Uint8 key)
+{
+	if(key) {
+		d->dat[4] = key;
+		uxn_eval(d->u, d->vector);
+		d->dat[4] = 0x00;
+	}
+}

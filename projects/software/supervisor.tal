@@ -29,6 +29,7 @@
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
+|80 @Controller &vector $2 &button   $1 &key    $1 &func   $1
 
 ( variables )
 
@@ -53,6 +54,7 @@
 	( vectors )
 	;on-error .System/vector DEO2
 	;on-frame .Screen/vector DEO2
+	;on-button .Controller/vector DEO2
 
 BRK
 
@@ -60,6 +62,12 @@ BRK
 
 	;draw-cross JSR2
 	;draw-stacks JSR2
+
+BRK
+
+@on-button ( -> )
+
+	.Controller/func DEI DEBUG
 
 BRK
 

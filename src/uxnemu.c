@@ -272,8 +272,8 @@ start(Uxn *u, char *rom)
 	/* audio2   */ uxn_port(u, 0x5, 0xffff, audio_dei, audio_deo);
 	/* audio3   */ uxn_port(u, 0x6, 0xffff, audio_dei, audio_deo);
 	/* unused   */ uxn_port(u, 0x7, 0xffff, nil_dei, nil_deo);
-	/* control  */ devctrl = uxn_port(u, 0x8, 0xffff, nil_dei, nil_deo);
-	/* mouse    */ devmouse = uxn_port(u, 0x9, 0xffff, nil_dei, nil_deo);
+	/* control  */ devctrl = uxn_port(u, 0x8, 0x0000, nil_dei, nil_deo);
+	/* mouse    */ devmouse = uxn_port(u, 0x9, 0x0000, nil_dei, nil_deo);
 	/* file     */ uxn_port(u, 0xa, 0xffff, nil_dei, file_deo);
 	/* datetime */ uxn_port(u, 0xb, 0xffff, datetime_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xc, 0xffff, nil_dei, nil_deo);
@@ -285,6 +285,7 @@ start(Uxn *u, char *rom)
 	uxn_port(&supervisor, 0x0, 0xffff, system_dei, system_deo);
 	uxn_port(&supervisor, 0x1, 0xffff, nil_dei, console_deo);
 	uxn_port(&supervisor, 0x2, 0xffff, screen_dei, screen_deo);
+	uxn_port(&supervisor, 0x8, 0x0000, nil_dei, nil_deo);
 
 	uxn_eval(&supervisor, PAGE_PROGRAM);
 
@@ -344,6 +345,22 @@ get_button(SDL_Event *event)
 	case SDLK_DOWN: return 0x20;
 	case SDLK_LEFT: return 0x40;
 	case SDLK_RIGHT: return 0x80;
+	}
+	return 0x00;
+}
+
+static Uint8
+get_fkey(SDL_Event *event)
+{
+	switch(event->key.keysym.sym) {
+	case SDLK_F1: return 0x01;
+	case SDLK_F2: return 0x02;
+	case SDLK_F3: return 0x04;
+	case SDLK_F4: return 0x08;
+	case SDLK_F5: return 0x10;
+	case SDLK_F6: return 0x20;
+	case SDLK_F7: return 0x40;
+	case SDLK_F8: return 0x80;
 	}
 	return 0x00;
 }
@@ -442,6 +459,8 @@ run(Uxn *u)
 					controller_key(devctrl, get_key(&event));
 				else if(get_button(&event))
 					controller_down(devctrl, get_button(&event));
+				else if(get_fkey(&event))
+					controller_special(&supervisor.dev[0x8], get_fkey(&event));
 				else
 					do_shortcut(u, &event);
 				ksym = event.key.keysym.sym;
