@@ -67,7 +67,14 @@ BRK
 
 @on-button ( -> )
 
-	.Controller/func DEI DEBUG
+	.Controller/func DEI
+	DUP #02 ! ,&no-f2 JCN
+		;toggle-debugger JSR2
+		&no-f2
+	DUP #08 ! ,&no-f4 JCN
+		;reboot JSR2
+		&no-f4
+	POP
 
 BRK
 
@@ -114,6 +121,20 @@ BRK
 	#0000 EADDR STA2
 
 BRK
+
+@toggle-debugger ( -- )
+
+	( toggle debug ) #fd0e STH2k LDA #00 = STH2r STA
+
+RTN
+
+@reboot ( -- )
+
+	( clear devices/stacks )
+	#fd00 #0300 ;mclr JSR2
+
+RTN
+	&boot-path "boot.rom $1
 
 @draw-stacks ( -- )
 
@@ -200,6 +221,16 @@ RTN
 
 JMP2r
 
+@mclr ( addr* len* -- )
+
+	OVR2 ++ SWP2
+	&loop
+		STH2k #00 STH2r STA
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+
+JMP2r
+
 @print-hex ( value* -- )
 
 	SWP ,&byte JSR 
@@ -209,6 +240,15 @@ JMP2r
 	JMP2r
 	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
 	&above #57 ADD JMP2r
+
+JMP2r
+
+@print-str ( string* -- )
+
+	#0001 SUB2 
+	&while
+		INC2 LDAk DUP #18 DEO ,&while JCN 
+	POP2
 
 JMP2r
 

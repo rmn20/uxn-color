@@ -117,6 +117,8 @@ screen_dei(Device *d, Uint8 port)
 	case 0x3: return uxn_screen.width;
 	case 0x4: return uxn_screen.height >> 8;
 	case 0x5: return uxn_screen.height;
+	case 0x6:
+
 	default: return d->dat[port];
 	}
 }

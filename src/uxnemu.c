@@ -459,8 +459,8 @@ run(Uxn *u)
 					controller_key(devctrl, get_key(&event));
 				else if(get_button(&event))
 					controller_down(devctrl, get_button(&event));
-				else if(get_fkey(&event))
-					controller_special(&supervisor.dev[0x8], get_fkey(&event));
+				/* else if(get_fkey(&event))
+					controller_special(&supervisor.dev[0x8], get_fkey(&event)); */
 				else
 					do_shortcut(u, &event);
 				ksym = event.key.keysym.sym;
