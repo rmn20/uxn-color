@@ -16,6 +16,8 @@ typedef signed short Sint16;
 typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
+#define PAGE_WST 0xfe00
+#define PAGE_RST 0xff00
 
 /* clang-format off */
 

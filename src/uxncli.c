@@ -143,7 +143,7 @@ main(int argc, char **argv)
 
 	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
 	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
-	if(!uxn_boot(&u, (Stack *)(shadow + 0x200), (Stack *)(shadow + 0x400), memory))
+	if(!uxn_boot(&u, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST), memory))
 		return error("Boot", "Failed");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);
