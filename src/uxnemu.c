@@ -238,7 +238,7 @@ load(Uxn *u, char *rom)
 	SDL_RWops *f;
 	int r;
 	if(!(f = SDL_RWFromFile(rom, "rb"))) return 0;
-	r = f->read(f, u->ram + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM);
+	r = f->read(f, u->ram + PAGE_PROGRAM, 1, 0x10000 - PAGE_PROGRAM);
 	f->close(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", rom);
@@ -251,8 +251,8 @@ static Uint8 *shadow, *memory;
 static int
 start(Uxn *u, char *rom)
 {
-	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
-	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	shadow = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 
 	if(!uxn_boot(&supervisor, shadow, shadow + VISOR_DEV, (Stack *)(shadow + VISOR_WST), (Stack *)(shadow + VISOR_RST)))
 		return error("Boot", "Failed to start uxn.");

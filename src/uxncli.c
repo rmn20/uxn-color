@@ -103,7 +103,7 @@ load(Uxn *u, char *filepath)
 	FILE *f;
 	int r;
 	if(!(f = fopen(filepath, "rb"))) return 0;
-	r = fread(u->ram + PAGE_PROGRAM, 1, 0xffff - PAGE_PROGRAM, f);
+	r = fread(u->ram + PAGE_PROGRAM, 1, 0x10000 - PAGE_PROGRAM, f);
 	fclose(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", filepath);
@@ -118,8 +118,8 @@ main(int argc, char **argv)
 	Uxn u;
 	int i, loaded = 0;
 
-	shadow = (Uint8 *)calloc(0xffff, sizeof(Uint8));
-	memory = (Uint8 *)calloc(0xffff, sizeof(Uint8));
+	shadow = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 	if(!uxn_boot(&u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
 		return error("Boot", "Failed");
 
