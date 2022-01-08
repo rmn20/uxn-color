@@ -5,22 +5,18 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%8// { #03 SFT2 }
-%10** { #40 SFT2 } %10// { #04 SFT2 }
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
 
-%MIN2 { LTH2k JMP SWP2 POP2 }
-%MOD { DIVk MUL SUB }
-%DEC { #01 - }
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%SWP? { #01 JCN SWP } %SWP2? { #01 JCN SWP2 }
-%BRK? { #01 JCN BRK }
-%RTN? { #01 JCN RTN }
 
-%DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
-%DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
-
-%SEL-ENTRY { ;dir/entries #00 .browser/sel LDZ DUP2 ADD2 ADD2 }
+%AUTO-NONE   { #00 .Screen/auto DEO }
+%AUTO-XADDR  { #05 .Screen/auto DEO }
+%AUTO-YADDR  { #06 .Screen/auto DEO }
 
 ( devices )
 
@@ -40,8 +36,8 @@
 @pointer
 	&x  $2 &y  $2
 @browser
-	&x $2 &y $2 
-	&sel $1 &last $1
+	&x $2 &y $2 &x2 $2 &y2 $2 
+	&sel $1 &last $1 &scroll $1
 
 ( init )
 
@@ -63,18 +59,15 @@
 	#0100 .Audio0/length DEO2
 	#dd .Audio0/volume DEO ( TODO: turn ON )
 
-	( determine max visible file length )
-	.Screen/width DEI2 8// #00ff MIN2 NIP
-	;draw-browser/clear-length STA
-
 	( place )
 	#0088 .browser/x STZ2
 	#0010 .browser/y STZ2
+	.Screen/height DEI2 #33 SFT2 #0011 -- .browser/y2 STZ2
 
 	( draw mascot )
 	#0010 #0010 #0060 #0060 ;mascot-icn #01 ;draw-icn JSR2
 
-	;read-dir JSR2
+	;load-dir JSR2
 
 	( theme support )
 	;load-theme JSR2
@@ -104,154 +97,116 @@ BRK
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
+	( within browser )
+	.Mouse/y DEI2 .browser/y LDZ2 << ,&outside JCN
+	.Mouse/y DEI2 .browser/y2 LDZ2 >> ,&outside JCN
+
 	( select choice )
 	.Mouse/y DEI2 .browser/y LDZ2 --
 		10// NIP ;select-file JSR2
 
+	( run choice )
 	.Mouse/state DEI #00 = ,&no-click JCN
 		.browser/sel LDZ ;run-file JSR2
 		&no-click
+
+	&outside
 
 BRK
 
 @on-button ( -> )
 
+	( controller )
 	.Controller/button DEI
 	DUP #10 ! ,&no-up JCN
-		.browser/sel LDZ DEC ;select-file JSR2
+		.browser/sel LDZ #00 = ,&no-up JCN
+		.browser/sel LDZ #01 - ;select-file JSR2 
 		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
-		.browser/sel LDZ INC ;select-file JSR2
+		.browser/sel LDZ INC ;dir/lines LDA = ,&no-down JCN 
+		.browser/sel LDZ INC ;select-file JSR2 
 		POP BRK
 		&no-down
 	DUP #01 ! ,&no-a JCN
-		.browser/sel LDZ ;run-file JSR2
+		.browser/sel LDZ ;run-file JSR2 
 		POP BRK
 		&no-a
 	POP
+	( keyboard )
 	.Controller/key DEI
 	DUP #0d ! ,&no-enter JCN
 		.browser/sel LDZ ;run-file JSR2
-		POP
+		POP BRK
 		&no-enter
 	POP
 
 BRK
 
-@read-dir ( -- )
+@load-dir ( -- )
 
 	;dir/path .File/name DEO2
 	#1000 .File/length DEO2
 	;dir/data .File/read DEO2
+	.File/success DEI2 ;dir/length STA2
 
-	( separate into lines )
-	#00 ;dir/data STH2k
+	( split with null-char )
+	;dir/data
 	&while
-		LDAk #0a ! ,&no-lb JCN
-		STAk
-		STH2r ;add-entry JSR2
-		INC2 STH2k ,&while JMP
-		&no-lb INC2 LDAk ,&while JCN
-	POP2r POP2 POP
-RTN
-
-@add-entry ( line* -- )
-	DUP2 ;filter-entry JSR2 ,&ignored JCN
-
-	( just add entry to end for now, FIXME sort entries )
-	;dir/entries
-		#00 ;dir/lines LDA DUP2 ADD2
-		ADD2
-	STA2
-	;dir/lines LDAk INC ROT ROT STA
-	#0000
-
-	&ignored
+		LDAk #1f > ,&no-lb JCN
+			STH2k #00 STH2r STA
+			;dir/lines LDA INC ;dir/lines STA
+			&no-lb
+		INC2 LDAk ,&while JCN
 	POP2
-RTN
 
-@filter-entry ( line* -- ignore-flag )
-	POP2 #00
 RTN
 
 @select-file ( id -- )
-	( clamp id to useful values )
-	DUP #fc LTH ,&not-negative JCN
-	DUP EOR
-	&not-negative
-	;dir/lines LDA DEC LTHk SWP? POP
 
+	( has changed )
 	DUP .browser/last LDZ ! ,&has-changed JCN
 		POP RTN
 		&has-changed
 
-	DUP ;scroll-browser JSR2
+	#00 ;draw-browser JSR2
 
-	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
-	#0010 #0010 
-		;hand-icn #00 ;draw-icn JSR2
-
-	DUP 
-		.browser/sel STZ
-	DUP
-		.browser/last STZ
+	DUP .browser/sel STZ
+	DUP .browser/last STZ
 		#30 + .Audio0/pitch DEO
-	;draw-browser JSR2
 
-	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ TOS 10** ++ ] 
-	#0010 #0010 
-		;hand-icn #02 ;draw-icn JSR2
+	;follow-selection JSR2
 
+	#01 ;draw-browser JSR2
+
+	( draw mascot )
 	#0010 #0010 #0060 #0060 
 	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01 
 		;draw-icn JSR2
 
 RTN
 
-( Scroll the browser to accomodate off-screen line items )
-@scroll-browser ( id -- )
-	( Check whether the selection moved up or down )
-	.browser/last LDZ OVR SWP SUB #80 AND ,&negative JCN
+@follow-selection ( -- )
 
-	&positive ( The selection moved down )
-	( Calculate the id currently at the bottom of the screen )
-	.Screen/height DEI2 .browser/y LDZ2 #0010 ++ -- 10// NIP
-	GTH ,&scroll-up JCN [ RTN ]
-	&scroll-up
-		.browser/y LDZ2k #0010 -- ROT STZ2
-		RTN
-
-	&negative ( The selection moved up )
-	( Calculate the id currently at the top of the screen )
-	( TODO make a macro constant for y initial pos )
-	#0010 .browser/y LDZ2 -- 10// NIP
-
-	LTH ,&scroll-down JCN [ RTN ]
-	&scroll-down
-		.browser/y LDZ2k #0010 ++ ROT STZ2 ( Decrement y by 0x10 )
-		RTN
-
-@run-file ( id -- )
-
-	SEL-ENTRY LDA2
-	#0005 ++ DUP2 ;print-string JSR2
-	#0a .Console/write DEO
-
-	DUP2 ;check-rom JSR2 ,&valid JCN
-	POP2 RTN
-
-	&valid
-	;load-rom JSR2
+	.browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP #01 - .browser/sel LDZ
+	DUP2 > ,&below JCN
+		DUP2 SWP - .browser/scroll STZ 
+		POP2 RTN
+	&below
+	POP2
+	#00 .browser/scroll STZ 
 
 RTN
 
-@print-string ( addr* -- )
+@run-file ( id -- )
 
-	&loop
-		LDAk .Console/write DEO
-		INC2 LDAk ,&loop JCN
-	POP2
+	;get-entry JSR2 #0005 ++
+	
+	DUP2 ;check-rom JSR2 ,&valid JCN
+		POP2 RTN
+		&valid
+
+	;load-rom JSR2 
 
 RTN
 
@@ -261,86 +216,45 @@ RTN
 
 RTN
 
-@draw-browser ( -- )
+@draw-browser ( mask -- )
 
-	.browser/x LDZ2 .Screen/x DEO2
-	.browser/y LDZ2 .Screen/y DEO2
-	SEL-ENTRY ;dir/entries
-	&outer ( selected-entry* this-entry* )
-		.Screen/y DEI2 #0010 LTH2 ,&inc JCN ( Don't draw anything in the first row )
-		EQU2k #0c * #01 + STH
-		LDA2k ORAk #00 = ,&end JCN
-		,&clear JSR
-		STHr ,&draw-one JSR
-		.browser/x LDZ2 .Screen/x DEO2
-		&inc .Screen/y DEI2 #0010 ++ .Screen/y DEO2
-		INC2 INC2 ,&outer JMP
-	&end
-	POP2 POP2 POP2 POPr
-RTN
-
-	&draw-one ( line* color -- )
 	STH
+
+	( draw hand )
+	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ .browser/scroll LDZ - TOS 10** ++ ] 
+	#0010 #0010 
+		;hand-icn STHkr #03 * ;draw-icn JSR2
+	( draw files )
+	.browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP #00
 	&loop
-		( top-addr ) LDAk #20 - TOS #0010 MUL2 ;font ++ .Screen/addr DEO2
-		( top-draw ) STHkr .Screen/sprite DEO
-		( bottom-addr ) .Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
-		( next-y ) .Screen/y DEI2 #0008 ++ .Screen/y DEO2
-		( bottom-draw ) STHkr .Screen/sprite DEO
-		( prev-y ) .Screen/y DEI2 #0008 -- .Screen/y DEO2
-		( move ) .Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		&skip
-		INC2 LDAk ,&loop JCN
-	POP2 POPr
-RTN
-
-	&clear ( -- )
-	.Screen/x DEI2k ( Stash the current x pos )
-
-	( Clear the screen )
-	( Clear length gets set in init )
-	LIT2 &clear-length 00 00
-	&clear-loop
-		#00 .Screen/sprite DEO
-		.Screen/y DEI2k #0008 ++ ROT DEO2
-		#00 .Screen/sprite DEO
-		.Screen/y DEI2k #0008 -- ROT DEO2
-		.Screen/x DEI2k #0008 ++ ROT DEO2
-		INC NEQk ,&clear-loop JCN
+		.browser/x LDZ2 .Screen/x DEO2
+		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
+		DUP .browser/scroll LDZ + ;get-entry JSR2 #01 STHkr *  ;draw-str JSR2
+		INC GTHk ,&loop JCN
 	POP2
-	ROT DEO2
-RTN
 
-@draw-time ( -- )
-
-	.DateTime/day DEI
-		DUP #0f AND ;hex-char JSR2 ;&date-str #0009 ++ STA
-		#04 SFT ;hex-char JSR2 ;&date-str #0008 ++ STA
-	.DateTime/month DEI
-		DUP #0f AND ;hex-char JSR2 ;&date-str #0006 ++ STA
-		#04 SFT ;hex-char JSR2 ;&date-str #0005 ++ STA
-	.DateTime/year DEI2
-		DUP #0f AND ;hex-char JSR2 ;&date-str #0003 ++ STA
-		#04 SFT ;hex-char JSR2 ;&date-str #0002 ++ STA
-		DUP #0f AND ;hex-char JSR2 ;&date-str INC2 STA
-		#04 SFT ;hex-char JSR2 ;&date-str STA
-
-	.DateTime/second DEI
-		DUP #0f AND ;hex-char JSR2 ;&time-str #0007 ++ STA
-		#04 SFT ;hex-char JSR2 ;&time-str #0006 ++ STA
-	.DateTime/minute DEI
-		DUP #0f AND ;hex-char JSR2 ;&time-str #0004 ++ STA
-		#04 SFT ;hex-char JSR2 ;&time-str #0003 ++ STA
-	.DateTime/hour DEI
-		DUP #0f AND ;hex-char JSR2 ;&time-str INC2 STA
-		#04 SFT ;hex-char JSR2 ;&time-str STA
-
-	#0020 #0080 ;&date-str #01 ;draw-label JSR2
-	#0080 #0080 ;&time-str #02 ;draw-label JSR2
+	POPr
 
 RTN
-	&date-str "0000-00-00 $1
-	&time-str "00:00:00 $1
+
+@get-entry ( id -- addr* )
+
+	( limit ) STH
+	( counter ) LITr 00
+	;dir/length LDA2 #0000
+	&loop
+		EQUkr STHr #00 = ,&no-reached JCN
+			POP2r NIP2 ;dir/data ++ RTN
+			&no-reached
+		DUP2 ;dir/data ++ LDA #00 ! ,&no-lb JCN
+			INCr
+			&no-lb
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+	POP2r
+	;dir/data
+
+RTN
 
 @hex-char ( hex -- char )
 
@@ -350,42 +264,63 @@ RTN
 
 @draw-icn ( x* y* width* height* addr* color  -- )
 	
+	AUTO-XADDR
 	( load ) STH .Screen/addr DEO2 ,&height STR2 ,&width STR2 ,&y STR2 ,&x STR2
 	,&height LDR2 #0000 
 	&ver
 		( save ) DUP2 ,&y LDR2 ADD2 .Screen/y DEO2
+		,&x LDR2 .Screen/x DEO2
 		,&width LDR2 #0000
 		&hor
-			( save ) DUP2 ,&x LDR2 ADD2 .Screen/x DEO2
 			( draw ) STHkr .Screen/sprite DEO
-			( incr ) .Screen/addr DEI2 #0008 ADD2 .Screen/addr DEO2
 			#0008 ADD2 GTH2k ,&hor JCN
 		POP2 POP2
 		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
 	POPr
+	AUTO-NONE
 
 RTN
 	&x $2 &y $2 &width $2 &height $2
 
-@draw-label ( x* y* addr* color -- )
+@draw-str ( text* color -- )
 
-	STH STH2
-	.Screen/y DEO2
-	.Screen/x DEO2
-	STH2r
-	&loop
-		( top-addr ) LDAk #20 - TOS #0010 MUL2 ;font ++ .Screen/addr DEO2
-		( top-draw ) STHkr .Screen/sprite DEO
-		( bottom-addr ) .Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
-		( next-y ) .Screen/y DEI2 #0008 ++ .Screen/y DEO2
-		( bottom-draw ) STHkr .Screen/sprite DEO
-		( prev-y ) .Screen/y DEI2 #0008 -- .Screen/y DEO2
-		( move ) .Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		INC2 LDAk ,&loop JCN
-	POP2 POPr
+	AUTO-YADDR
+	STH
+	&while
+		LDAk STHkr ,draw-char JSR
+		INC2 LDAk ,&while JCN
+	POP2
+	POPr
 
 RTN
+
+@draw-short ( short* color -- )
+
+	STH SWP STHkr ,draw-byte JSR
+	STHr ,draw-byte JSR
+
+RTN
+
+@draw-byte ( byte color -- )
+
+	STH
+	DUP #04 SFT ,&parse JSR STHkr ,draw-char JSR
+	#0f AND ,&parse JSR STHr ,draw-char JSR
+
+RTN
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+@draw-char ( char color -- )
+
+	SWP
+	[ #20 - #00 SWP #40 SFT2 ;font ++ ] .Screen/addr DEO2
+	.Screen/sprite DEOk DEO
+	.Screen/x DEI2k #0008 ++ ROT DEO2
+	.Screen/y DEI2k #0010 -- ROT DEO2
+
+JMP2r
 
 ( theme )
 
@@ -406,25 +341,6 @@ RTN
 
 RTN
 
-( helpers )
-
-@print-hex ( value* -- )
-
-	&short ( value* -- )
-		SWP ,&echo JSR 
-	&byte ( value -- )
-		,&echo JSR
-	RTN
-
-	&echo ( value -- )
-	STHk #04 SFT ,&parse JSR .Console/write DEO
-	STHr #0f AND ,&parse JSR .Console/write DEO
-	RTN
-	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 + RTN &above #09 - #60 + RTN
-
-RTN
-
 @pointer-icn
 	80c0 e0f0 f8e0 1000
 @hand-icn
@@ -432,7 +348,6 @@ RTN
 	0000 0000 0000 fc02
 	8180 8080 8040 3f00
 	fc20 c020 c020 c000
-
 @sin-pcm
 	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
 	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
@@ -460,5 +375,5 @@ RTN
 @dir
 	&path ". $1
 	&lines $1
-	&entries $100
+	&length $2
 	&data
