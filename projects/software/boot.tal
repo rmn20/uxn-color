@@ -18,6 +18,14 @@
 %AUTO-XADDR  { #05 .Screen/auto DEO }
 %AUTO-YADDR  { #06 .Screen/auto DEO }
 
+%HALT   { #010f DEO }
+%EMIT   { #18 DEO }
+%PRINT  { ;print-str JSR2 #0a EMIT }
+%DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
+%DEBUG2 { ;print-hex JSR2 #0a EMIT }
+
+%LINES-COUNT { .browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP }
+
 ( devices )
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &pad    $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1
@@ -25,7 +33,7 @@
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1
 |30 @Audio0     &vector $2 &position $2 &output $1 &pad    $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1
 |80 @Controller &vector $2 &button   $1 &key    $1
-|90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &wheel  $1 
+|90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &pad    $3 &scrollx $2 &scrolly $2
 |a0 @File       &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
 |b0 @DateTime   &year   $2 &month    $1 &day    $1 &hour   $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 
 
@@ -97,13 +105,26 @@ BRK
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
+	( wheel )
+	.Mouse/scrolly INC DEI
+	DUP #ff ! ,&no-up JCN
+		.browser/scroll LDZ #00 = ,&no-up JCN
+		DUP .browser/scroll LDZ + ;scroll-to JSR2
+		&no-up
+
+	DUP #01 ! ,&no-down JCN
+		.browser/scroll LDZ ;dir/lines LDA = ,&no-down JCN
+		DUP .browser/scroll LDZ + ;scroll-to JSR2
+		&no-down
+	POP
+
 	( within browser )
 	.Mouse/y DEI2 .browser/y LDZ2 << ,&outside JCN
-	.Mouse/y DEI2 .browser/y2 LDZ2 >> ,&outside JCN
+	.Mouse/y DEI2 .browser/y2 LDZ2 #0010 -- >> ,&outside JCN
 
 	( select choice )
 	.Mouse/y DEI2 .browser/y LDZ2 --
-		10// NIP ;select-file JSR2
+		10// NIP .browser/scroll LDZ + ;select-file JSR2
 
 	( run choice )
 	.Mouse/state DEI #00 = ,&no-click JCN
@@ -142,6 +163,24 @@ BRK
 	POP
 
 BRK
+
+@scroll-to ( line -- )
+
+	STH
+	( more lines than visible )
+	;dir/lines LDA LINES-COUNT 
+	DUP2 > ,&can-scroll JCN
+		POPr POP2 RTN
+		&can-scroll
+	( less than max scroll )
+	- INC STHkr > ,&valid-scroll JCN
+		POPr RTN
+		&valid-scroll 
+	#00 ;draw-browser JSR2
+	STHr .browser/scroll STZ
+	#01 ;draw-browser JSR2
+
+RTN
 
 @load-dir ( -- )
 
@@ -188,15 +227,26 @@ RTN
 
 @follow-selection ( -- )
 
-	.browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP #01 - .browser/sel LDZ
-	DUP2 > ,&below JCN
-		DUP2 SWP - .browser/scroll STZ 
-		POP2 RTN
-	&below
+	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ -
+
+	DUP2 > ,&no-down JCN
+		.browser/scroll LDZ INC .browser/scroll STZ
+		&no-down
 	POP2
-	#00 .browser/scroll STZ 
 
 RTN
+
+@print-hex ( value* -- )
+
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+JMP2r
 
 @run-file ( id -- )
 
@@ -225,7 +275,7 @@ RTN
 	#0010 #0010 
 		;hand-icn STHkr #03 * ;draw-icn JSR2
 	( draw files )
-	.browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP #00
+	LINES-COUNT #00
 	&loop
 		.browser/x LDZ2 .Screen/x DEO2
 		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
