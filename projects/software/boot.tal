@@ -228,13 +228,24 @@ RTN
 @follow-selection ( -- )
 
 	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ -
-
 	DUP2 > ,&no-down JCN
-		.browser/scroll LDZ INC .browser/scroll STZ
+		.browser/scroll LDZ INC ;scroll-to JSR2
 		&no-down
+	DUP2 SWP < ,&no-up JCN
+		.browser/sel LDZ ;scroll-to JSR2
+		&no-up
 	POP2
 
 RTN
+
+@print-str ( string* -- )
+
+	#0001 SUB2 
+	&while
+		INC2 LDAk DUP #18 DEO ,&while JCN 
+	POP2
+
+JMP2r
 
 @print-hex ( value* -- )
 
