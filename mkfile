@@ -8,6 +8,7 @@ HFILES=\
 	/sys/include/npe/stdio.h\
 	src/devices/audio.h\
 	src/devices/controller.h\
+	src/devices/datetime.h\
 	src/devices/file.h\
 	src/devices/mouse.h\
 	src/devices/screen.h\
@@ -32,19 +33,19 @@ bin:
 %.rom:Q: %.tal bin/uxnasm
 	bin/uxnasm $stem.tal $target >/dev/null
 
-bin/uxncli: file.$O system.$O uxncli.$O uxn.$O
+bin/uxncli: file.$O datetime.$O system.$O uxncli.$O uxn.$O
 	$LD $LDFLAGS -o $target $prereq
 
 bin/uxnasm: uxnasm.$O
 	$LD $LDFLAGS -o $target $prereq
 
-bin/uxnemu: audio.$O controller.$O file.$O mouse.$O screen.$O system.$O uxn.$O uxnemu.$O
+bin/uxnemu: audio.$O controller.$O datetime.$O file.$O mouse.$O screen.$O system.$O uxn.$O uxnemu.$O
 	$LD $LDFLAGS -o $target $prereq
 
 (uxnasm|uxncli|uxnemu|uxn)\.$O:R: src/\1.c
 	$CC $CFLAGS -Isrc -o $target src/$stem1.c
 
-(audio|controller|file|mouse|screen|system)\.$O:R: src/devices/\1.c
+(audio|controller|datetime|file|mouse|screen|system)\.$O:R: src/devices/\1.c
 	$CC $CFLAGS -Isrc -o $target src/devices/$stem1.c
 
 nuke:V: clean
