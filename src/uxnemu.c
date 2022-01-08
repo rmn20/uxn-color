@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+
 #include "uxn.h"
+
+Uint8 *supervisor_memory, *memory;
 
 #pragma GCC diagnostic push
 #pragma clang diagnostic push
@@ -246,17 +249,15 @@ load(Uxn *u, char *rom)
 	return 1;
 }
 
-static Uint8 *shadow, *memory;
-
 static int
 start(Uxn *u, char *rom)
 {
 	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	shadow = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	supervisor_memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 
-	if(!uxn_boot(&supervisor, shadow, shadow + VISOR_DEV, (Stack *)(shadow + VISOR_WST), (Stack *)(shadow + VISOR_RST)))
+	if(!uxn_boot(&supervisor, supervisor_memory, supervisor_memory + VISOR_DEV, (Stack *)(supervisor_memory + VISOR_WST), (Stack *)(supervisor_memory + VISOR_RST)))
 		return error("Boot", "Failed to start uxn.");
-	if(!uxn_boot(u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
+	if(!uxn_boot(u, memory, supervisor_memory + PAGE_DEV, (Stack *)(supervisor_memory + PAGE_WST), (Stack *)(supervisor_memory + PAGE_RST)))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(&supervisor, "supervisor.rom"))
 		error("Supervisor", "No debugger found.");
@@ -458,10 +459,11 @@ run(Uxn *u)
 					controller_key(devctrl, get_key(&event));
 				else if(get_button(&event))
 					controller_down(devctrl, get_button(&event));
-				/* else if(get_fkey(&event))
-					controller_special(&supervisor.dev[0x8], get_fkey(&event)); */
 				else
 					do_shortcut(u, &event);
+				/* function keys are sent to supervisor */
+				if(get_fkey(&event))
+					controller_special(&supervisor.dev[0x8], get_fkey(&event));
 				ksym = event.key.keysym.sym;
 				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 					break;

@@ -4,6 +4,9 @@
 #include <time.h>
 
 #include "uxn.h"
+
+Uint8 *supervisor_memory, *memory;
+
 #include "devices/system.h"
 #include "devices/file.h"
 #include "devices/datetime.h"
@@ -110,17 +113,15 @@ load(Uxn *u, char *filepath)
 	return 1;
 }
 
-static Uint8 *shadow, *memory;
-
 int
 main(int argc, char **argv)
 {
 	Uxn u;
 	int i, loaded = 0;
 
-	shadow = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	supervisor_memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	if(!uxn_boot(&u, memory, shadow + PAGE_DEV, (Stack *)(shadow + PAGE_WST), (Stack *)(shadow + PAGE_RST)))
+	if(!uxn_boot(&u, memory, supervisor_memory + PAGE_DEV, (Stack *)(supervisor_memory + PAGE_WST), (Stack *)(supervisor_memory + PAGE_RST)))
 		return error("Boot", "Failed");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);

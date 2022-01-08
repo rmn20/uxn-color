@@ -67,7 +67,7 @@ BRK
 
 @on-button ( -> )
 
-	.Controller/func DEI
+	.Controller/func DEI DUP DEBUG
 	DUP #02 ! ,&no-f2 JCN
 		;toggle-debugger JSR2
 		&no-f2
@@ -124,7 +124,8 @@ BRK
 
 @toggle-debugger ( -- )
 
-	( toggle debug ) #fd0e STH2k LDA #00 = STH2r STA
+	( toggle debug ) 
+	( #fd0e STH2k LDA #00 = STH2r STA )
 
 RTN
 
@@ -132,6 +133,9 @@ RTN
 
 	( clear devices/stacks )
 	#fd00 #0300 ;mclr JSR2
+
+	( load rom )
+
 
 RTN
 	&boot-path "boot.rom $1
