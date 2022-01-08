@@ -180,8 +180,6 @@ system_deo_special(Device *d, Uint8 port)
 static void
 console_deo(Device *d, Uint8 port)
 {
-	if(port == 0x1)
-		DEVPEEK16(d->vector, 0x0);
 	if(port > 0x7)
 		write(port - 0x7, (char *)&d->dat[port], 1);
 }
@@ -228,7 +226,8 @@ nil_dei(Device *d, Uint8 port)
 static void
 nil_deo(Device *d, Uint8 port)
 {
-	if(port == 0x1) DEVPEEK16(d->vector, 0x0);
+	(void)d;
+	(void)port;
 }
 
 /* Boot */
@@ -409,7 +408,7 @@ static int
 console_input(Uxn *u, char c)
 {
 	devconsole->dat[0x2] = c;
-	return uxn_eval(u, devconsole->vector);
+	return uxn_eval(u, GETVECTOR(devconsole));
 }
 
 static int
@@ -483,8 +482,8 @@ run(Uxn *u)
 				console_input(u, event.cbutton.button);
 		}
 		if(devsystem->dat[0xe])
-			uxn_eval(&supervisor, supervisor.dev[2].vector);
-		uxn_eval(u, devscreen->vector);
+			uxn_eval(&supervisor, GETVECTOR(&supervisor.dev[2]));
+		uxn_eval(u, GETVECTOR(devscreen));
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
 			redraw();
 		if(!BENCH) {

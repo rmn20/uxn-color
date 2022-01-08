@@ -28,12 +28,14 @@ int
 uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 {
 	Device *d = &u->dev[0];
-	Uint16 vec = d->vector;
+	Uint16 vec = GETVECTOR(d);
 	DEVPOKE16(0x4, addr);
 	d->dat[0x6] = error;
-	uxn_eval(&supervisor, supervisor.dev[0].vector);
+	uxn_eval(&supervisor, GETVECTOR(&supervisor.dev[0]));
 	if(vec) {
-		d->vector = 0; /* need to rearm to run System/vector again */
+		/* need to rearm to run System/vector again */
+		d->dat[0] = 0;
+		d->dat[1] = 0;
 		if(error != 2) /* working stack overflow has special treatment */
 			vec += 0x0004;
 		return uxn_eval(u, vec);
@@ -58,7 +60,6 @@ void
 system_deo(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x1: DEVPEEK16(d->vector, 0x0); break;
 	case 0x2: d->u->wst->ptr = d->dat[port]; break;
 	case 0x3: d->u->rst->ptr = d->dat[port]; break;
 	default: system_deo_special(d, port);

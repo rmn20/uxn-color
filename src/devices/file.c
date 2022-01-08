@@ -146,9 +146,6 @@ file_deo(Device *d, Uint8 port)
 {
 	Uint16 a, b, res;
 	switch(port) {
-	case 0x1:
-		DEVPEEK16(d->vector, 0x0);
-		break;
 	case 0x5:
 		DEVPEEK16(a, 0x4);
 		DEVPEEK16(b, 0xa);

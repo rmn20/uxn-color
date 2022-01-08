@@ -18,7 +18,7 @@ controller_down(Device *d, Uint8 mask)
 {
 	if(mask) {
 		d->dat[2] |= mask;
-		uxn_eval(d->u, d->vector);
+		uxn_eval(d->u, GETVECTOR(d));
 	}
 }
 
@@ -27,7 +27,7 @@ controller_up(Device *d, Uint8 mask)
 {
 	if(mask) {
 		d->dat[2] &= (~mask);
-		uxn_eval(d->u, d->vector);
+		uxn_eval(d->u, GETVECTOR(d));
 	}
 }
 
@@ -36,7 +36,7 @@ controller_key(Device *d, Uint8 key)
 {
 	if(key) {
 		d->dat[3] = key;
-		uxn_eval(d->u, d->vector);
+		uxn_eval(d->u, GETVECTOR(d));
 		d->dat[3] = 0x00;
 	}
 }
@@ -46,7 +46,7 @@ controller_special(Device *d, Uint8 key)
 {
 	if(key) {
 		d->dat[4] = key;
-		uxn_eval(d->u, d->vector);
+		uxn_eval(d->u, GETVECTOR(d));
 		d->dat[4] = 0x00;
 	}
 }

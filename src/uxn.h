@@ -27,6 +27,7 @@ typedef unsigned int Uint32;
 
 #define DEVPEEK16(o, x) { (o) = (d->dat[(x)] << 8) + d->dat[(x) + 1]; }
 #define DEVPOKE16(x, y) { d->dat[(x)] = (y) >> 8; d->dat[(x) + 1] = (y); }
+#define GETVECTOR(d) ((d)->dat[0] << 8 | (d)->dat[1])
 
 /* clang-format on */
 
@@ -37,7 +38,6 @@ typedef struct {
 typedef struct Device {
 	struct Uxn *u;
 	Uint8 *dat, *mem;
-	Uint16 vector;
 	Uint8 (*dei)(struct Device *d, Uint8);
 	void (*deo)(struct Device *d, Uint8);
 } Device;

@@ -127,7 +127,6 @@ void
 screen_deo(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x1: DEVPEEK16(d->vector, 0x0); break;
 	case 0x5:
 		if(!FIXED_SIZE) {
 			Uint16 w, h;
