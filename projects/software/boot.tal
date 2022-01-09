@@ -11,6 +11,8 @@
 %10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
 %20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
 
+%40** { #60 SFT2 }
+
 %RTN { JMP2r }
 %TOS { #00 SWP }
 
@@ -52,9 +54,9 @@
 |0100 ( -> )
 
 	( theme ) 
-	#f077 .System/r DEO2 
-	#f00c .System/g DEO2 
-	#f02a .System/b DEO2
+	#f079 .System/r DEO2 
+	#f0c2 .System/g DEO2 
+	#f0a4 .System/b DEO2
 
 	( vectors )
 	;on-frame .Screen/vector DEO2
@@ -111,7 +113,6 @@ BRK
 		.browser/scroll LDZ #00 = ,&no-up JCN
 		DUP .browser/scroll LDZ + ;scroll-to JSR2
 		&no-up
-
 	DUP #01 ! ,&no-down JCN
 		.browser/scroll LDZ ;dir/lines LDA = ,&no-down JCN
 		DUP .browser/scroll LDZ + ;scroll-to JSR2
@@ -121,16 +122,13 @@ BRK
 	( within browser )
 	.Mouse/y DEI2 .browser/y LDZ2 << ,&outside JCN
 	.Mouse/y DEI2 .browser/y2 LDZ2 #0010 -- >> ,&outside JCN
-
 	( select choice )
 	.Mouse/y DEI2 .browser/y LDZ2 --
 		10// NIP .browser/scroll LDZ + ;select-file JSR2
-
 	( run choice )
 	.Mouse/state DEI #00 = ,&no-click JCN
 		.browser/sel LDZ ;run-file JSR2
 		&no-click
-
 	&outside
 
 BRK
@@ -142,11 +140,13 @@ BRK
 	DUP #10 ! ,&no-up JCN
 		.browser/sel LDZ #00 = ,&no-up JCN
 		.browser/sel LDZ #01 - ;select-file JSR2 
+		;follow-selection JSR2
 		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
 		.browser/sel LDZ INC ;dir/lines LDA = ,&no-down JCN 
 		.browser/sel LDZ INC ;select-file JSR2 
+		;follow-selection JSR2
 		POP BRK
 		&no-down
 	DUP #01 ! ,&no-a JCN
@@ -163,6 +163,67 @@ BRK
 	POP
 
 BRK
+
+@load-dir ( -- )
+
+	;dir/path .File/name DEO2
+	#1000 .File/length DEO2
+	;dir/data .File/read DEO2
+	.File/success DEI2 ;dir/length STA2
+
+	( split with null-char )
+	;dir/data
+	&while
+		LDAk #1f > ,&no-lb JCN
+			( split ) STH2k #00 STH2r STA
+			( count lines ) ;dir/lines LDA INC ;dir/lines STA
+			&no-lb
+		INC2 LDAk ,&while JCN
+	POP2
+
+RTN
+
+@select-file ( id -- )
+
+	( has changed )
+	DUP .browser/last LDZ ! ,&has-changed JCN
+		POP RTN
+		&has-changed
+
+	#00 ;draw-browser JSR2
+	DUP .browser/sel STZ
+	DUP .browser/last STZ
+		#30 + .Audio0/pitch DEO
+	#01 ;draw-browser JSR2
+
+	( draw mascot )
+	#0010 #0010 #0060 #0060 
+	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01 
+		;draw-icn JSR2
+
+	( draw position )
+	AUTO-YADDR
+	#0010 .Screen/x DEO2
+	#0080 .Screen/y DEO2
+	.browser/sel LDZ #02 ;draw-byte JSR2
+	LIT '/ #02 ;draw-char JSR2
+	;dir/lines LDA #01 - #02 ;draw-byte JSR2
+	AUTO-NONE
+
+RTN
+
+@follow-selection ( -- )
+
+	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ -
+	DUP2 > ,&no-down JCN
+		.browser/scroll LDZ INC ,scroll-to JSR
+		&no-down
+	DUP2 SWP < ,&no-up JCN
+		.browser/sel LDZ ,scroll-to JSR
+		&no-up
+	POP2
+
+RTN
 
 @scroll-to ( line -- )
 
@@ -181,83 +242,6 @@ BRK
 	#01 ;draw-browser JSR2
 
 RTN
-
-@load-dir ( -- )
-
-	;dir/path .File/name DEO2
-	#1000 .File/length DEO2
-	;dir/data .File/read DEO2
-	.File/success DEI2 ;dir/length STA2
-
-	( split with null-char )
-	;dir/data
-	&while
-		LDAk #1f > ,&no-lb JCN
-			STH2k #00 STH2r STA
-			;dir/lines LDA INC ;dir/lines STA
-			&no-lb
-		INC2 LDAk ,&while JCN
-	POP2
-
-RTN
-
-@select-file ( id -- )
-
-	( has changed )
-	DUP .browser/last LDZ ! ,&has-changed JCN
-		POP RTN
-		&has-changed
-
-	#00 ;draw-browser JSR2
-
-	DUP .browser/sel STZ
-	DUP .browser/last STZ
-		#30 + .Audio0/pitch DEO
-
-	;follow-selection JSR2
-
-	#01 ;draw-browser JSR2
-
-	( draw mascot )
-	#0010 #0010 #0060 #0060 
-	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01 
-		;draw-icn JSR2
-
-RTN
-
-@follow-selection ( -- )
-
-	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ -
-	DUP2 > ,&no-down JCN
-		.browser/scroll LDZ INC ;scroll-to JSR2
-		&no-down
-	DUP2 SWP < ,&no-up JCN
-		.browser/sel LDZ ;scroll-to JSR2
-		&no-up
-	POP2
-
-RTN
-
-@print-str ( string* -- )
-
-	#0001 SUB2 
-	&while
-		INC2 LDAk DUP #18 DEO ,&while JCN 
-	POP2
-
-JMP2r
-
-@print-hex ( value* -- )
-
-	SWP ,&byte JSR 
-	&byte ( byte -- )
-		STHk #04 SFT ,&parse JSR #18 DEO
-		STHr #0f AND ,&parse JSR #18 DEO
-	JMP2r
-	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
-	&above #57 ADD JMP2r
-
-JMP2r
 
 @run-file ( id -- )
 
@@ -282,21 +266,31 @@ RTN
 	STH
 
 	( draw hand )
-	.browser/x LDZ2 #0018 -- .browser/y LDZ2 [ .browser/sel LDZ .browser/scroll LDZ - TOS 10** ++ ] 
+	.browser/x LDZ2 #0018 -- .browser/y LDZ2 
+	.browser/sel LDZ .browser/scroll LDZ - TOS 10** ++ 
 	#0010 #0010 
-		;hand-icn STHkr #03 * ;draw-icn JSR2
+		;hand-icn STHkr #02 * ;draw-icn JSR2
 	( draw files )
 	LINES-COUNT #00
 	&loop
 		.browser/x LDZ2 .Screen/x DEO2
 		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
-		DUP .browser/scroll LDZ + ;get-entry JSR2 #01 STHkr *  ;draw-str JSR2
+		DUP .browser/scroll LDZ + ;get-entry JSR2 
+			DUP2 ;get-type JSR2 ;draw-type JSR2
+			#01 STHkr * ;draw-str JSR2
 		INC GTHk ,&loop JCN
 	POP2
 
 	POPr
 
 RTN
+
+@get-type ( line* -- type )
+
+	;scap JSR2 #0004 -- ;&rom-ext ;scmp JSR2
+
+RTN
+	&rom-ext ".rom $1
 
 @get-entry ( id -- addr* )
 
@@ -317,9 +311,20 @@ RTN
 
 RTN
 
-@hex-char ( hex -- char )
+@draw-type ( type -- )
 
-	DUP #09 GTH #04 JCN #30 + RTN #57 +
+	STHk TOS 20** ;file-icns ++ .Screen/addr DEO2
+	AUTO-XADDR
+	#02 STHkr - .Screen/sprite DEOk DEO
+
+	.Screen/x DEI2k #0010 -- ROT DEO2
+	.Screen/y DEI2k #0008 ++ ROT DEO2
+	
+	#02 STHr - .Screen/sprite DEOk DEO
+
+	.Screen/x DEI2k #0008 ++ ROT DEO2
+	.Screen/y DEI2k #0008 -- ROT DEO2
+	AUTO-NONE
 
 RTN
 
@@ -402,6 +407,52 @@ JMP2r
 
 RTN
 
+( helpers )
+
+@print-str ( string* -- )
+
+	#0001 SUB2 
+	&while
+		INC2 LDAk DUP #18 DEO ,&while JCN 
+	POP2
+
+JMP2r
+
+@print-hex ( value* -- )
+
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+JMP2r
+
+@scmp ( a* b* -- flag )
+
+	STH2
+	&loop
+		LDAk LDAkr STHr = ,&not-diff JCN
+			POP2 POP2r #00 RTN
+			&not-diff
+		LDAk LDAkr STHr #0000 !! ,&not-end JCN
+			POP2 POP2r #01 RTN
+			&not-end
+		INC2 INC2r
+		,&loop JMP
+	POP2 POP2r #00
+
+RTN
+
+@scap ( str* -- str-end* )
+
+	( clamp ) LDAk #00 ! JMP RTN
+	&while INC2 LDAk ,&while JCN
+
+RTN
+
 @pointer-icn
 	80c0 e0f0 f8e0 1000
 @hand-icn
@@ -409,6 +460,15 @@ RTN
 	0000 0000 0000 fc02
 	8180 8080 8040 3f00
 	fc20 c020 c020 c000
+@file-icns
+	003f 3f30 3f30 3f30
+	00fc fc0c fc0c fc0c
+	3f33 3f3f 3f3f 3f00
+	fcfc fcc4 c8d0 e000
+	003f 3f30 3132 3231
+	00fc fc0c 8c4c 4c8c
+	303f 3f3f 3f3f 3f00
+	0cfc fcc4 c8d0 e000
 @sin-pcm
 	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
 	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
