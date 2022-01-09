@@ -189,6 +189,10 @@ RTN
 	DUP .browser/last LDZ ! ,&has-changed JCN
 		POP RTN
 		&has-changed
+	( beyond )
+	DUP ;dir/lines LDA < ,&valid JCN
+		POP RTN
+		&valid
 
 	#00 ;draw-browser JSR2
 	DUP .browser/sel STZ
@@ -263,6 +267,9 @@ RTN
 
 @draw-browser ( mask -- )
 
+	( when empty )
+	;dir/lines LDA #01 = ;draw-browser-empty JCN2
+
 	STH
 
 	( draw hand )
@@ -273,17 +280,31 @@ RTN
 	( draw files )
 	LINES-COUNT #00
 	&loop
+		( reached end )
+		DUP INC ;dir/lines LDA > ,&end JCN
+		( has file )
 		.browser/x LDZ2 .Screen/x DEO2
 		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
 		DUP .browser/scroll LDZ + ;get-entry JSR2 
 			DUP2 ;get-type JSR2 ;draw-type JSR2
 			#01 STHkr * ;draw-str JSR2
 		INC GTHk ,&loop JCN
+		&end
 	POP2
 
 	POPr
 
 RTN
+
+@draw-browser-empty ( mask -- )
+
+	POP
+	.browser/x LDZ2 .Screen/x DEO2
+	.browser/y LDZ2 .Screen/y DEO2
+	;&empty-txt #01 ;draw-str JSR2
+
+RTN
+	&empty-txt "Empty 20 "Folder $1
 
 @get-type ( line* -- type )
 
