@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 /*
 Copyright (c) 2021 Devine Lu Linvega
 Copyright (c) 2021 Andrew Alderwick

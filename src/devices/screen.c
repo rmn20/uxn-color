@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "../uxn.h"
 #include "screen.h"
 
