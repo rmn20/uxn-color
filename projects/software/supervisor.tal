@@ -148,12 +148,12 @@ RTN
 		( working stack )
 		#0010 .Screen/y DEO2
 		DUP2 #0018 ** #0010 ++ .Screen/x DEO2
-		DUP #fe00 LDA ( ptr ) EQU #41 + STH
+		DUP #fe00 LDA ( ptr ) EQU #4b + STH
 		DUP2 #fe01 ++ LDA STHr ;draw-byte JSR2
 		( return stack )
 		#0028 .Screen/y DEO2
 		DUP2 #0018 ** #0010 ++ .Screen/x DEO2
-		DUP #ff00 LDA ( ptr ) EQU #41 + STH
+		DUP #ff00 LDA ( ptr ) EQU #4b + STH
 		DUP2 #ff01 ++ LDA STHr ;draw-byte JSR2
 		INC2 GTH2k ,&wst JCN
 	POP2 POP2
