@@ -105,7 +105,14 @@ uxnemu orca.rom | shim
 
 ## Need a hand?
 
-Find us in [`#uxn` on irc.esper.net](ircs://irc.esper.net:6697/#uxn).
+The following resources are a good place to start:
+
+* [XXIIVV — uxntal](https://wiki.xxiivv.com/site/uxntal.html)
+* [XXIIVV — uxntal cheatsheet](https://wiki.xxiivv.com/site/uxntal_cheatsheet.html)
+* [XXIIVV — uxntal reference](https://wiki.xxiivv.com/site/uxntal_reference.html)
+* [compudanzas — uxn tutorial](https://compudanzas.net/uxn_tutorial.html)
+
+You can also find us in [`#uxn` on irc.esper.net](ircs://irc.esper.net:6697/#uxn).
 
 ## Contributing
 
