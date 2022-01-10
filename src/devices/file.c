@@ -13,8 +13,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define _POSIX_C_SOURCE 200809L
-
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -53,13 +51,13 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 	if(len < strlen(basename) + 7)
 		return 0;
 	if(stat(pathname, &st))
-		return fail_nonzero ? snprintf(p, len, "!!!! %s\n", basename) : 0;
+		return fail_nonzero ? sprintf(p, "!!!! %s\n", basename) : 0;
 	else if(S_ISDIR(st.st_mode))
-		return snprintf(p, len, "---- %s\n", basename);
+		return sprintf(p, "---- %s\n", basename);
 	else if(st.st_size < 0x10000)
-		return snprintf(p, len, "%04x %s\n", (unsigned int)st.st_size, basename);
+		return sprintf(p, "%04x %s\n", (unsigned int)st.st_size, basename);
 	else
-		return snprintf(p, len, "???? %s\n", basename);
+		return sprintf(p, "???? %s\n", basename);
 }
 
 static Uint16
@@ -72,7 +70,10 @@ file_read_dir(char *dest, Uint16 len)
 		Uint16 n;
 		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
 			continue;
-		snprintf(pathname, sizeof(pathname), "%s/%s", current_filename, de->d_name);
+		if(strlen(current_filename) + 1 + strlen(de->d_name) < sizeof(pathname))
+			sprintf(pathname, "%s/%s", current_filename, de->d_name);
+		else
+			pathname[0] = '\0';
 		n = get_entry(p, len, pathname, de->d_name, 1);
 		if(!n) break;
 		p += n;
