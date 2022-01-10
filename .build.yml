@@ -10,6 +10,7 @@ environment:
     SSH_HOST_KEYS: |
         [w1.uxn-build.ald.nu]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP+IYCB4JrKklFjWSMRkPBTqUjBqUuhlDQy6/X3l8xj5
         [m1.uxn-build.ald.nu]:2223 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvWVqlHh3XQ5ziEbT55K896/mW2BVDdkU6hWgIfU9md
+        [p1.uxn-build.ald.nu]:2224 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAgduGa60Tx3PsnEaJDyUzmPmpzGYmDeLFtLcVoU5tJs
 secrets:
     - 138ad607-a4ec-4d74-88a1-8f3be2ba2d03
 sources:
@@ -21,7 +22,7 @@ tasks:
         umask 077
         mkdir -p ~/.ssh
         printf '%s\n' "${SSH_HOST_KEYS}" > ~/.ssh/known_hosts
-        printf 'User build\nStrictHostKeyChecking yes\nCheckHostIP no\nHost win\nHostName w1.uxn-build.ald.nu\nPort 2222\nHost mac\nHostName m1.uxn-build.ald.nu\nPort 2223\n' > ~/.ssh/config
+        printf 'User build\nStrictHostKeyChecking yes\nCheckHostIP no\nHost win\nHostName w1.uxn-build.ald.nu\nPort 2222\nHost mac\nHostName m1.uxn-build.ald.nu\nPort 2223\nHost 9front\nHostName p1.uxn-build.ald.nu\nPort 2224\n' > ~/.ssh/config
     - build-linux: |
         cd uxn
         ./build.sh --no-run
@@ -46,3 +47,5 @@ tasks:
         }
         acurl -f "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz
         acurl -f "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz -Fprotocol=GEMINI
+    - build-9front: |
+        ssh 9front "$(cd uxn && git rev-parse HEAD)"
