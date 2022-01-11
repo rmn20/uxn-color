@@ -21,10 +21,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#pragma mark - Core
-
-static Device *devsystem, *devconsole;
-
 static int
 error(char *msg, const char *err)
 {
@@ -47,8 +43,6 @@ inspect(Stack *s, char *name)
 		fprintf(stderr, "\n");
 	}
 }
-
-#pragma mark - Devices
 
 void
 system_deo_special(Device *d, Uint8 port)
@@ -83,20 +77,19 @@ nil_deo(Device *d, Uint8 port)
 	(void)port;
 }
 
-#pragma mark - Generics
-
 static int
 console_input(Uxn *u, char c)
 {
-	devconsole->dat[0x2] = c;
-	return uxn_eval(u, GETVECTOR(devconsole));
+	Device *d = &u->dev[1];
+	d->dat[0x2] = c;
+	return uxn_eval(u, GETVECTOR(d));
 }
 
 static void
 run(Uxn *u)
 {
-	Device *d = devconsole;
-	while((!u->dev[0].dat[0xf]) && (read(0, &d->dat[0x2], 1) > 0))
+	Device *d = &u->dev[0];
+	while((!d->dat[0xf]) && (read(0, &d->dat[0x2], 1) > 0))
 		uxn_eval(u, GETVECTOR(d));
 }
 
@@ -124,8 +117,8 @@ main(int argc, char **argv)
 	if(!uxn_boot(&u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
 		return error("Boot", "Failed");
 
-	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(&u, 0x1, nil_dei, console_deo);
+	/* system   */ uxn_port(&u, 0x0, system_dei, system_deo);
+	/* console  */ uxn_port(&u, 0x1, nil_dei, console_deo);
 	/* empty    */ uxn_port(&u, 0x2, nil_dei, nil_deo);
 	/* empty    */ uxn_port(&u, 0x3, nil_dei, nil_deo);
 	/* empty    */ uxn_port(&u, 0x4, nil_dei, nil_deo);

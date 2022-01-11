@@ -45,7 +45,7 @@ static SDL_Rect gRect;
 
 /* devices */
 
-static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
+static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 
@@ -260,7 +260,7 @@ start(Uxn *u, char *rom)
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
 	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
-	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
+	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
 	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
 	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
 	/* audio1   */ uxn_port(u, 0x4, audio_dei, audio_deo);
@@ -407,8 +407,9 @@ do_shortcut(Uxn *u, SDL_Event *event)
 static int
 console_input(Uxn *u, char c)
 {
-	devconsole->dat[0x2] = c;
-	return uxn_eval(u, GETVECTOR(devconsole));
+	Device *d = &u->dev[1];
+	d->dat[0x2] = c;
+	return uxn_eval(u, GETVECTOR(d));
 }
 
 static int
