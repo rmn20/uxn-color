@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <time.h>
 
 #include "uxn.h"
@@ -90,7 +89,7 @@ stdin_handler(void *p)
 {
 	SDL_Event event;
 	event.type = stdin_event;
-	while(read(0, &event.cbutton.button, 1) > 0)
+	while(fread(&event.cbutton.button, 1, 1, stdin) > 0)
 		SDL_PushEvent(&event);
 	return 0;
 	(void)p;
@@ -183,8 +182,12 @@ system_deo_special(Device *d, Uint8 port)
 static void
 console_deo(Device *d, Uint8 port)
 {
-	if(port > 0x7)
-		write(port - 0x7, (char *)&d->dat[port], 1);
+	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
+												  : 0;
+	if(fd) {
+		fputc(d->dat[port], fd);
+		fflush(fd);
+	}
 }
 
 static Uint8
