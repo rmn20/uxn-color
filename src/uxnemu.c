@@ -434,9 +434,7 @@ run(Uxn *u)
 			/* Audio */
 			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
 				Device *d = devaudio0 + (event.type - audio0_event);
-				Uint16 res;
-				DEVPEEK16(res, 0x00);
-				uxn_eval(u, res);
+				uxn_eval(u, GETVECTOR(d));
 			}
 			/* Mouse */
 			else if(event.type == SDL_MOUSEMOTION)

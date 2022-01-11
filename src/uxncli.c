@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <time.h>
 
 #include "uxn.h"
 
@@ -63,8 +62,12 @@ system_deo_special(Device *d, Uint8 port)
 static void
 console_deo(Device *d, Uint8 port)
 {
-	if(port > 0x7)
-		write(port - 0x7, (char *)&d->dat[port], 1);
+	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
+												  : 0;
+	if(fd) {
+		fputc(d->dat[port], fd);
+		fflush(fd);
+	}
 }
 
 static Uint8
@@ -92,12 +95,9 @@ console_input(Uxn *u, char c)
 static void
 run(Uxn *u)
 {
-	Uint16 vec;
 	Device *d = devconsole;
-	while((!u->dev[0].dat[0xf]) && (read(0, &devconsole->dat[0x2], 1) > 0)) {
-		DEVPEEK16(vec, 0);
-		uxn_eval(u, vec);
-	}
+	while((!u->dev[0].dat[0xf]) && (read(0, &d->dat[0x2], 1) > 0))
+		uxn_eval(u, GETVECTOR(d));
 }
 
 static int
