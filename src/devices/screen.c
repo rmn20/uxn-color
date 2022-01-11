@@ -151,7 +151,7 @@ screen_deo(Device *d, Uint8 port)
 		DEVPEEK16(x, 0x8);
 		DEVPEEK16(y, 0xa);
 		DEVPEEK16(addr, 0xc);
-		screen_blit(&uxn_screen, layer, x, y, &d->mem[addr], d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
+		screen_blit(&uxn_screen, layer, x, y, &d->u->ram[addr], d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
 		if(d->dat[0x6] & 0x04) DEVPOKE16(0xc, addr + 8 + twobpp * 8); /* auto addr+length */
 		if(d->dat[0x6] & 0x01) DEVPOKE16(0x8, x + 8);                 /* auto x+8 */
 		if(d->dat[0x6] & 0x02) DEVPOKE16(0xa, y + 8);                 /* auto y+8 */

@@ -108,14 +108,14 @@ err:
 /* clang-format on */
 
 int
-uxn_boot(Uxn *u, Uint8 *ram, Uint8 *devpage, Stack *wst, Stack *rst)
+uxn_boot(Uxn *u, Uint8 *ram, Uint8 *devices, Stack *wst, Stack *rst)
 {
 	Uint32 i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
 	u->ram = ram;
-	u->devpage = devpage;
+	u->devices = devices;
 	u->wst = wst;
 	u->rst = rst;
 	return 1;
@@ -126,9 +126,8 @@ uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *d, Uint8 port), void (*deofn)(
 {
 	Device *d = &u->dev[id];
 	d->u = u;
-	d->mem = u->ram;
+	d->dat = u->devices + id * 0x10;
 	d->dei = deifn;
 	d->deo = deofn;
-	d->dat = u->devpage + id * 0x10;
 	return d;
 }
