@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "uxn.h"
 
@@ -89,8 +88,11 @@ static void
 run(Uxn *u)
 {
 	Device *d = &u->dev[0];
-	while((!d->dat[0xf]) && (read(0, &d->dat[0x2], 1) > 0))
-		uxn_eval(u, GETVECTOR(d));
+	while(!d->dat[0xf]) {
+		int c = fgetc(stdin);
+		if(c != EOF)
+			console_input(u, (Uint8)c);
+	}
 }
 
 static int
@@ -106,50 +108,50 @@ load(Uxn *u, char *filepath)
 	return 1;
 }
 
+static int
+start(Uxn *u)
+{
+	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	if(!uxn_boot(u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
+		return error("Boot", "Failed");
+	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
+	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
+	/* empty    */ uxn_port(u, 0x2, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x3, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x4, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x5, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x6, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x7, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x8, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0x9, nil_dei, nil_deo);
+	/* file     */ uxn_port(u, 0xa, nil_dei, file_deo);
+	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0xc, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0xd, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0xe, nil_dei, nil_deo);
+	/* empty    */ uxn_port(u, 0xf, nil_dei, nil_deo);
+	return 1;
+}
+
 int
 main(int argc, char **argv)
 {
 	Uxn u;
-	int i, loaded = 0;
-
-	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	if(!uxn_boot(&u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
-		return error("Boot", "Failed");
-
-	/* system   */ uxn_port(&u, 0x0, system_dei, system_deo);
-	/* console  */ uxn_port(&u, 0x1, nil_dei, console_deo);
-	/* empty    */ uxn_port(&u, 0x2, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x3, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x4, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x5, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x6, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x7, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x8, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0x9, nil_dei, nil_deo);
-	/* file     */ uxn_port(&u, 0xa, nil_dei, file_deo);
-	/* datetime */ uxn_port(&u, 0xb, datetime_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xc, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xd, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xe, nil_dei, nil_deo);
-	/* empty    */ uxn_port(&u, 0xf, nil_dei, nil_deo);
-
-	for(i = 1; i < argc; i++) {
-		if(!loaded++) {
-			if(!load(&u, argv[i]))
-				return error("Load", "Failed");
-			if(!uxn_eval(&u, PAGE_PROGRAM))
-				return error("Init", "Failed");
-		} else {
-			char *p = argv[i];
-			while(*p) console_input(&u, *p++);
-			console_input(&u, '\n');
-		}
+	int i;
+	if(argc < 2)
+		return error("Usage", "uxncli game.rom args");
+	if(!start(&u))
+		return error("Start", "Failed");
+	if(!load(&u, argv[1]))
+		return error("Load", "Failed");
+	if(!uxn_eval(&u, PAGE_PROGRAM))
+		return error("Init", "Failed");
+	for(i = 2; i < argc; i++) {
+		char *p = argv[i];
+		while(*p) console_input(&u, *p++);
+		console_input(&u, '\n');
 	}
-	if(!loaded)
-		return error("Input", "Missing");
-
 	run(&u);
-
 	return 0;
 }
