@@ -4,7 +4,7 @@
 
 #include "uxn.h"
 
-Uint8 *supervisor_memory, *memory;
+Uint8 *bank0, *bank1;
 
 #include "devices/system.h"
 #include "devices/file.h"
@@ -119,9 +119,9 @@ main(int argc, char **argv)
 	Uxn u;
 	int i, loaded = 0;
 
-	supervisor_memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	if(!uxn_boot(&u, memory, supervisor_memory + PAGE_DEV, (Stack *)(supervisor_memory + PAGE_WST), (Stack *)(supervisor_memory + PAGE_RST)))
+	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	if(!uxn_boot(&u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
 		return error("Boot", "Failed");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_dei, system_deo);

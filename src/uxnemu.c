@@ -4,7 +4,7 @@
 
 #include "uxn.h"
 
-Uint8 *supervisor_memory, *memory;
+Uint8 *bank0, *bank1;
 
 #pragma GCC diagnostic push
 #pragma clang diagnostic push
@@ -252,10 +252,10 @@ load(Uxn *u, char *rom)
 static int
 start(Uxn *u, char *rom)
 {
-	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	supervisor_memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
+	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 
-	if(!uxn_boot(u, memory, supervisor_memory + PAGE_DEV, (Stack *)(supervisor_memory + PAGE_WST), (Stack *)(supervisor_memory + PAGE_RST)))
+	if(!uxn_boot(u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
@@ -277,7 +277,7 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 
 	/* Supervisor */
-	if(!uxn_boot(&supervisor, supervisor_memory, supervisor_memory + VISOR_DEV, (Stack *)(supervisor_memory + VISOR_WST), (Stack *)(supervisor_memory + VISOR_RST)))
+	if(!uxn_boot(&supervisor, bank0, bank0 + VISOR_DEV, (Stack *)(bank0 + VISOR_WST), (Stack *)(bank0 + VISOR_RST)))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(&supervisor, "supervisor.rom"))
 		error("Supervisor", "No debugger found.");
