@@ -6,7 +6,7 @@
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 %!~ { NEQk NIP }
 
-%HALT { #01 #0f DEO }
+%HALT { #010f DEO }
 
 %RTN  { JMP2r }
 %TOS  { #00 SWP }

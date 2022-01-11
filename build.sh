@@ -37,7 +37,7 @@ rm -f ./bin/uxnasm
 rm -f ./bin/uxnemu
 rm -f ./bin/uxncli
 rm -f ./bin/supervisor.rom
-rm -f ./bin/boot.rom
+rm -f ./bin/launcher.rom
 rm -f ./bin/asma.rom
 
 # When clang-format is present
@@ -110,8 +110,8 @@ fi
 
 echo "Assembling(supervisor).."
 ./bin/uxnasm projects/software/supervisor.tal bin/supervisor.rom
-echo "Assembling(boot).."
-./bin/uxnasm projects/software/boot.tal bin/boot.rom
+echo "Assembling(launcher).."
+./bin/uxnasm projects/software/launcher.tal bin/launcher.rom
 echo "Assembling(asma).."
 ./bin/uxnasm projects/software/asma.tal bin/asma.rom
 

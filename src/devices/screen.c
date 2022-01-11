@@ -83,7 +83,6 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 	if(bg && fg && pixels) {
 		p->width = width;
 		p->height = height;
-		p->pixels = pixels;
 		screen_clear(p, &p->bg);
 		screen_clear(p, &p->fg);
 	}
@@ -119,8 +118,6 @@ screen_dei(Device *d, Uint8 port)
 	case 0x3: return uxn_screen.width;
 	case 0x4: return uxn_screen.height >> 8;
 	case 0x5: return uxn_screen.height;
-	case 0x6:
-
 	default: return d->dat[port];
 	}
 }

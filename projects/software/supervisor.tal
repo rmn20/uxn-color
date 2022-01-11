@@ -22,8 +22,11 @@
 %2//  { #01 SFT2 }
 %8**  { #30 SFT2 }
 
-%EADDR { #fd04 }
-%ECODE { #fd06 }
+%SYS_EADDR { #fd04 }
+%SYS_ECODE { #fd06 }
+%SYS_DEBUG { #fd0e }
+%WST { #fe00 }
+%RST { #ff00 }
 
 ( devices )
 
@@ -55,6 +58,11 @@
 	;on-error .System/vector DEO2
 	;on-frame .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
+
+	( print initial memory )
+	SYS_DEBUG LDA #00 = ,&no-debug JCN
+		;print-stacks JSR2
+		&no-debug
 
 BRK
 
@@ -116,9 +124,9 @@ BRK
 
 	;at-txt #4f ;draw-str JSR2
 
-	EADDR LDA2 #47 ;draw-short JSR2
+	SYS_EADDR LDA2 #47 ;draw-short JSR2
 
-	#0000 EADDR STA2
+	#0000 SYS_EADDR STA2
 
 BRK
 
@@ -136,9 +144,8 @@ RTN
 
 	( load rom )
 
-
 RTN
-	&boot-path "boot.rom $1
+	&boot-path "launcher.rom $1
 
 @draw-stacks ( -- )
 
@@ -148,12 +155,12 @@ RTN
 		( working stack )
 		#0010 .Screen/y DEO2
 		DUP2 #0018 ** #0010 ++ .Screen/x DEO2
-		DUP #fe00 LDA ( ptr ) EQU #4b + STH
+		DUP #fe00 LDA ( ptr ) EQU #41 + STH
 		DUP2 #fe01 ++ LDA STHr ;draw-byte JSR2
 		( return stack )
 		#0028 .Screen/y DEO2
 		DUP2 #0018 ** #0010 ++ .Screen/x DEO2
-		DUP #ff00 LDA ( ptr ) EQU #4b + STH
+		DUP #ff00 LDA ( ptr ) EQU #41 + STH
 		DUP2 #ff01 ++ LDA STHr ;draw-byte JSR2
 		INC2 GTH2k ,&wst JCN
 	POP2 POP2
@@ -234,6 +241,39 @@ JMP2r
 	POP2 POP2
 
 JMP2r
+
+@print-stacks ( -- )
+
+	#0a EMIT
+	WST ;&wst-txt ,print-stack JSR
+	RST ;&rst-txt ,print-stack JSR
+
+RTN
+	&wst-txt "Working-stack $1
+	&rst-txt "Return-stack $1
+
+@print-stack ( addr* name* -- )
+
+	PRINT
+	( keep ptr ) LDAk STH
+	( keep counter ) LITr 00
+	( skip ptr ) INC2 
+	DUP2 #0020 ++ SWP2
+	&loop
+		( print cell )
+		EQUkr STHr #3b * #20 + EMIT
+		LDAk ;print-hex/byte JSR2
+		EQUkr STHr #3d * #20 + EMIT
+		( break into columns )
+		SUB2k #0001 -- #0007 AND2 #0000 !! ,&no-lb JCN
+			#0a EMIT 
+			&no-lb
+		INCr
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+	POP2r
+
+RTN
 
 @print-hex ( value* -- )
 

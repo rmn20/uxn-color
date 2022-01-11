@@ -255,15 +255,10 @@ start(Uxn *u, char *rom)
 	memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 	supervisor_memory = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 
-	if(!uxn_boot(&supervisor, supervisor_memory, supervisor_memory + VISOR_DEV, (Stack *)(supervisor_memory + VISOR_WST), (Stack *)(supervisor_memory + VISOR_RST)))
-		return error("Boot", "Failed to start uxn.");
 	if(!uxn_boot(u, memory, supervisor_memory + PAGE_DEV, (Stack *)(supervisor_memory + PAGE_WST), (Stack *)(supervisor_memory + PAGE_RST)))
 		return error("Boot", "Failed to start uxn.");
-	if(!load(&supervisor, "supervisor.rom"))
-		error("Supervisor", "No debugger found.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
-
 	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ devconsole = uxn_port(u, 0x1, nil_dei, console_deo);
 	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
@@ -282,15 +277,19 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 
 	/* Supervisor */
-	uxn_port(&supervisor, 0x0, system_dei, system_deo);
-	uxn_port(&supervisor, 0x1, nil_dei, console_deo);
-	uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
-	uxn_port(&supervisor, 0x8, nil_dei, nil_deo);
-
-	uxn_eval(&supervisor, PAGE_PROGRAM);
+	if(!uxn_boot(&supervisor, supervisor_memory, supervisor_memory + VISOR_DEV, (Stack *)(supervisor_memory + VISOR_WST), (Stack *)(supervisor_memory + VISOR_RST)))
+		return error("Boot", "Failed to start uxn.");
+	if(!load(&supervisor, "supervisor.rom"))
+		error("Supervisor", "No debugger found.");
+	/* system   */ uxn_port(&supervisor, 0x0, system_dei, system_deo);
+	/* console  */ uxn_port(&supervisor, 0x1, nil_dei, console_deo);
+	/* screen   */ uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
+	/* control  */ uxn_port(&supervisor, 0x8, nil_dei, nil_deo);
 
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
+
+	uxn_eval(&supervisor, PAGE_PROGRAM);
 
 	return 1;
 }
@@ -330,7 +329,7 @@ static void
 restart(Uxn *u)
 {
 	set_size(WIDTH, HEIGHT, 1);
-	start(u, "boot.rom");
+	start(u, "launcher.rom");
 }
 
 static Uint8
@@ -527,7 +526,7 @@ main(int argc, char **argv)
 			console_input(&u, '\n');
 		}
 	}
-	if(!loaded && !start(&u, "boot.rom"))
+	if(!loaded && !start(&u, "launcher.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
 	run(&u);
 	SDL_Quit();
