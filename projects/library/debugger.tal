@@ -22,7 +22,7 @@ The debugger will catch stack errors that arise after that point.
 
 @debug ( pc* -- )
 	#0001 SUB2 .System/eaddr DEO2
-	.System/ecode DEIk #f8 AND #06 EOR SWP DEO
+	.System/ecode DEIk #07 EOR SWP DEO
 	,debug-vector/main JMP
 
 @debug-vector ( -> )
@@ -126,18 +126,19 @@ The debugger will catch stack errors that arise after that point.
 		:&rst-msg :&overflow-msg
 		:&wst-msg :&divzero-msg
 		:&rst-msg :&divzero-msg
+		:&emulator-msg :&interrupt-msg
 		:&userdef-msg :&breakpoint-msg
-		:&userdef-msg :&custom-msg
 
 	&halted-msg "Halted: 2000 ( #0002, at 0x0100 )
 	&wst-msg "Working-stack 2000
 	&rst-msg "Return-stack 2000
+	&emulator-msg "Emulator 2000
 	&userdef-msg "User-defined 2000
 	&underflow-msg "underflow 00
 	&overflow-msg "overflow 00
 	&divzero-msg "division 20 "by 20 "zero 00
+	&interrupt-msg "interrupt 00
 	&breakpoint-msg "breakpoint 00
-	&custom-msg "custom 20 "error 00
 	&executing-msg 20 "executing 2000
 	&at-msg 20 "at 20 "0x 00
 	&contents-msg "contents: 00

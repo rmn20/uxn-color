@@ -84,6 +84,12 @@ audio_finished_handler(UxnAudio *c)
 	SDL_PushEvent(&event);
 }
 
+int
+uxn_interrupt(Uxn *u)
+{
+	return 0;
+}
+
 static int
 stdin_handler(void *p)
 {

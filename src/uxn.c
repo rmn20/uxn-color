@@ -29,12 +29,12 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEVR(o, d, x) { dev = (d); o = dev->dei(dev, (x) & 0x0f); if(bs) { o = (o << 8) + dev->dei(dev, ((x) + 1) & 0x0f); } }
 #define DEVW8(x, y) { dev->dat[(x) & 0xf] = y; dev->deo(dev, (x) & 0x0f); }
 #define DEVW(d, x, y) { dev = (d); if(bs) { DEVW8((x), (y) >> 8); DEVW8((x) + 1, (y)); } else { DEVW8((x), (y)) } }
-#define WARP(x) { if(bs) pc = (x); else pc += (Sint8)(x); }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
 	unsigned int a, b, c, j, k, bs, instr, errcode;
+	Uint16 warp_count = 0;
 	Uint8 kptr, *sp;
 	Stack *src, *dst;
 	Device *dev;
@@ -72,9 +72,9 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x09: /* NEQ */ POP(a) POP(b) PUSH8(src, b != a) break;
 		case 0x0a: /* GTH */ POP(a) POP(b) PUSH8(src, b > a) break;
 		case 0x0b: /* LTH */ POP(a) POP(b) PUSH8(src, b < a) break;
-		case 0x0c: /* JMP */ POP(a) WARP(a) break;
-		case 0x0d: /* JCN */ POP(a) POP8(b) if(b) WARP(a) break;
-		case 0x0e: /* JSR */ POP(a) PUSH16(dst, pc) WARP(a) break;
+		case 0x0c: /* JMP */ POP(a) goto warp;
+		case 0x0d: /* JCN */ POP(a) POP8(b) if(b) goto warp; break;
+		case 0x0e: /* JSR */ POP(a) PUSH16(dst, pc) goto warp;
 		case 0x0f: /* STH */ POP(a) PUSH(dst, a) break;
 		/* Memory */
 		case 0x10: /* LDZ */ POP8(a) PEEK(b, a) PUSH(src, b) break;
@@ -95,6 +95,11 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x1e: /* EOR */ POP(a) POP(b) PUSH(src, b ^ a) break;
 		case 0x1f: /* SFT */ POP8(a) POP(b) c = b >> (a & 0x0f) << ((a & 0xf0) >> 4); PUSH(src, c) break;
 		}
+		continue;
+
+		warp:
+		if(bs) pc = a; else pc += (Sint8)(a);
+		if(!++warp_count && uxn_interrupt(u)) return uxn_halt(u, 6, pc - 1);
 	}
 	return 1;
 

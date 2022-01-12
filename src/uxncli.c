@@ -20,6 +20,12 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+int
+uxn_interrupt(Uxn *u)
+{
+	return 0;
+}
+
 static int
 error(char *msg, const char *err)
 {
