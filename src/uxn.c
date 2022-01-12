@@ -59,45 +59,44 @@ uxn_eval(Uxn *u, Uint16 pc)
 		switch(instr & 0x1f) {
 		/* Stack */
 		case 0x00: /* LIT */ if(bs) { PEEK16(a, pc) PUSH16(src, a) pc += 2; }
-		                     else   { a = u->ram[pc]; PUSH8(src, a) pc++; } break;
-		case 0x01: /* INC */ POP(a) PUSH(src, a + 1) break;
-		case 0x02: /* POP */ POP(a) break;
-		case 0x03: /* DUP */ POP(a) PUSH(src, a) PUSH(src, a) break;
-		case 0x04: /* NIP */ POP(a) POP(b) PUSH(src, a) break;
-		case 0x05: /* SWP */ POP(a) POP(b) PUSH(src, a) PUSH(src, b) break;
-		case 0x06: /* OVR */ POP(a) POP(b) PUSH(src, b) PUSH(src, a) PUSH(src, b) break;
-		case 0x07: /* ROT */ POP(a) POP(b) POP(c) PUSH(src, b) PUSH(src, a) PUSH(src, c) break;
+		                     else   { a = u->ram[pc]; PUSH8(src, a) pc++; } continue;
+		case 0x01: /* INC */ POP(a) PUSH(src, a + 1) continue;
+		case 0x02: /* POP */ POP(a) continue;
+		case 0x03: /* DUP */ POP(a) PUSH(src, a) PUSH(src, a) continue;
+		case 0x04: /* NIP */ POP(a) POP(b) PUSH(src, a) continue;
+		case 0x05: /* SWP */ POP(a) POP(b) PUSH(src, a) PUSH(src, b) continue;
+		case 0x06: /* OVR */ POP(a) POP(b) PUSH(src, b) PUSH(src, a) PUSH(src, b) continue;
+		case 0x07: /* ROT */ POP(a) POP(b) POP(c) PUSH(src, b) PUSH(src, a) PUSH(src, c) continue;
 		/* Logic */
-		case 0x08: /* EQU */ POP(a) POP(b) PUSH8(src, b == a) break;
-		case 0x09: /* NEQ */ POP(a) POP(b) PUSH8(src, b != a) break;
-		case 0x0a: /* GTH */ POP(a) POP(b) PUSH8(src, b > a) break;
-		case 0x0b: /* LTH */ POP(a) POP(b) PUSH8(src, b < a) break;
-		case 0x0c: /* JMP */ POP(a) goto warp;
-		case 0x0d: /* JCN */ POP(a) POP8(b) if(b) goto warp; break;
-		case 0x0e: /* JSR */ POP(a) PUSH16(dst, pc) goto warp;
-		case 0x0f: /* STH */ POP(a) PUSH(dst, a) break;
+		case 0x08: /* EQU */ POP(a) POP(b) PUSH8(src, b == a) continue;
+		case 0x09: /* NEQ */ POP(a) POP(b) PUSH8(src, b != a) continue;
+		case 0x0a: /* GTH */ POP(a) POP(b) PUSH8(src, b > a) continue;
+		case 0x0b: /* LTH */ POP(a) POP(b) PUSH8(src, b < a) continue;
+		case 0x0c: /* JMP */ POP(a) break;
+		case 0x0d: /* JCN */ POP(a) POP8(b) if(b) break; continue;
+		case 0x0e: /* JSR */ POP(a) PUSH16(dst, pc) break;
+		case 0x0f: /* STH */ POP(a) PUSH(dst, a) continue;
 		/* Memory */
-		case 0x10: /* LDZ */ POP8(a) PEEK(b, a) PUSH(src, b) break;
-		case 0x11: /* STZ */ POP8(a) POP(b) POKE(a, b) break;
-		case 0x12: /* LDR */ POP8(a) PEEK(b, pc + (Sint8)a) PUSH(src, b) break;
-		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a; POKE(c, b) break;
-		case 0x14: /* LDA */ POP16(a) PEEK(b, a) PUSH(src, b) break;
-		case 0x15: /* STA */ POP16(a) POP(b) POKE(a, b) break;
-		case 0x16: /* DEI */ POP8(a) DEVR(b, &u->dev[a >> 4], a) PUSH(src, b) break;
-		case 0x17: /* DEO */ POP8(a) POP(b) DEVW(&u->dev[a >> 4], a, b) break;
+		case 0x10: /* LDZ */ POP8(a) PEEK(b, a) PUSH(src, b) continue;
+		case 0x11: /* STZ */ POP8(a) POP(b) POKE(a, b) continue;
+		case 0x12: /* LDR */ POP8(a) PEEK(b, pc + (Sint8)a) PUSH(src, b) continue;
+		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a; POKE(c, b) continue;
+		case 0x14: /* LDA */ POP16(a) PEEK(b, a) PUSH(src, b) continue;
+		case 0x15: /* STA */ POP16(a) POP(b) POKE(a, b) continue;
+		case 0x16: /* DEI */ POP8(a) DEVR(b, &u->dev[a >> 4], a) PUSH(src, b) continue;
+		case 0x17: /* DEO */ POP8(a) POP(b) DEVW(&u->dev[a >> 4], a, b) continue;
 		/* Arithmetic */
-		case 0x18: /* ADD */ POP(a) POP(b) PUSH(src, b + a) break;
-		case 0x19: /* SUB */ POP(a) POP(b) PUSH(src, b - a) break;
-		case 0x1a: /* MUL */ POP(a) POP(b) PUSH(src, (Uint32)b * a) break;
-		case 0x1b: /* DIV */ POP(a) POP(b) if(a == 0) { errcode = 4; goto err; } PUSH(src, b / a) break;
-		case 0x1c: /* AND */ POP(a) POP(b) PUSH(src, b & a) break;
-		case 0x1d: /* ORA */ POP(a) POP(b) PUSH(src, b | a) break;
-		case 0x1e: /* EOR */ POP(a) POP(b) PUSH(src, b ^ a) break;
-		case 0x1f: /* SFT */ POP8(a) POP(b) c = b >> (a & 0x0f) << ((a & 0xf0) >> 4); PUSH(src, c) break;
+		case 0x18: /* ADD */ POP(a) POP(b) PUSH(src, b + a) continue;
+		case 0x19: /* SUB */ POP(a) POP(b) PUSH(src, b - a) continue;
+		case 0x1a: /* MUL */ POP(a) POP(b) PUSH(src, (Uint32)b * a) continue;
+		case 0x1b: /* DIV */ POP(a) POP(b) if(a == 0) { errcode = 4; goto err; } PUSH(src, b / a) continue;
+		case 0x1c: /* AND */ POP(a) POP(b) PUSH(src, b & a) continue;
+		case 0x1d: /* ORA */ POP(a) POP(b) PUSH(src, b | a) continue;
+		case 0x1e: /* EOR */ POP(a) POP(b) PUSH(src, b ^ a) continue;
+		case 0x1f: /* SFT */ POP8(a) POP(b) c = b >> (a & 0x0f) << ((a & 0xf0) >> 4); PUSH(src, c) continue;
 		}
-		continue;
 
-		warp:
+		/* Jump to a */
 		if(bs) pc = a; else pc += (Sint8)(a);
 		if(!++warp_count && uxn_interrupt(u)) return uxn_halt(u, 6, pc - 1);
 	}
