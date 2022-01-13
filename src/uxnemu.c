@@ -42,7 +42,7 @@ static SDL_Rect gRect;
 
 /* devices */
 
-static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0;
+static Device *devscreen, *devmouse, *devctrl, *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 
@@ -293,13 +293,6 @@ set_zoom(Uint8 scale)
 }
 
 static void
-toggle_debugger(void)
-{
-	devsystem->dat[0xe] = !devsystem->dat[0xe];
-	screen_clear(&uxn_screen, &uxn_screen.fg);
-}
-
-static void
 capture_screen(void)
 {
 	const Uint32 format = SDL_PIXELFORMAT_RGB24;
@@ -390,8 +383,9 @@ console_input(Uxn *u, char c)
 static int
 run(Uxn *u)
 {
+	Device *devsys = &u->dev[0];
 	redraw();
-	while(!devsystem->dat[0xf]) {
+	while(!devsys->dat[0xf]) {
 		SDL_Event event;
 		double elapsed, begin;
 		if(!BENCH)
@@ -454,7 +448,7 @@ run(Uxn *u)
 				console_input(u, event.cbutton.button);
 		}
 		uxn_eval(u, GETVECTOR(devscreen));
-		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
+		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;

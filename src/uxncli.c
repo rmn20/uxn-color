@@ -34,7 +34,6 @@ error(char *msg, const char *err)
 void
 system_deo_special(Device *d, Uint8 port)
 {
-	
 }
 
 static void

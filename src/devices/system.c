@@ -23,19 +23,22 @@ static const char *errors[] = {
 	"Return-stack division by zero"};
 
 static void
-print_stack(Stack *s, char *name)
+system_print(Stack *s, char *name)
 {
-	Uint8 x, y;
-	fprintf(stderr, "\n%s\n", name);
-	for(y = 0; y < 0x04; y++) {
-		for(x = 0; x < 0x08; x++) {
-			Uint8 p = y * 0x08 + x;
-			fprintf(stderr,
-				p == s->ptr ? "[%02x]" : " %02x ",
-				s->dat[p]);
-		}
-		fprintf(stderr, "\n");
-	}
+	Uint8 i;
+	fprintf(stderr, "<%s> ", name);
+	for(i = 0; i < s->ptr; i++)
+		fprintf(stderr, i == s->ptr ? "[%02x]" : " %02x ", s->dat[i]);
+	if(!i)
+		fprintf(stderr, "empty");
+	fprintf(stderr, "\n");
+}
+
+void
+system_inspect(Uxn *u)
+{
+	system_print(&u->wst, "wst");
+	system_print(&u->rst, "rst");
 }
 
 int
@@ -53,14 +56,9 @@ uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 			vec += 0x0004;
 		return uxn_eval(u, vec);
 	}
+	system_inspect(u);
 	fprintf(stderr, "Halted: %s#%04x, at 0x%04x\n", errors[error], u->ram[addr], addr);
 	return 0;
-}
-
-void
-system_inspect(Uxn *u){
-	print_stack(&u->wst, "Working-stack");
-	print_stack(&u->rst, "Return-stack");
 }
 
 /* IO */
