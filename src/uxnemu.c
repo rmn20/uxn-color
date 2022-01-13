@@ -3,8 +3,6 @@
 
 #include "uxn.h"
 
-Uint8 *bank0;
-
 #pragma GCC diagnostic push
 #pragma clang diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -262,9 +260,7 @@ load(Uxn *u, char *rom)
 static int
 start(Uxn *u, char *rom)
 {
-	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-
-	if(!uxn_boot(u, bank0))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8))))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");

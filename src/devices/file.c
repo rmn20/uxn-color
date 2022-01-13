@@ -150,7 +150,7 @@ file_deo(Device *d, Uint8 port)
 	case 0x5:
 		DEVPEEK16(a, 0x4);
 		DEVPEEK16(b, 0xa);
-		res = file_stat(&bank0[a], b);
+		res = file_stat(&d->u->ram[a], b);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0x6:
@@ -159,19 +159,19 @@ file_deo(Device *d, Uint8 port)
 		break;
 	case 0x9:
 		DEVPEEK16(a, 0x8);
-		res = file_init(&bank0[a]);
+		res = file_init(&d->u->ram[a]);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xd:
 		DEVPEEK16(a, 0xc);
 		DEVPEEK16(b, 0xa);
-		res = file_read(&bank0[a], b);
+		res = file_read(&d->u->ram[a], b);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xf:
 		DEVPEEK16(a, 0xe);
 		DEVPEEK16(b, 0xa);
-		res = file_write(&bank0[a], b, d->dat[0x7]);
+		res = file_write(&d->u->ram[a], b, d->dat[0x7]);
 		DEVPOKE16(0x2, res);
 		break;
 	}

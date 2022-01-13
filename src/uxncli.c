@@ -2,9 +2,6 @@
 #include <stdlib.h>
 
 #include "uxn.h"
-
-Uint8 *bank0;
-
 #include "devices/system.h"
 #include "devices/file.h"
 #include "devices/datetime.h"
@@ -118,8 +115,7 @@ load(Uxn *u, char *filepath)
 static int
 start(Uxn *u)
 {
-	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	if(!uxn_boot(u, bank0))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8))))
 		return error("Boot", "Failed");
 	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
