@@ -3,7 +3,7 @@
 
 #include "uxn.h"
 
-Uint8 *bank0, *bank1;
+Uint8 *bank0;
 
 #include "devices/system.h"
 #include "devices/file.h"
@@ -23,6 +23,7 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_interrupt(Uxn *u)
 {
+	(void)u;
 	return 0;
 }
 
@@ -53,8 +54,8 @@ void
 system_deo_special(Device *d, Uint8 port)
 {
 	if(port == 0xe) {
-		inspect(d->u->wst, "Working-stack");
-		inspect(d->u->rst, "Return-stack");
+		inspect(&d->u->wst, "Working-stack");
+		inspect(&d->u->rst, "Return-stack");
 	}
 }
 
@@ -118,8 +119,7 @@ static int
 start(Uxn *u)
 {
 	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
-	if(!uxn_boot(u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
+	if(!uxn_boot(u, bank0))
 		return error("Boot", "Failed");
 	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);

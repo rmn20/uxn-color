@@ -37,18 +37,18 @@ typedef struct {
 
 typedef struct Device {
 	struct Uxn *u;
-	Uint8 *dat, *mem;
+	Uint8 dat[16], *mem;
 	Uint8 (*dei)(struct Device *d, Uint8);
 	void (*deo)(struct Device *d, Uint8);
 } Device;
 
 typedef struct Uxn {
-	Uint8 *ram, *devices;
-	Stack *wst, *rst;
+	Uint8 *ram;
+	Stack wst, rst;
 	Device dev[16];
 } Uxn;
 
-int uxn_boot(Uxn *u, Uint8 *ram, Uint8 *devices, Stack *wst, Stack *rst);
+int uxn_boot(Uxn *u, Uint8 *ram);
 int uxn_eval(Uxn *u, Uint16 pc);
 int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);
 int uxn_interrupt(Uxn *u);

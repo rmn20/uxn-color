@@ -3,7 +3,7 @@
 
 #include "uxn.h"
 
-Uint8 *bank0, *bank1;
+Uint8 *bank0;
 
 #pragma GCC diagnostic push
 #pragma clang diagnostic push
@@ -87,6 +87,7 @@ audio_finished_handler(UxnAudio *c)
 int
 uxn_interrupt(Uxn *u)
 {
+	(void)u;
 	return 0;
 }
 
@@ -261,10 +262,9 @@ load(Uxn *u, char *rom)
 static int
 start(Uxn *u, char *rom)
 {
-	bank1 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 	bank0 = (Uint8 *)calloc(0x10000, sizeof(Uint8));
 
-	if(!uxn_boot(u, bank1, bank0 + PAGE_DEV, (Stack *)(bank0 + PAGE_WST), (Stack *)(bank0 + PAGE_RST)))
+	if(!uxn_boot(u, bank0))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
@@ -285,20 +285,8 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 
-	/* Supervisor */
-	if(!uxn_boot(&supervisor, bank0, bank0 + VISOR_DEV, (Stack *)(bank0 + VISOR_WST), (Stack *)(bank0 + VISOR_RST)))
-		return error("Boot", "Failed to start uxn.");
-	if(!load(&supervisor, "supervisor.rom"))
-		error("Supervisor", "No debugger found.");
-	/* system   */ uxn_port(&supervisor, 0x0, system_dei, system_deo);
-	/* console  */ uxn_port(&supervisor, 0x1, nil_dei, console_deo);
-	/* screen   */ uxn_port(&supervisor, 0x2, screen_dei, screen_deo);
-	/* control  */ uxn_port(&supervisor, 0x8, nil_dei, nil_deo);
-
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
-
-	uxn_eval(&supervisor, PAGE_PROGRAM);
 
 	return 1;
 }
@@ -353,22 +341,6 @@ get_button(SDL_Event *event)
 	case SDLK_DOWN: return 0x20;
 	case SDLK_LEFT: return 0x40;
 	case SDLK_RIGHT: return 0x80;
-	}
-	return 0x00;
-}
-
-static Uint8
-get_fkey(SDL_Event *event)
-{
-	switch(event->key.keysym.sym) {
-	case SDLK_F1: return 0x01;
-	case SDLK_F2: return 0x02;
-	case SDLK_F3: return 0x04;
-	case SDLK_F4: return 0x08;
-	case SDLK_F5: return 0x10;
-	case SDLK_F6: return 0x20;
-	case SDLK_F7: return 0x40;
-	case SDLK_F8: return 0x80;
 	}
 	return 0x00;
 }
@@ -468,9 +440,6 @@ run(Uxn *u)
 					controller_down(devctrl, get_button(&event));
 				else
 					do_shortcut(u, &event);
-				/* function keys are sent to supervisor */
-				if(get_fkey(&event))
-					controller_special(&supervisor.dev[0x8], get_fkey(&event));
 				ksym = event.key.keysym.sym;
 				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 					break;
@@ -490,8 +459,6 @@ run(Uxn *u)
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);
 		}
-		if(devsystem->dat[0xe])
-			uxn_eval(&supervisor, GETVECTOR(&supervisor.dev[2]));
 		uxn_eval(u, GETVECTOR(devscreen));
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed || devsystem->dat[0xe])
 			redraw();

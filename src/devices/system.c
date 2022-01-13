@@ -14,8 +14,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-Uxn supervisor;
-
 static const char *errors[] = {
 	"Working-stack underflow",
 	"Return-stack underflow",
@@ -31,7 +29,6 @@ uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 	Uint16 vec = GETVECTOR(d);
 	DEVPOKE16(0x4, addr);
 	d->dat[0x6] = error;
-	uxn_eval(&supervisor, GETVECTOR(&supervisor.dev[0]));
 	if(vec) {
 		/* need to rearm to run System/vector again */
 		d->dat[0] = 0;
@@ -50,8 +47,8 @@ Uint8
 system_dei(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x2: return d->u->wst->ptr;
-	case 0x3: return d->u->rst->ptr;
+	case 0x2: return d->u->wst.ptr;
+	case 0x3: return d->u->rst.ptr;
 	default: return d->dat[port];
 	}
 }
@@ -60,8 +57,8 @@ void
 system_deo(Device *d, Uint8 port)
 {
 	switch(port) {
-	case 0x2: d->u->wst->ptr = d->dat[port]; break;
-	case 0x3: d->u->rst->ptr = d->dat[port]; break;
+	case 0x2: d->u->wst.ptr = d->dat[port]; break;
+	case 0x3: d->u->rst.ptr = d->dat[port]; break;
 	default: system_deo_special(d, port);
 	}
 }

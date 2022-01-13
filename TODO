@@ -1,6 +1,0 @@
-# TODOs
-
-- Emulation controls should be handled by the supervisor.
-- Overlap the supervisor device page with the core device page.
-- The boot rom should display "no roms" when the list is empty.
-- 
