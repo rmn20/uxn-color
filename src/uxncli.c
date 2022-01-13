@@ -5,6 +5,7 @@
 #include "devices/system.h"
 #include "devices/file.h"
 #include "devices/datetime.h"
+#include "devices/debug.h"
 
 /*
 Copyright (c) 2021 Devine Lu Linvega
