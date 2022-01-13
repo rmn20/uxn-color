@@ -31,29 +31,10 @@ error(char *msg, const char *err)
 	return 0;
 }
 
-static void
-inspect(Stack *s, char *name)
-{
-	Uint8 x, y;
-	fprintf(stderr, "\n%s\n", name);
-	for(y = 0; y < 0x04; y++) {
-		for(x = 0; x < 0x08; x++) {
-			Uint8 p = y * 0x08 + x;
-			fprintf(stderr,
-				p == s->ptr ? "[%02x]" : " %02x ",
-				s->dat[p]);
-		}
-		fprintf(stderr, "\n");
-	}
-}
-
 void
 system_deo_special(Device *d, Uint8 port)
 {
-	if(port == 0xe) {
-		inspect(&d->u->wst, "Working-stack");
-		inspect(&d->u->rst, "Return-stack");
-	}
+	
 }
 
 static void

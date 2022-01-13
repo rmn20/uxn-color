@@ -23,7 +23,7 @@ static const char *errors[] = {
 	"Return-stack division by zero"};
 
 static void
-inspect(Stack *s, char *name)
+print_stack(Stack *s, char *name)
 {
 	Uint8 x, y;
 	fprintf(stderr, "\n%s\n", name);
@@ -57,6 +57,12 @@ uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
 	return 0;
 }
 
+void
+system_inspect(Uxn *u){
+	print_stack(&u->wst, "Working-stack");
+	print_stack(&u->rst, "Return-stack");
+}
+
 /* IO */
 
 Uint8
@@ -75,10 +81,7 @@ system_deo(Device *d, Uint8 port)
 	switch(port) {
 	case 0x2: d->u->wst.ptr = d->dat[port]; break;
 	case 0x3: d->u->rst.ptr = d->dat[port]; break;
-	case 0xe:
-		inspect(&d->u->wst, "Working-stack");
-		inspect(&d->u->rst, "Return-stack");
-		break;
+	case 0xe: system_inspect(d->u); break;
 	default: system_deo_special(d, port);
 	}
 }

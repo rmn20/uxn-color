@@ -372,7 +372,7 @@ do_shortcut(Uxn *u, SDL_Event *event)
 	if(event->key.keysym.sym == SDLK_F1)
 		set_zoom(zoom > 2 ? 1 : zoom + 1);
 	else if(event->key.keysym.sym == SDLK_F2)
-		toggle_debugger();
+		system_inspect(u);
 	else if(event->key.keysym.sym == SDLK_F3)
 		capture_screen();
 	else if(event->key.keysym.sym == SDLK_F4)
