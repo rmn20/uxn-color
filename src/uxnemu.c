@@ -264,7 +264,7 @@ start(Uxn *u, char *rom)
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
-	/* system   */ devsystem = uxn_port(u, 0x0, system_dei, system_deo);
+	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
 	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
 	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
