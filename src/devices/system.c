@@ -28,7 +28,7 @@ system_print(Stack *s, char *name)
 	Uint8 i;
 	fprintf(stderr, "<%s> ", name);
 	for(i = 0; i < s->ptr; i++)
-		fprintf(stderr, i == s->ptr ? "[%02x]" : " %02x ", s->dat[i]);
+		fprintf(stderr, "%02x ", s->dat[i]);
 	if(!i)
 		fprintf(stderr, "empty");
 	fprintf(stderr, "\n");
