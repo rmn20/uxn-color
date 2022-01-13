@@ -15,7 +15,6 @@
 #include "devices/controller.h"
 #include "devices/mouse.h"
 #include "devices/datetime.h"
-#include "devices/debug.h"
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
@@ -280,7 +279,7 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xf, debug_dei, debug_deo);
+	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
 	return 1;

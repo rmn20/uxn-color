@@ -60,8 +60,6 @@ then
 	clang-format -i src/devices/controller.c
 	clang-format -i src/devices/datetime.h
 	clang-format -i src/devices/datetime.c
-	clang-format -i src/devices/debug.h
-	clang-format -i src/devices/debug.c
 	clang-format -i src/uxnasm.c
 	clang-format -i src/uxnemu.c
 	clang-format -i src/uxncli.c
@@ -100,8 +98,8 @@ fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/debug.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/debug.c src/uxncli.c -o bin/uxncli
+${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c -o bin/uxncli
 
 if [ -d "$HOME/bin" ]
 then
