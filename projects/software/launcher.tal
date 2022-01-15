@@ -63,6 +63,11 @@
 	;on-button .Controller/vector DEO2
 	;on-mouse .Mouse/vector DEO2
 
+	( asma debugger )
+	#0d ;asma/log-level STA
+
+	;asma-heap ;heap STA2
+
 	( setup synth )
 	#0102 .Audio0/adsr DEO2
 	;sin-pcm .Audio0/addr DEO2
@@ -252,16 +257,33 @@ RTN
 	;get-entry JSR2 #0005 ++
 	
 	DUP2 ;check-rom JSR2 ,&valid JCN
+
+		( check if tal file )
+
+		DUP2 ;scap JSR2 #0004 -- ;&tal-ext ;scmp JSR2 #01 ! ,&no-tal JCN
+			DUP2 ;&output-path ;scpy JSR2
+			;&rom-ext ;&output-path ;scat JSR2
+			;&output-path ;asma-assemble-file JSR2 
+			;load-dir JSR2
+			;redraw JSR2
+			RTN
+			&no-tal
+
 		POP2 RTN
 		&valid
 
 	;load-rom JSR2 
 
 RTN
+	&tal-ext ".tal $1
+	&rom-ext ".rom $1
+	&output-path $20
 
 @redraw ( -- )
 
-	( unused )
+	( force selection )
+	#ff .browser/last STZ
+	#00 ;select-file JSR2
 
 RTN
 
@@ -451,6 +473,12 @@ JMP2r
 
 JMP2r
 
+@scat ( src* dst* -- )
+
+	DUP2 ,slen JSR ++ ,scpy JSR
+
+JMP2r
+
 @scmp ( a* b* -- flag )
 
 	STH2
@@ -467,12 +495,29 @@ JMP2r
 
 RTN
 
+@scpy ( src* dst* -- )
+	
+	STH2
+	&while
+		LDAk STH2kr STA INC2r
+		INC2 LDAk ,&while JCN
+	POP2
+	#00 STH2r STA
+
+JMP2r
+
 @scap ( str* -- str-end* )
 
 	( clamp ) LDAk #00 ! JMP RTN
 	&while INC2 LDAk ,&while JCN
 
 RTN
+
+@slen ( str* -- len* )
+
+	DUP2 ,scap JSR SWP2 --
+
+JMP2r
 
 @pointer-icn
 	80c0 e0f0 f8e0 1000
@@ -518,4 +563,13 @@ RTN
 	&path ". $1
 	&lines $1
 	&length $2
-	&data
+	&data $1000
+
+( assembler memory )
+
+~projects/library/asma.tal
+
+@asma-heap
+|e000 &end @asma-read-buffer
+|f800 &end @asma-write-buffer
+|ffff &end
