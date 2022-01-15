@@ -2,33 +2,35 @@
 	a simple calculator
 	uxnasm projects/software/calc.tal bin/calc.rom && uxnemu bin/calc.rom )
 
-%+  { ADD } %-   { SUB }  %/   { DIV }
-%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ }
-%++ { ADD2 } %-- { SUB2 } %// { DIV2 }
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
+
+%2MOD  { #01 AND } %2MOD2  { #0001 AND2 }
+%4MOD  { #03 AND } %4MOD2  { #0003 AND2 }
+%8MOD  { #07 AND } %8MOD2  { #0007 AND2 }
+%10MOD { #0f AND } %10MOD2 { #000f AND2 }
+
 %!~ { NEQk NIP }
-
-%2*   { #10 SFT } 
-%4*   { #20 SFT } %4/ { #02 SFT }
-%8*   { #30 SFT } %8/   { #03 SFT }
-%2**  { #10 SFT2 } %2// { #01 SFT2 }
-%4**  { #20 SFT2 }
-%8**  { #30 SFT2 } %8// { #03 SFT2 }
-%10** { #40 SFT2 } %10// { #04 SFT2 }
-%20** { #50 SFT2 }
-
-%2MOD2 { #0001 AND2 }
-%4MOD { #03 AND } %4MOD2 { #0003 AND2 }
-%8MOD { #07 AND }
 
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
+%AUTO-NONE   { #00 .Screen/auto DEO }
+%AUTO-X      { #01 .Screen/auto DEO }
+%AUTO-XADDR  { #05 .Screen/auto DEO }
+%AUTO-YADDR  { #06 .Screen/auto DEO }
+
 %RELEASE-MOUSE { #0096 DEO }
 
 %RTN { JMP2r }
-%BRK? { #01 JCN BRK }
 %RTN? { #01 JCN RTN }
 %TOS { #00 SWP }
 
@@ -47,7 +49,8 @@
 |0000
 
 @input
-	&length $1 &value $2
+	&value $2 
+	&mode $1
 @stack
 	&length $1
 	&items $10
@@ -82,7 +85,7 @@
 	;on-button .Controller/vector DEO2
 
 	( setup synth )
-	#0110 .Audio0/adsr DEO2
+	#0010 .Audio0/adsr DEO2
 	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
 	#dd .Audio0/volume DEO
@@ -120,13 +123,11 @@ BRK
 
 	.Controller/key DEI 
 	( generics )
-	#00 !~ ,&no-release JCN ;redraw JSR2 POP BRK &no-release
+	#00 !~ ,&no-empty JCN ;redraw JSR2 POP BRK &no-empty
+	#09 !~ ,&no-tab JCN ;toggle-mode JSR2 POP BRK &no-tab
 	#0d !~ ,&no-enter JCN ;do-push JSR2 POP BRK &no-enter
 	#1b !~ ,&no-esc JCN ;do-pop JSR2 POP BRK &no-esc
-	#08 !~ ,&no-backspace JCN
-		.input/value LDZ2 #04 SFT2 .input/value STZ2
-		#ff ;draw-input JSR2 POP BRK
-		&no-backspace
+	#08 !~ ,&no-backspace JCN ;do-erase JSR2 POP BRK &no-backspace
 	( arithmetic )
 	LIT '+ !~ ,&no-add JCN ;do-add JSR2 POP BRK &no-add
 	LIT '- !~ ,&no-sub JCN ;do-sub JSR2 POP BRK &no-sub
@@ -156,50 +157,59 @@ BRK
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
 
-	( handle events )
 	.Mouse/state DEI .pointer/last LDZ
+	( down )
 	DUP2 #0100 !! ,&no-down JCN
-		.Mouse/state DEI .pointer/last STZ
-		POP2
 		.Mouse/x DEI2 .Mouse/y DEI2 
 		OVR2 OVR2 .keypad-frame ;within-rect JSR2 ;click-keypad JCN2
 		OVR2 OVR2 .input-frame ;within-rect JSR2 ;click-input JCN2
 		OVR2 OVR2 .modpad-frame ;within-rect JSR2 ;click-modpad JCN2
 		OVR2 OVR2 .bitpad-frame ;within-rect JSR2 ;click-bitpad JCN2
 		POP2 POP2
-		BRK
 		&no-down
+	( up )
 	DUP2 #0001 !! ,&no-up JCN
-		.Mouse/state DEI .pointer/last STZ
-		POP2 ;redraw JSR2 BRK
+		;redraw JSR2
 		&no-up
 	POP2
+	( record )
 	.Mouse/state DEI .pointer/last STZ
 
 BRK
 
-@click-keypad ( x* y* -> )
+@click-keypad ( state* x* y* -> )
 
 	( y ) .keypad-frame/y LDZ2 -- #24 SFT2
 	( x ) SWP2 .keypad-frame/x LDZ2 -- 10// 4MOD2
-	( value ) ++ ;keypad/layout ++ LDA 
-		;push-input JSR2
-
-	RELEASE-MOUSE
+	( value ) ++ ;keypad/layout ++ LDA ;push-input JSR2
+	RELEASE-MOUSE POP2
 
 BRK
 
-@click-modpad ( x* y* -> )
+@click-modpad ( state* x* y* -> )
 
 	( y ) .modpad-frame/y LDZ2 -- #24 SFT2 NIP STH
 	( x ) .modpad-frame/x LDZ2 -- 10// 
 	( lookup ) STHr + 2** ;keypad/ops ++ LDA2 JSR2
 	;draw-bitpad JSR2
-	RELEASE-MOUSE
+	RELEASE-MOUSE POP2
 
 BRK
 
-@click-bitpad ( x* y* -> )
+@click-input ( state* x* y* -> )
+
+	POP2
+	.input-frame/x LDZ2 -- 8// NIP
+	DUP #00 ! ,&no-push JCN
+		;do-push JSR2 &no-push
+	DUP #01 ! ,&no-pop JCN
+		;do-pop JSR2 &no-pop
+	POP
+	RELEASE-MOUSE POP2
+
+BRK
+
+@click-bitpad ( state* x* y* -> )
 
 	( y ) .bitpad-frame/y LDZ2 -- 8// NIP 8* STH
 	( x ) .bitpad-frame/x LDZ2 -- 8// NIP 
@@ -213,22 +223,8 @@ BRK
 		.input/value STZ2
 
 	;draw-bitpad JSR2
-	RELEASE-MOUSE
-
-BRK
-
-@click-input ( x* y* -> )
-
-	POP2
-	.input-frame/x LDZ2 -- 8// NIP
-	DUP #00 ! ,&no-push JCN
-		;do-push JSR2
-		&no-push
-	DUP #01 ! ,&no-pop JCN
-		;do-pop JSR2
-		&no-pop
-	POP
-	RELEASE-MOUSE
+	#ff ;draw-input JSR2
+	RELEASE-MOUSE POP2
 
 BRK
 
@@ -236,8 +232,9 @@ BRK
 
 	DUP #50 + .Audio0/pitch DEO
 	DUP TOS ;keypad/series ++ LDA ;draw-keypad JSR2
-	TOS .input/value LDZ2 10** ++ .input/value STZ2
-	( INCZ ) .input/length LDZk INC SWP STZ
+	( hex/dec )
+	TOS .input/value LDZ2 #00 [ #0a #10 .input/mode LDZ JMP SWP POP ] **
+		++ .input/value STZ2
 	#ff ;draw-input JSR2
 	;draw-bitpad JSR2
 
@@ -263,13 +260,20 @@ RTN
 
 RTN
 
+@toggle-mode ( -- )
+
+	.input/mode LDZk #00 = SWP STZ
+	;redraw JSR2
+
+RTN
+
 @do-push ( -- )
 
 	.input/value LDZ2 ADD #00 > JMP RTN
 	.stack/length LDZ #07 < JMP RTN
-
 	#40 .Audio0/pitch DEO
 	.input/value LDZ2 ;push JSR2
+	;draw-bitpad JSR2
 
 RTN
 
@@ -282,6 +286,7 @@ RTN
 		;draw-stack JSR2
 		&continue
 	#01 ;draw-input JSR2
+	;draw-bitpad JSR2
 
 RTN
 
@@ -397,17 +402,22 @@ RTN
 
 RTN
 
+@do-erase ( -- )
+
+	.input/value LDZ2 #04 SFT2 .input/value STZ2
+	#ff ;draw-input JSR2
+	;draw-bitpad JSR2
+
+RTN
+
 @key-value ( key -- value )
 
-	DUP #2f > OVR #3a < #0101 !! ,&no-num JCN
-		#30 - RTN
-		&no-num
-	DUP #60 > OVR #67 < #0101 !! ,&no-lc JCN
-		#57 - RTN ( #61 - #0a + )
-		&no-lc
-	DUP #40 > OVR #47 < #0101 !! ,&no-uc JCN
-		#37 - RTN ( #41 - #0a + )
-		&no-uc
+	DUP #2f > OVR #3a < #0101 !! ,&no-num JCN 
+		#30 - RTN &no-num
+	DUP #60 > OVR #67 < #0101 !! ,&no-lc JCN 
+		#57 - RTN ( #61 - #0a + ) &no-lc
+	DUP #40 > OVR #47 < #0101 !! ,&no-uc JCN 
+		#37 - RTN ( #41 - #0a + ) &no-uc
 	POP #00
 
 RTN
@@ -418,7 +428,22 @@ RTN
 	#ff ;draw-modpad JSR2
 	#ff ;draw-input JSR2
 	;draw-bitpad JSR2
-	,draw-stack JSR
+	;draw-mode JSR2
+	;draw-stack JSR2
+
+	#0010 .Screen/x DEO2
+	#0010 .Screen/y DEO2
+
+RTN
+
+@draw-mode ( -- )
+
+	AUTO-XADDR
+	.input-frame/x LDZ2 .Screen/x DEO2
+	.input-frame/y LDZ2 #0014 -- .Screen/y DEO2
+	;modes #00 .input/mode LDZ #0018 MUL2 ++ .Screen/addr DEO2
+	#02 .input/mode LDZ + .Screen/sprite DEOk DEOk DEO
+	AUTO-NONE
 
 RTN
 
@@ -426,98 +451,38 @@ RTN
 
 	#08 #00
 	&loop
+		.input-frame/x LDZ2 #0018 ++ .Screen/x DEO2
+		DUP TOS 8** .input-frame/y LDZ2 ++ #004c -- .Screen/y DEO2
 		( color ) DUP #08 .stack/length LDZ - #01 - > STH
-		( value ) DUP 2* .stack/items + [ #10 .stack/length LDZ 2* - - ] LDZ2 STH2
-		( y ) DUP TOS 8** .input-frame/y LDZ2 ++ #004c -- STH2
-		( x ) .input-frame/x LDZ2 #0020 ++ STH2r STH2r STHr ,draw-short JSR
+		( value ) DUP 2* .stack/items + [ #10 .stack/length LDZ 2* - - ] LDZ2
+			STHr ;draw-number JSR2
 		INC GTHk ,&loop JCN
 	POP2
 
 RTN
-
-@draw-short ( x* y* value* color -- )
-
-	STH STH2
-	.Screen/y DEO2
-	#0020 ++ .Screen/x DEO2
-	#0400
-	&loop
-		.Screen/x DEI2 #0008 -- .Screen/x DEO2
-		( value ) DUP STH2kr ROT 4* SFT2 #000f AND2
-		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
-		( get color ) ROTr STHkr 
-		( place stack ) ROTr ROTr
-		( no leading zeros )
-		OVR STH2kr ,get-length JSR < ,&visible JCN
-			POP #00
-			&visible
-		( draw ) .Screen/sprite DEO
-		INC GTHk ,&loop JCN
-	POP2
-	POP2r POPr
-
-RTN
-
-@get-length ( short* -- length )
-
-	DUP2 #1000 << ,&no4 JCN POP2 #04 RTN &no4
-	DUP2 #0100 << ,&no3 JCN POP2 #03 RTN &no3
-	DUP2 #0010 << ,&no2 JCN POP2 #02 RTN &no2
-	#0000 !!
-
-RTN
-
-@draw-decimal ( -- )
-
-	.bitpad-frame/y2 LDZ2 #0008 ++ .Screen/y DEO2
-	.center/x LDZ2 #0014 -- .Screen/x DEO2
-	#01 .Screen/auto DEO
-
-	.input/value LDZ2
-	( 10,000 ) #2710 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 ]
-	( 1,000 ) #03e8 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 ]
-	( 100 ) #0064 DIV2k DUP2 NIP ,&digit JSR [ MUL2 SUB2 NIP ]
-	( 10 ) #0a DIVk DUP ,&digit JSR [ MUL SUB ]
-	( 1 ) ,&digit JSR
-	#00 .Screen/auto DEO
-
-RTN
-	&digit ( num -- )
-		8* TOS ;font-hex ++ .Screen/addr DEO2
-		#03 .Screen/sprite DEO
-	RTN
 
 @draw-input ( key -- )
 
 	STH
-
 	( draw value )
-	.input-frame/x LDZ2 #0020 ++
-	.input-frame/y LDZ2 #0003 ++
-	.input/value LDZ2
-	#02 
-		;draw-short JSR2
-
+	.input-frame/x LDZ2 #0018 ++ .Screen/x DEO2
+	.input-frame/y LDZ2 #0003 ++ .Screen/y DEO2
+	.input/value LDZ2 #02 ;draw-number JSR2
 	( controls )
 	.input-frame/x LDZ2
 	.input-frame/y LDZ2
 	;stack-icns/push [ STHkr #00 = ] #02
 		;draw-key-thin JSR2
-
 	.input-frame/x LDZ2 #0008 ++
 	.input-frame/y LDZ2
 	;stack-icns/pop [ STHkr #01 = ] #03
 		;draw-key-thin JSR2
-
 	( line )
 	.input-frame/x LDZ2 
 	.input-frame/x2 LDZ2 
 	.input-frame/y LDZ2 #0004 -- #02 
 		;line-hor-dotted JSR2
-
 	POPr
-
-	;draw-decimal JSR2
 
 RTN
 
@@ -559,7 +524,7 @@ RTN
 
 @draw-bitpad ( -- )
 
-	#10 #00
+	#1000
 	&loop
 		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ .Screen/y DEO2
 		( x ) DUP 8MOD TOS 8** .bitpad-frame/x LDZ2 ++ .Screen/x DEO2
@@ -573,7 +538,7 @@ RTN
 
 @draw-key ( x* y* glyph* state color -- )
 
-	( auto x addr ) #05 .Screen/auto DEO
+	( auto x addr ) AUTO-XADDR
 	( color ) ,&color STR
 	( state ) ,&state STR
 	( glyph ) ,&glyph STR2
@@ -591,30 +556,57 @@ RTN
 	.Screen/x DEI2 #000c -- .Screen/x DEO2
 	.Screen/y DEI2 #0005 -- .Screen/y DEO2
 	,&color LDR [ ,&state LDR #09 MUL + ] .Screen/sprite DEO
-	( auto none ) #00 .Screen/auto DEO
+	( auto none ) AUTO-NONE
 
 RTN
 	&color $1 &state $1 &glyph $2
 
 @draw-key-thin ( x* y* glyph* state color -- )
 
-	( auto y addr ) #06 .Screen/auto DEO
-	( color ) ,&color STR
-	( state ) ,&state STR
-	( glyph ) ,&glyph STR2
-	( state ) ;button-thin-icns [ #00 ,&state LDR 10** ++ ] .Screen/addr DEO2 
-	( y ) .Screen/y DEO2
-	( x ) .Screen/x DEO2
-	( draw background )
-	,&color LDR .Screen/sprite DEOk DEO
+	AUTO-YADDR
+	,&color STR ,&state STR ,&glyph STR2
+	( frame )
+	;button-thin-icns #00 [ LIT &state $1 ] 10** ++ .Screen/addr DEO2 
+	.Screen/y DEO2 .Screen/x DEO2
+	[ LIT &color $1 ] .Screen/sprite DEOk DEO
 	( glyph )
-	,&glyph LDR2 .Screen/addr DEO2
+	[ LIT2 &glyph $2 ] .Screen/addr DEO2
 	.Screen/y DEI2 #000c -- .Screen/y DEO2
 	#05 .Screen/sprite DEO
-	( auto none ) #00 .Screen/auto DEO
+	AUTO-NONE
 
 RTN
-	&color $1 &state $1 &glyph $2
+
+@draw-number ( number* color -- )
+
+	,&color STR
+	.input/mode LDZ ,&decimal JCN
+	( hexadecimal )
+		AUTO-X
+		,&color LDR #00 ,&color STR 
+		#00 ,&digit JSR ,&color STR
+		SWP 
+		STHk #04 SFT ,&digit JSR
+		STHr #0f AND ,&digit JSR
+		STHk #04 SFT ,&digit JSR
+		STHr #0f AND ,&digit JSR
+		AUTO-NONE
+	RTN
+	&decimal
+		AUTO-X
+		#2710 DIV2k DUP2 NIP ,&digit JSR MUL2 SUB2
+		#03e8 DIV2k DUP2 NIP ,&digit JSR MUL2 SUB2
+		#0064 DIV2k DUP2 NIP ,&digit JSR MUL2 SUB2 NIP
+		#0a DIVk DUP ,&digit JSR MUL SUB 
+		,&digit JSR
+		AUTO-NONE
+	RTN
+	&digit 
+		8* TOS ;font-hex ++ .Screen/addr DEO2 
+		LIT &color $1 .Screen/sprite DEO 
+	RTN
+
+RTN
 
 ( theme )
 
@@ -645,12 +637,8 @@ RTN
 	( x > rect.x2 ) DUP2 STHkr #04 ADD LDZ2 GTH2 ,&skip JCN
 	POP2 POP2 POPr
 	#01 
-RTN
-	&skip
-	POP2 POP2 POPr
-	#00
-
-RTN
+RTN 
+	&skip POP2 POP2 POPr #00 RTN
 
 @line-hor-dotted ( x0* x1* y* color -- )
 	
@@ -665,38 +653,24 @@ RTN
 RTN
 
 @print-hex ( value* -- )
-	
-	&short ( value* -- )
-		SWP ,&echo JSR 
-	&byte ( value -- )
-		,&echo JSR
-	RTN
 
-	&echo ( value -- )
-	STHk #04 SFT ,&parse JSR .Console/write DEO
-	STHr #0f AND ,&parse JSR .Console/write DEO
-	RTN
-	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 + RTN &above #09 - #60 + RTN
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
 
-RTN
+JMP2r
 
 @keypad
 	&layout
-		0708 090f
-		0405 060e
-		0102 030d
-		000a 0b0c
+	0708 090f 0405 060e 0102 030d 000a 0b0c
 	&series
-		0c08 090a
-		0405 0600
-		0102 0d0e
-		0f0b 0703
+	0c08 090a 0405 0600 0102 0d0e 0f0b 0703
 	&color
-		0101 0102
-		0101 0102
-		0101 0102
-		0102 0202
+	0101 0102 0101 0102 0101 0102 0102 0202
 	&ops
 		:do-add :do-sub :do-mul :do-div
 		:do-and :do-ora :do-eor :do-not
@@ -727,7 +701,17 @@ RTN
 	007c 8282 7c82 827c 007c 8282 7e02 827c
 	007c 8202 7e82 827e 00fc 8282 fc82 82fc
 	007c 8280 8080 827c 00fc 8282 8282 82fc
-	007c 8280 f080 827c 007c 8280 f080 8080
+	007e 8080 fe80 807e 007c 8280 f080 8080
+
+@modes
+	( hex )
+	0082 8282 fe82 8282
+	007e 8080 fe80 807e
+	0082 4428 1028 4482
+	( dec )
+	00fc 8282 8282 82fc
+	007e 8080 fe80 807e
+	007c 8280 8080 827c
 
 @mod-icns
 	0010 1010 fe10 1010
@@ -742,35 +726,35 @@ RTN
 
 @button-icns
 	( outline )
-		3f40 8080 8080 8080
-		f804 0202 0202 0202
-		8080 8080 8040 3f00
-		0202 0202 0204 f800
+	3f40 8080 8080 8080
+	f804 0202 0202 0202
+	8080 8080 8040 3f00
+	0202 0202 0204 f800
 	( full )
-		3f7f ffff ffff ffff
-		f8fc fefe fefe fefe
-		ffff ffff ff7f 3f00
-		fefe fefe fefc f800
+	3f7f ffff ffff ffff
+	f8fc fefe fefe fefe
+	ffff ffff ff7f 3f00
+	fefe fefe fefc f800
 
 @button-thin-icns
 	( outline )
-		3844 8282 8282 8282
-		8282 8282 8244 3800
+	3844 8282 8282 8282
+	8282 8282 8244 3800
 	( full )
-		387c fefe fefe fefe
-		fefe fefe fe7c 3800
+	387c fefe fefe fefe
+	fefe fefe fe7c 3800
 
 @bit-icns
 	( outline )
-		3844 8282 8244 3800
+	3844 8282 8244 3800
 	( full )
-		387c fefe fe7c 3800
+	387c fefe fe7c 3800
 
 @stack-icns
 	&push
-		0000 1028 1000 0000
+	0000 1028 1000 0000
 	&pop
-		0000 2810 2800 0000
+	0000 2810 2800 0000
 
 @pointer-icn
 	80c0 e0f0 f8e0 1000
