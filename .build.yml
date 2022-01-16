@@ -45,8 +45,8 @@ tasks:
             [ -d "${PROJECT}" ] || git clone "https://git.sr.ht/~rabbits/${PROJECT}"
             ( cd "${PROJECT}" && ../uxn/uxn/uxnasm "${F#*/}" "../rompack/uxn/${ROMNAME}" || rm -f "../rompack/uxn/${ROMNAME}" )
         done
-        tar -czf out/rompack.tar.gz -C rompack uxn
-        ( cd rompack && zip -qr ../out/rompack.zip uxn )
+        tar -czf out/uxn-rompack.tar.gz -C rompack uxn
+        ( cd rompack && zip -qr ../out/uxn-rompack.zip uxn )
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
         ssh win "rm -f uxn-windows-64bit.zip; export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run; mv bin uxn; zip -qr ../uxn-windows-64bit.zip uxn"
@@ -57,13 +57,13 @@ tasks:
     - upload: |
         if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         ls -l out
-        tar -czf out.tar.gz -C out uxn-linux-amd64.tar.gz uxn-windows-64bit.zip uxn-macos.tar.gz
+        tar -czf out.tar.gz -C out .
         acurl() {
             set +x
             curl -H "Authorization: Bearer ${OAUTH2_TOKEN}" "${@}"
             set -x
         }
-        acurl -f "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz
-        acurl -f "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz -Fprotocol=GEMINI
+        acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz
+        acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz -Fprotocol=GEMINI
     - build-9front: |
         ssh 9front "$(cd uxn && git rev-parse HEAD)"
