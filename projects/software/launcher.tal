@@ -48,6 +48,7 @@
 @browser
 	&x $2 &y $2 &x2 $2 &y2 $2 
 	&sel $1 &last $1 &scroll $1
+	&lines $1
 
 ( init )
 
@@ -119,7 +120,7 @@ BRK
 		DUP .browser/scroll LDZ + ;scroll-to JSR2
 		&no-up
 	DUP #01 ! ,&no-down JCN
-		.browser/scroll LDZ ;dir/lines LDA = ,&no-down JCN
+		.browser/scroll LDZ .browser/lines LDZ = ,&no-down JCN
 		DUP .browser/scroll LDZ + ;scroll-to JSR2
 		&no-down
 	POP
@@ -149,7 +150,7 @@ BRK
 		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
-		.browser/sel LDZ INC ;dir/lines LDA = ,&no-down JCN 
+		.browser/sel LDZ INC .browser/lines LDZ = ,&no-down JCN 
 		.browser/sel LDZ INC ;select-file JSR2 
 		;follow-selection JSR2
 		POP BRK
@@ -175,13 +176,14 @@ BRK
 	#1000 .File/length DEO2
 	;dir/data .File/read DEO2
 	.File/success DEI2 ;dir/length STA2
+	#00 .browser/lines STZ
 
 	( split with null-char )
 	;dir/data
 	&while
 		LDAk #1f > ,&no-lb JCN
 			( split ) STH2k #00 STH2r STA
-			( count lines ) ;dir/lines LDA INC ;dir/lines STA
+			( count lines ) .browser/lines LDZk INC SWP STZ
 			&no-lb
 		INC2 LDAk ,&while JCN
 	POP2
@@ -195,7 +197,7 @@ RTN
 		POP RTN
 		&has-changed
 	( beyond )
-	DUP ;dir/lines LDA < ,&valid JCN
+	DUP .browser/lines LDZ < ,&valid JCN
 		POP RTN
 		&valid
 
@@ -216,7 +218,7 @@ RTN
 	#0080 .Screen/y DEO2
 	.browser/sel LDZ #02 ;draw-byte JSR2
 	LIT '/ #02 ;draw-char JSR2
-	;dir/lines LDA #01 - #02 ;draw-byte JSR2
+	.browser/lines LDZ #01 - #02 ;draw-byte JSR2
 	AUTO-NONE
 
 RTN
@@ -238,7 +240,7 @@ RTN
 
 	STH
 	( more lines than visible )
-	;dir/lines LDA LINES-COUNT 
+	.browser/lines LDZ LINES-COUNT 
 	DUP2 > ,&can-scroll JCN
 		POPr POP2 RTN
 		&can-scroll
@@ -257,10 +259,9 @@ RTN
 	;get-entry JSR2 #0005 ++
 	
 	DUP2 ;check-rom JSR2 ,&valid JCN
-
 		( check if tal file )
-
 		DUP2 ;scap JSR2 #0004 -- ;&tal-ext ;scmp JSR2 #01 ! ,&no-tal JCN
+			( assemble tal file )
 			DUP2 ;&output-path ;scpy JSR2
 			;&rom-ext ;&output-path ;scat JSR2
 			;&output-path ;asma-assemble-file JSR2 
@@ -268,10 +269,8 @@ RTN
 			;redraw JSR2
 			RTN
 			&no-tal
-
 		POP2 RTN
 		&valid
-
 	;load-rom JSR2 
 
 RTN
@@ -290,7 +289,7 @@ RTN
 @draw-browser ( mask -- )
 
 	( when empty )
-	;dir/lines LDA #01 = ;draw-browser-empty JCN2
+	.browser/lines LDZ #01 = ;draw-browser-empty JCN2
 
 	STH
 
@@ -303,7 +302,7 @@ RTN
 	LINES-COUNT #00
 	&loop
 		( reached end )
-		DUP INC ;dir/lines LDA > ,&end JCN
+		DUP INC .browser/lines LDZ > ,&end JCN
 		( has file )
 		.browser/x LDZ2 .Screen/x DEO2
 		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
@@ -561,7 +560,6 @@ JMP2r
 
 @dir
 	&path ". $1
-	&lines $1
 	&length $2
 	&data $1000
 
