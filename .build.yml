@@ -4,6 +4,7 @@ packages:
     - build-essential
     - libsdl2-dev
     - rsync
+    - zip
 oauth: pages.sr.ht/PAGES:RW
 environment:
     SITE: rabbits.srht.site
@@ -29,6 +30,23 @@ tasks:
         mv bin uxn
         tar -czf ../out/uxn-linux-amd64.tar.gz uxn
         cd ..
+    - build-rompack: |
+        mkdir -p rompack/uxn
+        for F in uxn/projects/software/calc.tal uxn/projects/software/launcher.tal uxn/projects/examples/demos/piano.tal uxn/projects/examples/demos/clock.tal catclock/src/main.tal dexe/src/main.tal donsol/src/main.tal left/src/main.tal nasu/src/main.tal noodle/src/main.tal orca-toy/src/main.tal:orca.rom turye/src/main.tal; do
+            PROJECT="${F%%/*}"
+            if [ "${F}" = "${F%:*}" ]; then
+                ROMNAME="${F##*/}"
+                ROMNAME="${ROMNAME%.tal}.rom"
+                [ "${ROMNAME}" != main.rom ] || ROMNAME="${PROJECT}.rom"
+            else
+                ROMNAME="${F##*:}"
+                F="${F%:*}"
+            fi
+            [ -d "${PROJECT}" ] || git clone "https://git.sr.ht/~rabbits/${PROJECT}"
+            ( cd "${PROJECT}" && ../uxn/uxn/uxnasm "${F#*/}" "../rompack/uxn/${ROMNAME}" || rm -f "../rompack/uxn/${ROMNAME}" )
+        done
+        tar -czf out/rompack.tar.gz -C rompack uxn
+        ( cd rompack && zip -qr ../out/rompack.zip uxn )
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
         ssh win "rm -f uxn-windows-64bit.zip; export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run; mv bin uxn; zip -qr ../uxn-windows-64bit.zip uxn"
