@@ -31,7 +31,7 @@
 %RELEASE-MOUSE { #0096 DEO }
 
 %RTN { JMP2r }
-%RTN? { #01 JCN RTN }
+%RTN? { JMP RTN }
 %TOS { #00 SWP }
 
 ( devices )
@@ -580,11 +580,12 @@ RTN
 @draw-number ( number* color -- )
 
 	,&color STR
-	.input/mode LDZ ,&decimal JCN
+	( reset zero pad ) 
+	#00 ;&zero STA
 	( hexadecimal )
+	.input/mode LDZ ,&decimal JCN
 		AUTO-X
-		,&color LDR #00 ,&color STR 
-		#00 ,&digit JSR ,&color STR
+		#00 ,&digit JSR
 		SWP 
 		STHk #04 SFT ,&digit JSR
 		STHr #0f AND ,&digit JSR
@@ -592,7 +593,11 @@ RTN
 		STHr #0f AND ,&digit JSR
 		AUTO-NONE
 	RTN
-	&decimal
+	&digit ( num -- )
+		,&addr JSR .Screen/addr DEO2 
+		LIT &color $1 .Screen/sprite DEO 
+	RTN
+	&decimal ( num* -- )
 		AUTO-X
 		#2710 DIV2k DUP2 NIP ,&digit JSR MUL2 SUB2
 		#03e8 DIV2k DUP2 NIP ,&digit JSR MUL2 SUB2
@@ -601,12 +606,17 @@ RTN
 		,&digit JSR
 		AUTO-NONE
 	RTN
-	&digit 
-		8* TOS ;font-hex ++ .Screen/addr DEO2 
-		LIT &color $1 .Screen/sprite DEO 
+	&addr ( num -- addr* )
+		,&zero LDR ,&padded JCN
+		DUP ,&no-blank JCN 
+			POP ;blank-icn RTN 
+			&no-blank
+		DUP ,&zero STR
+		&padded 8* TOS ;font-hex ++
 	RTN
 
 RTN
+	&zero $1
 
 ( theme )
 
@@ -757,3 +767,5 @@ JMP2r
 
 @pointer-icn
 	80c0 e0f0 f8e0 1000
+
+@blank-icn
