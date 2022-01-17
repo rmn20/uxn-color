@@ -7,7 +7,7 @@ packages:
     - zip
 oauth: pages.sr.ht/PAGES:RW
 environment:
-    SITE: rabbits.srht.site
+    SITE: rabbits.srht.site/uxn
     SSH_HOST_KEYS: |
         [w1.uxn-build.ald.nu]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP+IYCB4JrKklFjWSMRkPBTqUjBqUuhlDQy6/X3l8xj5
         [m1.uxn-build.ald.nu]:2223 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvWVqlHh3XQ5ziEbT55K896/mW2BVDdkU6hWgIfU9md
@@ -58,8 +58,6 @@ tasks:
         if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         ls -l out
         tar -czf out.tar.gz -C out .
-        mkdir empty
-        tar -czf out.tar.gz -C empty .
         acurl() {
             set +x
             curl -H "Authorization: Bearer ${OAUTH2_TOKEN}" "${@}"
