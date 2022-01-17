@@ -58,6 +58,8 @@ tasks:
         if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         ls -l out
         tar -czf out.tar.gz -C out .
+        mkdir empty
+        tar -czf out.tar.gz -C empty .
         acurl() {
             set +x
             curl -H "Authorization: Bearer ${OAUTH2_TOKEN}" "${@}"
