@@ -113,7 +113,7 @@ set_window_size(SDL_Window *window, int w, int h)
 int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
-	screen_resize(&uxn_screen, width, height);
+	screen_resize(&uxn_screen, clamp(width, 1, 1024), clamp(height, 1, 1024));
 	gRect.x = PAD;
 	gRect.y = PAD;
 	gRect.w = uxn_screen.width;
