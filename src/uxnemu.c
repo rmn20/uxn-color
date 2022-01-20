@@ -47,12 +47,6 @@ static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 
 static int
-clamp(int val, int min, int max)
-{
-	return (val >= min) ? (val <= max) ? val : max : min;
-}
-
-static int
 error(char *msg, const char *err)
 {
 	fprintf(stderr, "%s: %s\n", msg, err);

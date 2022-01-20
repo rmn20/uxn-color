@@ -108,6 +108,12 @@ screen_redraw(UxnScreen *p, Uint32 *pixels)
 	p->fg.changed = p->bg.changed = 0;
 }
 
+int
+clamp(int val, int min, int max)
+{
+	return (val >= min) ? (val <= max) ? val : max : min;
+}
+
 /* IO */
 
 Uint8
