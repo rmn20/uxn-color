@@ -24,9 +24,6 @@ typedef struct UxnScreen {
 
 extern UxnScreen uxn_screen;
 
-/* this should probably be done differently */
-int set_size(Uint16 width, Uint16 height, int is_resize);
-
 void screen_palette(UxnScreen *p, Uint8 *addr);
 void screen_resize(UxnScreen *p, Uint16 width, Uint16 height);
 void screen_clear(UxnScreen *p, Layer *layer);

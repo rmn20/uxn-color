@@ -132,12 +132,13 @@ void
 screen_deo(Device *d, Uint8 port)
 {
 	switch(port) {
+	case 0x3:
 	case 0x5:
 		if(!FIXED_SIZE) {
 			Uint16 w, h;
 			DEVPEEK16(w, 0x2);
 			DEVPEEK16(h, 0x4);
-			set_size(w, h, 1);
+			screen_resize(&uxn_screen, clamp(w, 1, 1024), clamp(h, 1, 1024));
 		}
 		break;
 	case 0xe: {

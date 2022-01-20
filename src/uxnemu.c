@@ -100,14 +100,14 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_Point win, win_old;
 	SDL_GetWindowPosition(window, &win.x, &win.y);
 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
+	if(w == win_old.x && h == win_old.y) return;
 	SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2);
 	SDL_SetWindowSize(window, w, h);
 }
 
 int
-set_size(Uint16 width, Uint16 height, int is_resize)
+set_size(void)
 {
-	screen_resize(&uxn_screen, clamp(width, 1, 1024), clamp(height, 1, 1024));
 	gRect.x = PAD;
 	gRect.y = PAD;
 	gRect.w = uxn_screen.width;
@@ -119,14 +119,14 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 		return error("gTexture", SDL_GetError());
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return error("SDL_UpdateTexture", SDL_GetError());
-	if(is_resize)
-		set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	return 1;
 }
 
 static void
 redraw(void)
 {
+	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height) set_size();
 	screen_redraw(&uxn_screen, uxn_screen.pixels);
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
@@ -306,7 +306,7 @@ capture_screen(void)
 static void
 restart(Uxn *u)
 {
-	set_size(WIDTH, HEIGHT, 1);
+	screen_resize(&uxn_screen, WIDTH, HEIGHT);
 	start(u, "launcher.rom");
 }
 
@@ -391,7 +391,7 @@ run(Uxn *u)
 			else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
 				redraw();
 			else if(event.type == SDL_DROPFILE) {
-				set_size(WIDTH, HEIGHT, 0);
+				screen_resize(&uxn_screen, WIDTH, HEIGHT);
 				start(u, event.drop.file);
 				SDL_free(event.drop.file);
 			}
@@ -461,8 +461,7 @@ main(int argc, char **argv)
 
 	if(!init())
 		return error("Init", "Failed to initialize emulator.");
-	if(!set_size(WIDTH, HEIGHT, 0))
-		return error("Window", "Failed to set window size.");
+	screen_resize(&uxn_screen, WIDTH, HEIGHT);
 
 	/* set default zoom */
 	if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
