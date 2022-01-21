@@ -43,16 +43,16 @@
 @pointer 
 	&x $2 &y $2
 @timer 
-	&frame $1 &pause $1
+	&frame $1 &play $1
 
 ( program )
 
 |0100 ( -> )
 
 	( theme ) 
-	#30ff .System/r DEO2 
-	#e00f .System/g DEO2 
-	#800f .System/b DEO2
+	#0ff0 .System/r DEO2 
+	#0d0a .System/g DEO2 
+	#040f .System/b DEO2
 	( size )
 	#00 WIDTH 4** .Screen/width DEO2
 	#00 HEIGHT 4** .Screen/height DEO2
@@ -61,6 +61,7 @@
 	;on-mouse .Mouse/vector DEO2
 	;on-button .Controller/vector DEO2
 	( setup )
+	#01 .timer/play STZ
 	#01 .color STZ
 	;redraw JSR2
 
@@ -68,10 +69,14 @@ BRK
 
 @on-frame ( -> )
 
-	.timer/pause LDZ #00 = JMP BRK
-
+	.timer/play LDZ JMP BRK
+	( every 4th )
 	.timer/frame LDZk 
-		#0f AND ,&no-run JCN ;run JSR2 &no-run
+		#03 AND ,&no-run JCN 
+			;run JSR2 
+			;future-world ;past-world #4000 ;mcpy JSR2
+			;redraw JSR2
+			&no-run
 		LDZk INC SWP STZ
 
 BRK
@@ -84,25 +89,24 @@ BRK
 	DUP #04 ! ,&no-select JCN #03 .color STZ &no-select
 	DUP #08 ! ,&no-start JCN  #00 .color STZ &no-start
 	POP
+	( space )
 	.Controller/key DEI #20 ! ,&no-space JCN
-		.timer/pause LDZk #00 = SWP STZ &no-space
+		.timer/play LDZk #00 = SWP STZ &no-space
 
 BRK
 
 @on-mouse ( -> )
 
 	;pointer-icn .Screen/addr DEO2
-
 	( clear last cursor )
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
 	#40 .Screen/sprite DEO
-
 	( draw new cursor )
 	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2 
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
-	#41 .Mouse/state DEI #00 ! + .timer/pause LDZ + .Screen/sprite DEO
-
+	#41 .Mouse/state DEI #00 ! + .timer/play LDZ + .Screen/sprite DEO
+	( paint )
 	.Mouse/state DEI #00 = ,&no-down JCN
 		( color ) .color LDZ
 		( cell* ) .Mouse/x DEI2 4// NIP .Mouse/y DEI2 4// NIP
@@ -146,8 +150,6 @@ RTN
 		POPr
 		INC GTHk ,&ver JCN
 	POP2
-	;future-world ;past-world #4000 ;mcpy JSR2
-	,redraw JSR
 
 RTN
 
@@ -193,11 +195,15 @@ RTN
 
 JMP2r
 
-@pointer-icn 80c0 e0f0 f8e0 1000
-@cell-icn e0e0 e000 0000 0000
+@pointer-icn 
+	80c0 e0f0 f8e0 1000
+@cell-icn 
+	e0e0 e000 0000 0000
 
-@past-world
+( 
+	I live in the atom with the happy protons and neutrons. 
+	I'm also so negative all the freakin time. 
+	What do I do? 
+	How do I find peace? )
 
-$4000
-
-@future-world
+@past-world $4000 @future-world
