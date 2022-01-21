@@ -1,0 +1,203 @@
+( wireworld )
+
+( 
+	#00 empty - black
+	#01 conductor - yellow
+	#02 electron tail - red
+	#03 electron head - blue 
+
+	RULES
+
+	- electron head(3), becomes electron tail(2)
+    - electron tail(2), becomes conductor(1)
+    - conductor(1), becomes electron head(3) 
+    	if there are exactly 1 or 2 electron heads around it. )
+
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
+
+%RTN   { JMP2r }
+%TOS { #00 SWP }
+
+%WIDTH { #40 }
+%HEIGHT { #40 }
+
+( devices )
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &pad    $4 &r      $2 &g      $2 &b      $2 &debug  $1 &halt $1
+|20 @Screen     &vector $2 &width    $2 &height $2 &pad    $2 &x      $2 &y      $2 &addr   $2 &pixel  $1 &sprite $1
+|80 @Controller &vector $2 &button   $1 &key    $1 &func   $1
+|90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &pad    $3 &modx   $2 &mody   $2
+
+|0000
+
+@color $1
+@pointer 
+	&x $2 &y $2
+@timer 
+	&frame $1 &pause $1
+
+( program )
+
+|0100 ( -> )
+
+	( theme ) 
+	#30ff .System/r DEO2 
+	#e00f .System/g DEO2 
+	#800f .System/b DEO2
+	( size )
+	#00 WIDTH 4** .Screen/width DEO2
+	#00 HEIGHT 4** .Screen/height DEO2
+	( vectors ) 
+	;on-frame .Screen/vector DEO2
+	;on-mouse .Mouse/vector DEO2
+	;on-button .Controller/vector DEO2
+	( setup )
+	#01 .color STZ
+	;redraw JSR2
+
+BRK
+
+@on-frame ( -> )
+
+	.timer/pause LDZ #00 = JMP BRK
+
+	.timer/frame LDZk 
+		#0f AND ,&no-run JCN ;run JSR2 &no-run
+		LDZk INC SWP STZ
+
+BRK
+
+@on-button ( -> )
+
+	.Controller/button DEI
+	DUP #01 ! ,&no-a JCN      #01 .color STZ &no-a
+	DUP #02 ! ,&no-b JCN      #02 .color STZ &no-b
+	DUP #04 ! ,&no-select JCN #03 .color STZ &no-select
+	DUP #08 ! ,&no-start JCN  #00 .color STZ &no-start
+	POP
+	.Controller/key DEI #20 ! ,&no-space JCN
+		.timer/pause LDZk #00 = SWP STZ &no-space
+
+BRK
+
+@on-mouse ( -> )
+
+	;pointer-icn .Screen/addr DEO2
+
+	( clear last cursor )
+	.pointer/x LDZ2 .Screen/x DEO2
+	.pointer/y LDZ2 .Screen/y DEO2
+	#40 .Screen/sprite DEO
+
+	( draw new cursor )
+	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2 
+	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
+	#41 .Mouse/state DEI #00 ! + .timer/pause LDZ + .Screen/sprite DEO
+
+	.Mouse/state DEI #00 = ,&no-down JCN
+		( color ) .color LDZ
+		( cell* ) .Mouse/x DEI2 4// NIP .Mouse/y DEI2 4// NIP
+			;get-addr JSR2 STA
+		;redraw JSR2
+		&no-down
+
+BRK
+
+@redraw ( -- )
+
+	;cell-icn .Screen/addr DEO2
+	HEIGHT #00
+	&ver
+		DUP TOS 4** .Screen/y DEO2
+		STHk
+		WIDTH #00
+		&hor
+			DUP TOS 4** .Screen/x DEO2
+			DUP STHkr ,get-addr JSR LDA .Screen/sprite DEO
+			INC GTHk ,&hor JCN
+		POP2
+		POPr
+		INC GTHk ,&ver JCN
+	POP2
+
+RTN
+
+@run ( -- )
+
+	HEIGHT #00
+	&ver
+		STHk
+		WIDTH #00
+		&hor
+			( x,y ) DUP STHkr 
+			( cell ) DUP2 ,get-addr JSR STH2k LDA 
+			( transform ) ,transform JSR STH2r ( future ) #4000 ++ STA
+			INC GTHk ,&hor JCN
+		POP2
+		POPr
+		INC GTHk ,&ver JCN
+	POP2
+	;future-world ;past-world #4000 ;mcpy JSR2
+	,redraw JSR
+
+RTN
+
+@transform ( xy cell -- cell )
+
+	DUP #03 ! ,&no-head JCN POP POP2 #02 RTN &no-head
+	DUP #02 ! ,&no-tail JCN POP POP2 #01 RTN &no-tail
+	DUP #01 ! ,&no-cond JCN POP ,morph JSR #02 * INC RTN &no-cond
+	NIP NIP
+
+RTN
+
+@get-addr ( x y -- addr* )
+
+	TOS [ #00 WIDTH ] ** ROT TOS ++ ;past-world ++
+
+RTN
+
+@morph ( xy -- bool )
+
+	LITr 00
+	DUP2 SWP #01 - SWP #01 - ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 #01 - ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 SWP INC SWP #01 - ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 SWP #01 - SWP ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 SWP INC SWP ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 SWP #01 - SWP INC ,get-addr JSR LDA #03 ! JMP INCr
+	DUP2 INC ,get-addr JSR LDA #03 ! JMP INCr
+	SWP INC SWP INC ,get-addr JSR LDA #03 ! JMP INCr
+	STHkr #02 = STHr #01 = #0000 >>
+
+RTN
+
+@mcpy ( src* dst* len* -- )
+
+	SWP2 STH2
+	OVR2 ++ SWP2
+	&loop
+		LDAk STH2kr STA INC2r
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+	POP2r
+
+JMP2r
+
+@pointer-icn 80c0 e0f0 f8e0 1000
+@cell-icn e0e0 e000 0000 0000
+
+@past-world
+
+$4000
+
+@future-world
