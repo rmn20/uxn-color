@@ -108,7 +108,7 @@ BRK
 	#41 .Mouse/state DEI #00 ! + .timer/play LDZ + .Screen/sprite DEO
 	( paint )
 	.Mouse/state DEI #00 = ,&no-down JCN
-		( color ) .color LDZ
+		( color ) .color LDZ .Mouse/state DEI #01 > #00 = *
 		( cell* ) .Mouse/x DEI2 4// NIP .Mouse/y DEI2 4// NIP
 			;get-addr JSR2 STA
 		;redraw JSR2
