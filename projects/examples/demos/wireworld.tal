@@ -27,8 +27,9 @@
 %RTN   { JMP2r }
 %TOS { #00 SWP }
 
-%WIDTH { #40 }
+%WIDTH  { #40 }
 %HEIGHT { #40 }
+%LENGTH { #1000 }
 
 ( devices )
 
@@ -74,7 +75,7 @@ BRK
 	.timer/frame LDZk 
 		#03 AND ,&no-run JCN 
 			;run JSR2 
-			;future-world ;past-world #4000 ;mcpy JSR2
+			;past-world LENGTH ++ ;past-world LENGTH ;mcpy JSR2
 			;redraw JSR2
 			&no-run
 		LDZk INC SWP STZ
@@ -144,21 +145,12 @@ RTN
 		&hor
 			( x,y ) DUP STHkr 
 			( cell ) DUP2 ,get-addr JSR STH2k LDA 
-			( transform ) ,transform JSR STH2r ( future ) #4000 ++ STA
+			( transform ) ,transform JSR STH2r ( future ) LENGTH ++ STA
 			INC GTHk ,&hor JCN
 		POP2
 		POPr
 		INC GTHk ,&ver JCN
 	POP2
-
-RTN
-
-@transform ( xy cell -- cell )
-
-	DUP #03 ! ,&no-head JCN POP POP2 #02 RTN &no-head
-	DUP #02 ! ,&no-tail JCN POP POP2 #01 RTN &no-tail
-	DUP #01 ! ,&no-cond JCN POP ,morph JSR #02 * INC RTN &no-cond
-	NIP NIP
 
 RTN
 
@@ -168,18 +160,29 @@ RTN
 
 RTN
 
-@morph ( xy -- bool )
+@transform ( xy cell -- cell )
 
-	LITr 00
-	DUP2 SWP #01 - SWP #01 - ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 #01 - ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 SWP INC SWP #01 - ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 SWP #01 - SWP ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 SWP INC SWP ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 SWP #01 - SWP INC ,get-addr JSR LDA #03 ! JMP INCr
-	DUP2 INC ,get-addr JSR LDA #03 ! JMP INCr
-	SWP INC SWP INC ,get-addr JSR LDA #03 ! JMP INCr
-	STHkr #02 = STHr #01 = #0000 >>
+	DUP #00 ! ,&no-null JCN NIP NIP RTN &no-null
+	DUP #03 ! ,&no-head JCN POP POP2 #02 RTN &no-head
+	DUP #02 ! ,&no-tail JCN POP POP2 #01 RTN &no-tail
+	DUP #01 ! ,&no-cond JCN POP 
+		LITr 00
+		DUP2 #01 - ,get-addr JSR 
+			( tl ) #0001 -- LDAk #03 ! JMP INCr
+			( tc ) INC2 LDAk #03 ! JMP INCr
+			( tr ) INC2 LDA #03 ! JMP INCr
+		DUP2 ,get-addr JSR
+			( ml ) #0001 -- LDAk #03 ! JMP INCr
+			( mr ) INC2 INC2 LDA #03 ! JMP INCr
+		INC ,get-addr JSR
+			( bl ) #0001 -- LDAk #03 ! JMP INCr
+			( bc ) INC2 LDAk #03 ! JMP INCr
+			( br ) INC2 LDA #03 ! JMP INCr
+		STHkr #02 = STHr #01 = #0000 >>
+		#02 * INC RTN 
+		&no-cond
+	( unknown )
+	NIP NIP
 
 RTN
 
@@ -206,4 +209,4 @@ JMP2r
 	What do I do? 
 	How do I find peace? )
 
-@past-world $4000 @future-world
+@past-world 
