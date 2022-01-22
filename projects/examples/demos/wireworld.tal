@@ -64,6 +64,10 @@
 	( setup )
 	#01 .timer/play STZ
 	#01 .color STZ
+
+	;world-a ;get-addr/current STA2
+	LENGTH ;run/future-offset STA2
+
 	;redraw JSR2
 
 BRK
@@ -74,8 +78,13 @@ BRK
 	( every 4th )
 	.timer/frame LDZk 
 		#03 AND ,&no-run JCN 
-			;run JSR2 
-			;past-world LENGTH ++ ;past-world LENGTH ;mcpy JSR2
+			;run JSR2
+
+			( Swap worlds )
+			;get-addr/current LDA2k ;run/future-offset LDA2 STH2k ( ;current current* offest* )
+			++ SWP2 STA2 ( Set new current page )
+			#0000 STH2r -- ;run/future-offset STA2 ( Invert offest )
+
 			;redraw JSR2
 			&no-run
 		LDZk INC SWP STZ
@@ -148,8 +157,8 @@ RTN
 		WIDTH #00
 		&hor
 			( x,y ) DUP STHkr 
-			( cell ) DUP2 ,get-addr JSR STH2k LDA 
-			( transform ) ,transform JSR STH2r ( future ) LENGTH ++ STA
+			( cell ) DUP2 ,get-addr JSR STH2k LDA
+			( transform ) ,transform JSR STH2r ( future ) LIT2 &future-offset 0000 ++ STA
 			INC GTHk ,&hor JCN
 		POP2
 		POPr
@@ -160,7 +169,7 @@ RTN
 
 @get-addr ( x y -- addr* )
 
-	TOS [ #00 WIDTH ] ** ROT TOS ++ ;past-world ++
+	TOS [ #00 WIDTH ] ** ROT TOS ++ LIT2 &current 0000 ++
 
 RTN
 
@@ -190,18 +199,6 @@ RTN
 
 RTN
 
-@mcpy ( src* dst* len* -- )
-
-	SWP2 STH2
-	OVR2 ++ SWP2
-	&loop
-		LDAk STH2kr STA INC2r
-		INC2 GTH2k ,&loop JCN
-	POP2 POP2
-	POP2r
-
-JMP2r
-
 @mclr ( addr* len* -- )
 
 	OVR2 ++ SWP2
@@ -223,4 +220,4 @@ JMP2r
 	What do I do? 
 	How do I find peace? )
 
-@past-world 
+@world-a
