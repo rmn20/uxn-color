@@ -51,9 +51,9 @@
 |0100 ( -> )
 
 	( theme ) 
-	#0ff0 .System/r DEO2 
-	#0d0a .System/g DEO2 
-	#040f .System/b DEO2
+	#0f7f .System/r DEO2 
+	#0fe0 .System/g DEO2 
+	#0fc0 .System/b DEO2
 	( size )
 	#00 WIDTH 4** .Screen/width DEO2
 	#00 HEIGHT 4** .Screen/height DEO2
@@ -89,6 +89,10 @@ BRK
 	DUP #02 ! ,&no-b JCN      #02 .color STZ &no-b
 	DUP #04 ! ,&no-select JCN #03 .color STZ &no-select
 	DUP #08 ! ,&no-start JCN  #00 .color STZ &no-start
+	DUP #0c ! ,&no-both JCN
+		;past-world LENGTH 2** ;mclr JSR2
+		;redraw JSR2
+		&no-both
 	POP
 	( space )
 	.Controller/key DEI #20 ! ,&no-space JCN
@@ -195,6 +199,16 @@ RTN
 		INC2 GTH2k ,&loop JCN
 	POP2 POP2
 	POP2r
+
+JMP2r
+
+@mclr ( addr* len* -- )
+
+	OVR2 ++ SWP2
+	&loop
+		STH2k #00 STH2r STA
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
 
 JMP2r
 
