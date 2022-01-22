@@ -256,6 +256,10 @@ RTN
 
 @run-file ( id -- )
 
+	( release inputs )
+	#0000 .Controller/button DEO2
+	#00 .Mouse/state DEO
+
 	;get-entry JSR2 #0005 ++
 	
 	DUP2 ;check-rom JSR2 ,&valid JCN
