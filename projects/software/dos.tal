@@ -22,6 +22,9 @@
 %8MOD  { #07 AND } %8MOD2  { #0007 AND2 }
 %10MOD { #0f AND } %10MOD2 { #000f AND2 }
 
+%MOD  { DIVk MUL SUB }
+%MOD2 { DIV2k MUL2 SUB2 }
+
 %AUTO-NONE   { #00 .Screen/auto DEO }
 %AUTO-X      { #01 .Screen/auto DEO }
 %AUTO-Y      { #02 .Screen/auto DEO }
@@ -44,6 +47,7 @@
 |20 @Screen     &vector $2 &width   $2 &height $2 &auto  $1 &pad   $1 &x     $2 &y $2 &addr $2 &pixel $1 &sprite $1
 |80 @Controller &vector $2 &button $1 &key    $1
 |a0 @File       &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name    $2 &length  $2 &read   $2 &write $2
+|b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
 
 ( variables )
 
@@ -126,6 +130,10 @@ RTN
 @validate ( -- )
 	
 	;clear JSR2
+
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+
 	;get-cmd JSR2 ;commands-func ++ LDA2 JSR2
 	;buffer #0080 ;mclr JSR2
 
@@ -144,79 +152,57 @@ JMP2r
 
 RTN
 
-@cmd-ls 
-	&name "ls $1
+@cmd-ls "ls $1
 	&docs "list_folder_content $1
 	&func
-	
+
 	;path .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
-	PAD .Screen/x DEO2
-	PAD .Screen/y DEO2
+
 	;view #01 ;draw-tx JSR2
 
 RTN
 
-@cmd-cp 
-	&name "cp $1
-	&docs "copy_file_to_name $1
+@cmd-cp "cp $1 &docs "copy_file_to_name $1
 	&func
 
 RTN
 
-@cmd-mv 
-	&name "mv $1
-	&docs "move_file_to_name $1
+@cmd-mv "mv $1 &docs "move_file_to_name $1
 	&func
 
 RTN
 
-@cmd-rm 
-	&name "rm $1
-	&docs "remove_file $1
+@cmd-rm "rm $1 &docs "remove_file $1
 	&func
 
 RTN
 
-@cmd-tx
-	&name "tx $1 ( print file text )
-	&docs "display_file_as_text $1
+@cmd-tx "tx $1 &docs "display_file_as_text $1
 	&func
 
 	;buffer #0003 ++ .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
 
-	PAD .Screen/x DEO2
-	PAD .Screen/y DEO2
-
-	.File/success DEI2 #0000 >> ,&continue JCN
-		;&error-txt #02 ;draw-str JSR2
-		RTN
-		&continue
+	.File/success DEI2 #0000 >> ,&valid JCN
+		;&error-txt #02 ;draw-str JSR2 RTN &valid
 
 	;view #01 ;draw-tx JSR2
 
 RTN
 	&error-txt "unknown_file $1
 
-@cmd-hx
-	&name "hx $1 ( print file hex )
-	&docs "display_file_as_hex $1
+@cmd-hx "hx $1 &docs "display_file_as_hex $1
 	&func
 
 	;buffer #0003 ++ .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
 
-	PAD .Screen/x DEO2
-	PAD .Screen/y DEO2
-
-	.File/success DEI2 #0000 >> ,&continue JCN
-		;&error-txt #02 ;draw-str JSR2
-		RTN
-		&continue
+	.File/success DEI2 #0000 >> ,&valid JCN
+		;&error-txt #02 ;draw-str JSR2 RTN &valid
 
 	AUTO-YADDR
 	.Screen/x DEI2 ,&anchor STR2
@@ -232,9 +218,7 @@ RTN
 RTN
 	&error-txt "unknown_file $1
 
-@cmd-do
-	&name "do $1 ( print file hex )
-	&docs "run_file_as_rom $1
+@cmd-do "do $1 &docs "run_file_as_rom $1
 	&func
 
 	( release inputs )
@@ -253,20 +237,34 @@ RTN
 RTN
 	&invalid-txt "invalid_rom: $1
 
-@cmd-??
-	&name "-- $1
-	&docs "display_commands $1
+@cmd-tm "tm $1 &docs "display_time $1
 	&func
-	#aa DEBUG
-	PAD .Screen/x DEO2
-	PAD .Screen/y DEO2
+
+	#00 .DateTime/month DEI 4* ;month-txt ++ #01 ;draw-str JSR2
+	#20 #01 ;draw-char JSR2
+	.DateTime/day DEI #01 ;draw-dec JSR2
+	#20 #01 ;draw-char JSR2
+	#00 .DateTime/dotw DEI 4* ;week-txt ++ #01 ;draw-str JSR2
+	#20 #01 ;draw-char JSR2
+	.DateTime/hour DEI #01 ;draw-dec JSR2
+	LIT ': #01 ;draw-char JSR2
+	.DateTime/minute DEI #01 ;draw-dec JSR2
+	LIT ': #01 ;draw-char JSR2
+	.DateTime/second DEI #01 ;draw-dec JSR2
+
+RTN
+
+@cmd-?? "-- $1 &docs "display_commands $1
+	&func
+
 	;&help-txt #01 ;draw-tx JSR2
 	PAD #0010 ++ .Screen/y DEO2
+
 	;commands/end ;commands
 	&loop
-		PAD #0008 ++ .Screen/x DEO2
-		LDA2k #02 ;draw-str JSR2
-		PAD #0030 ++ .Screen/x DEO2
+		PAD .Screen/x DEO2
+		LDA2k #06 ;draw-str JSR2
+		PAD #0020 ++ .Screen/x DEO2
 		DUP2 ;commands -- ;commands-docs ++ LDA2 #01 ;draw-str JSR2
 		.Screen/y DEI2k #0010 ++ ROT DEO2
 		INC2 INC2 GTH2k ,&loop JCN
@@ -278,15 +276,15 @@ RTN
 
 @commands
 	:cmd-ls :cmd-cp :cmd-mv :cmd-rm 
-	:cmd-hx :cmd-tx :cmd-do
+	:cmd-hx :cmd-tx :cmd-do :cmd-tm
 	&end :cmd-??
 @commands-docs
 	:cmd-ls/docs :cmd-cp/docs :cmd-mv/docs :cmd-rm/docs 
-	:cmd-hx/docs :cmd-tx/docs :cmd-do/docs
+	:cmd-hx/docs :cmd-tx/docs :cmd-do/docs :cmd-tm/docs
 	&end :cmd-??/docs
 @commands-func
 	:cmd-ls/func :cmd-cp/func :cmd-mv/func :cmd-rm/func 
-	:cmd-hx/func :cmd-tx/func :cmd-do/func
+	:cmd-hx/func :cmd-tx/func :cmd-do/func :cmd-tm/func
 	&end :cmd-??/func
 
 @draw-input ( color -- )
@@ -345,6 +343,14 @@ RTN
 	&end
 	POP2
 	POPr
+
+RTN
+
+@draw-dec ( byte color -- )
+
+	STH
+	DUP #0a DIV LIT '0 + STHkr ,draw-char JSR
+	#0a MOD LIT '0 + STHr ,draw-char JSR
 
 RTN
 
@@ -464,8 +470,13 @@ JMP2r
 ~projects/library/check-rom.tal
 ~projects/library/load-rom.tal
 
-@strings
-	&you-said "You 20 "said 20 $1
+@week-txt
+	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 
+	"Sat $1
+
+@month-txt
+	"Jan $1 "Feb $1 "Mar $1 "Apr $1 "May $1 "Jun $1
+	"Jul $1 "Aug $1 "Sep $1 "Oct $1 "Nov $1 "Dec $1
 
 @cursor-icn
 	aa55 aa55 aa55 aa55 aa55 aa55 aa55 aa55
