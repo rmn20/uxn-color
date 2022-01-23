@@ -18,8 +18,8 @@ sources:
     - https://git.sr.ht/~rabbits/uxn
 tasks:
     - prepare: |
-        rm -f out
-        mkdir -p out
+        rm -f out build
+        mkdir -p out build/uxn-lin64 build/uxn-win64 build/uxn-mac64 build/essentials/uxn
         umask 077
         mkdir -p ~/.ssh
         printf '%s\n' "${SSH_HOST_KEYS}" > ~/.ssh/known_hosts
@@ -27,11 +27,8 @@ tasks:
     - build-linux: |
         cd uxn
         ./build.sh --no-run
-        mv bin uxn
-        tar -czf ../out/uxn-linux-amd64.tar.gz uxn
-        cd ..
-    - build-rompack: |
-        mkdir -p rompack/uxn
+        mv bin ../build/uxn-lin64/uxn
+    - build-essentials: |
         for F in uxn/projects/software/calc.tal uxn/projects/software/launcher.tal uxn/projects/examples/demos/piano.tal uxn/projects/examples/demos/clock.tal catclock/src/main.tal dexe/src/main.tal donsol/src/main.tal left/src/main.tal nasu/src/main.tal noodle/src/main.tal orca-toy/src/main.tal:orca.rom turye/src/main.tal; do
             PROJECT="${F%%/*}"
             if [ "${F}" = "${F%:*}" ]; then
@@ -43,17 +40,25 @@ tasks:
                 F="${F%:*}"
             fi
             [ -d "${PROJECT}" ] || git clone "https://git.sr.ht/~rabbits/${PROJECT}"
-            ( cd "${PROJECT}" && ../uxn/uxn/uxnasm "${F#*/}" "../rompack/uxn/${ROMNAME}" || rm -f "../rompack/uxn/${ROMNAME}" )
+            ( cd "${PROJECT}" && ../build/uxn-lin64/uxn/uxnasm "${F#*/}" "../build/essentials/uxn/${ROMNAME}" || rm -f "../build/essentials/uxn/${ROMNAME}" )
         done
-        tar -czf out/uxn-rompack.tar.gz -C rompack uxn
-        ( cd rompack && zip -qr ../out/uxn-rompack.zip uxn )
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
-        ssh win "rm -f uxn-windows-64bit.zip; export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run; mv bin uxn; zip -qr ../uxn-windows-64bit.zip uxn"
-        rsync win:uxn-windows-64bit.zip out/
+        ssh win "export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run"
+        rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
     - build-macos: |
-        ssh mac "rm -f uxn-macos.tar.gz; export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); ./build.sh --no-run; mv bin uxn; tar -zcf ../uxn-macos.tar.gz uxn"
-        rsync mac:uxn-macos.tar.gz out/
+        ssh mac "export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); ./build.sh --no-run"
+        rsync -rp mac:uxn/bin/ build/uxn-mac64/uxn/
+    - archive: |
+        for PROJECT in uxn-lin64 uxn-win64 uxn-mac64 essentials; do
+            tar -czf "out/${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
+            ( cd "build/${PROJECT}" && zip -qr "../../out/${PROJECT}.zip" uxn )
+            if [ "${PROJECT}" != essentials ]; then
+                cp build/essentials/uxn/* "build/${PROJECT}/uxn/"
+                tar -czf "out/uxn-essentials-${PROJECT#uxn-}.tar.gz" -C "build/${PROJECT}" uxn
+                ( cd "build/${PROJECT}" && zip -qr "../../out/uxn-essentials-${PROJECT#uxn-}.zip" uxn )
+            fi
+        done
     - upload: |
         if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         ls -l out

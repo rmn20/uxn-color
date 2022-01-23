@@ -39,7 +39,6 @@ uxn_eval(Uxn *u, Uint16 pc)
 	Stack *src, *dst;
 	Device *dev;
 	if(!pc || u->dev[0].dat[0xf]) return 0;
-	if(u->wst.ptr > 0xf8) u->wst.ptr = 0xf8;
 	while((instr = u->ram[pc++])) {
 		/* Return Mode */
 		if(instr & 0x40) {
