@@ -57,9 +57,9 @@
 |0100 ( -> )
 
 	( theme ) 
-	#0f55 .System/r DEO2 
-	#0fc5 .System/g DEO2 
-	#0fa5 .System/b DEO2
+	#50f5 .System/r DEO2 
+	#c0f5 .System/g DEO2 
+	#a0f5 .System/b DEO2
 
 	( vectors ) 
 	;on-button .Controller/vector DEO2
@@ -68,7 +68,7 @@
 	#00 WIDTH 8** PAD 2** ++ .Screen/width DEO2
 	#00 HEIGHT 8** PAD 2** ++ .Screen/height DEO2
 
-	#08 ;draw-input JSR2
+	#04 ;draw-input JSR2
 
 	LIT '. .path STZ
 
@@ -90,12 +90,12 @@ BRK
 	DUP #08 ! ,&no-backspace JCN
 		#00 ;draw-input JSR2
 		;buffer ;spop JSR2
-		#08 ;draw-input JSR2
+		#04 ;draw-input JSR2
 		&no-backspace
 	DUP STHk #1f > STHr #7b < #0101 !! ,&no-valid JCN
 	;buffer ;slen JSR2 #007f >> ,&no-valid JCN
 		STHk ;buffer STHr ;sput JSR2
-		#08 ;draw-input JSR2
+		#04 ;draw-input JSR2
 		&no-valid
 	POP
 
@@ -126,7 +126,7 @@ RTN
 @validate ( -- )
 	
 	;clear JSR2
-	;get-cmd JSR2 #0003 ++ JSR2
+	;get-cmd JSR2 ;commands-func ++ LDA2 JSR2
 	;buffer #0080 ;mclr JSR2
 
 JMP2r
@@ -136,49 +136,53 @@ JMP2r
 	;commands/end ;commands
 	&loop
 		LDA2k ;buffer ;scmp-seg JSR2 #00 = ,&continue JCN
-			NIP2 LDA2 RTN
+			NIP2 ;commands -- RTN
 			&continue
 		INC2 INC2 GTH2k ,&loop JCN
 	&end
-	POP2 LDA2
+	POP2 ;commands --
 
 RTN
 
 @cmd-ls 
 	&name "ls $1
-	&run
+	&docs "list_folder_content $1
+	&func
+	
 	;path .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
-
 	PAD .Screen/x DEO2
 	PAD .Screen/y DEO2
-
 	;view #01 ;draw-tx JSR2
 
 RTN
 
 @cmd-cp 
 	&name "cp $1
-	&run
+	&docs "copy_file_to_name $1
+	&func
 
 RTN
 
 @cmd-mv 
 	&name "mv $1
-	&run
+	&docs "move_file_to_name $1
+	&func
 
 RTN
 
 @cmd-rm 
 	&name "rm $1
-	&run
+	&docs "remove_file $1
+	&func
 
 RTN
 
 @cmd-tx
 	&name "tx $1 ( print file text )
-	&run
+	&docs "display_file_as_text $1
+	&func
 
 	;buffer #0003 ++ .File/name DEO2
 	#8000 .File/length DEO2
@@ -199,7 +203,8 @@ RTN
 
 @cmd-hx
 	&name "hx $1 ( print file hex )
-	&run
+	&docs "display_file_as_hex $1
+	&func
 
 	;buffer #0003 ++ .File/name DEO2
 	#8000 .File/length DEO2
@@ -229,7 +234,8 @@ RTN
 
 @cmd-do
 	&name "do $1 ( print file hex )
-	&run
+	&docs "run_file_as_rom $1
+	&func
 
 	( release inputs )
 	#0000 .Controller/button DEO2
@@ -249,27 +255,39 @@ RTN
 
 @cmd-??
 	&name "-- $1
-	&run
+	&docs "display_commands $1
+	&func
+	#aa DEBUG
 	PAD .Screen/x DEO2
 	PAD .Screen/y DEO2
 	;&help-txt #01 ;draw-tx JSR2
-	PAD #0020 ++ .Screen/y DEO2
+	PAD #0010 ++ .Screen/y DEO2
 	;commands/end ;commands
 	&loop
-		PAD #0020 ++ .Screen/x DEO2
+		PAD #0008 ++ .Screen/x DEO2
 		LDA2k #02 ;draw-str JSR2
+		PAD #0030 ++ .Screen/x DEO2
+		DUP2 ;commands -- ;commands-docs ++ LDA2 #01 ;draw-str JSR2
 		.Screen/y DEI2k #0010 ++ ROT DEO2
 		INC2 INC2 GTH2k ,&loop JCN
 	&end
-	POP2 LDA2
+	POP2 POP2
 
 RTN
-	&help-txt "Available 20 "commands: $1
+	&help-txt "Commands: $1
 
 @commands
 	:cmd-ls :cmd-cp :cmd-mv :cmd-rm 
 	:cmd-hx :cmd-tx :cmd-do
 	&end :cmd-??
+@commands-docs
+	:cmd-ls/docs :cmd-cp/docs :cmd-mv/docs :cmd-rm/docs 
+	:cmd-hx/docs :cmd-tx/docs :cmd-do/docs
+	&end :cmd-??/docs
+@commands-func
+	:cmd-ls/func :cmd-cp/func :cmd-mv/func :cmd-rm/func 
+	:cmd-hx/func :cmd-tx/func :cmd-do/func
+	&end :cmd-??/func
 
 @draw-input ( color -- )
 
@@ -282,7 +300,12 @@ RTN
 
 	#20 #00 ;draw-char JSR2
 
-	;buffer STHr ;draw-str JSR2
+	;buffer STHkr ;draw-str JSR2
+
+	;cursor-icn .Screen/addr DEO2
+	STHr .Screen/sprite DEOk DEO
+	.Screen/y DEI2 #0010 -- .Screen/y DEO2
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 
 JMP2r
 
@@ -443,6 +466,10 @@ JMP2r
 
 @strings
 	&you-said "You 20 "said 20 $1
+
+@cursor-icn
+	aa55 aa55 aa55 aa55 aa55 aa55 aa55 aa55
+	aa55 aa55 aa55 aa55 aa55 aa55 aa55 aa55
 
 @font ( terminus01x02 )
 	0000 0000 0000 0000 0000 0000 0000 0000
