@@ -58,7 +58,7 @@ tasks:
                 cp "out/uxn-${PROJECT}.tar.gz" out/uxn-essentials.tar.gz
                 cp "out/uxn-${PROJECT}.zip" out/uxn-essentials.zip
             else
-                cp build/rompack/uxn/* "build/${PROJECT}/"
+                cp build/rompack/uxn/* "build/${PROJECT}/uxn/"
                 tar -czf "out/uxn-essentials-${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
                 ( cd "build/${PROJECT}" && zip -qr "../../out/uxn-essentials-${PROJECT}.zip" uxn )
             fi
