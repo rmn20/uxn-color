@@ -64,10 +64,8 @@
 	( setup )
 	#01 .timer/play STZ
 	#01 .color STZ
-
-	;world-a ;get-addr/current STA2
-	LENGTH ;run/future-offset STA2
-
+	;world ;get-addr/current STA2
+	LENGTH ;run/future STA2
 	;redraw JSR2
 
 BRK
@@ -79,12 +77,9 @@ BRK
 	.timer/frame LDZk 
 		#03 AND ,&no-run JCN 
 			;run JSR2
-
 			( Swap worlds )
-			;get-addr/current LDA2k ;run/future-offset LDA2 STH2k ( ;current current* offest* )
-			++ SWP2 STA2 ( Set new current page )
-			#0000 STH2r -- ;run/future-offset STA2 ( Invert offest )
-
+			;get-addr/current LDA2k ;run/future LDA2 STH2k
+			++ SWP2 STA2 #0000 STH2r -- ;run/future STA2
 			;redraw JSR2
 			&no-run
 		LDZk INC SWP STZ
@@ -99,7 +94,7 @@ BRK
 	DUP #04 ! ,&no-select JCN #03 .color STZ &no-select
 	DUP #08 ! ,&no-start JCN  #00 .color STZ &no-start
 	DUP #0c ! ,&no-both JCN
-		;past-world LENGTH 2** ;mclr JSR2
+		;world LENGTH 2** ;mclr JSR2
 		;redraw JSR2
 		&no-both
 	POP
@@ -158,7 +153,7 @@ RTN
 		&hor
 			( x,y ) DUP STHkr 
 			( cell ) DUP2 ,get-addr JSR STH2k LDA
-			( transform ) ,transform JSR STH2r ( future ) LIT2 &future-offset 0000 ++ STA
+			( transform ) ,transform JSR STH2r [ LIT2 &future $2 ] ++ STA
 			INC GTHk ,&hor JCN
 		POP2
 		POPr
@@ -169,7 +164,7 @@ RTN
 
 @get-addr ( x y -- addr* )
 
-	TOS [ #00 WIDTH ] ** ROT TOS ++ LIT2 &current 0000 ++
+	TOS [ #00 WIDTH ] ** ROT TOS ++ [ LIT2 &current $2 ] ++
 
 RTN
 
@@ -220,4 +215,4 @@ JMP2r
 	What do I do? 
 	How do I find peace? )
 
-@world-a
+@world
