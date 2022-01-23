@@ -205,6 +205,8 @@ audio_deo(Device *d, Uint8 port)
 		DEVPEEK16(adsr, 0x8);
 		DEVPEEK16(c->len, 0xa);
 		DEVPEEK16(addr, 0xc);
+		if(c->len > 0x10000 - addr)
+			c->len = 0x10000 - addr;
 		c->addr = &d->u->ram[addr];
 		c->volume[0] = d->dat[0xe] >> 4;
 		c->volume[1] = d->dat[0xe] & 0xf;
