@@ -1,0 +1,543 @@
+( gui/terminal )
+
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+
+%HALT   { #010f DEO }
+%EMIT   { #18 DEO }
+%PRINT  { ;print-str JSR2 #0a EMIT }
+%DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
+%DEBUG2 { ;print-hex JSR2 #0a EMIT }
+
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
+
+%2MOD  { #01 AND } %2MOD2  { #0001 AND2 }
+%4MOD  { #03 AND } %4MOD2  { #0003 AND2 }
+%8MOD  { #07 AND } %8MOD2  { #0007 AND2 }
+%10MOD { #0f AND } %10MOD2 { #000f AND2 }
+
+%AUTO-NONE   { #00 .Screen/auto DEO }
+%AUTO-X      { #01 .Screen/auto DEO }
+%AUTO-Y      { #02 .Screen/auto DEO }
+%AUTO-XY     { #03 .Screen/auto DEO }
+%AUTO-ADDR   { #04 .Screen/auto DEO }
+%AUTO-XADDR  { #05 .Screen/auto DEO }
+%AUTO-YADDR  { #06 .Screen/auto DEO }
+%AUTO-XYADDR { #07 .Screen/auto DEO }
+%RELEASE-MOUSE { #0096 DEO }
+
+%RTN { JMP2r }
+
+%WIDTH { #50 }
+%HEIGHT { #28 }
+%PAD { #0020 }
+
+( devices )
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
+|20 @Screen     &vector $2 &width   $2 &height $2 &auto  $1 &pad   $1 &x     $2 &y $2 &addr $2 &pixel $1 &sprite $1
+|80 @Controller &vector $2 &button $1 &key    $1
+|a0 @File       &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name    $2 &length  $2 &read   $2 &write $2
+
+( variables )
+
+|0000
+
+@buffer $80
+@path $40
+
+( init )
+
+|0100 ( -> )
+
+	( theme ) 
+	#0f55 .System/r DEO2 
+	#0fc5 .System/g DEO2 
+	#0fa5 .System/b DEO2
+
+	( vectors ) 
+	;on-button .Controller/vector DEO2
+
+	( resize )
+	#00 WIDTH 8** PAD 2** ++ .Screen/width DEO2
+	#00 HEIGHT 8** PAD 2** ++ .Screen/height DEO2
+
+	#08 ;draw-input JSR2
+
+	LIT '. .path STZ
+
+	;clear JSR2
+
+BRK
+
+@on-button ( -> )
+
+	.Controller/key DEI
+	DUP #00 ! ,&no-null JCN
+		POP BRK
+		&no-null
+	DUP #0d ! ,&no-enter JCN
+		#00 ;draw-input JSR2
+		;validate JSR2
+		#01 ;draw-input JSR2
+		&no-enter
+	DUP #08 ! ,&no-backspace JCN
+		#00 ;draw-input JSR2
+		;buffer ;spop JSR2
+		#08 ;draw-input JSR2
+		&no-backspace
+	DUP STHk #1f > STHr #7b < #0101 !! ,&no-valid JCN
+	;buffer ;slen JSR2 #007f >> ,&no-valid JCN
+		STHk ;buffer STHr ;sput JSR2
+		#08 ;draw-input JSR2
+		&no-valid
+	POP
+
+BRK
+
+@clear ( -- )
+
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+	;&blank-icn .Screen/addr DEO2
+	AUTO-X
+	HEIGHT #00
+	&ver
+		WIDTH #00
+		&hor
+			#03 .Screen/sprite DEO
+			INC GTHk ,&hor JCN
+		POP2
+		PAD .Screen/x DEO2
+		.Screen/y DEI2k #0008 ++ ROT DEO2
+		INC GTHk ,&ver JCN
+	POP2
+	AUTO-NONE
+
+RTN
+	&blank-icn 8000 0000 0000 0000
+
+@validate ( -- )
+	
+	;clear JSR2
+	;get-cmd JSR2 #0003 ++ JSR2
+	;buffer #0080 ;mclr JSR2
+
+JMP2r
+
+@get-cmd ( -- cmd* )
+
+	;commands/end ;commands
+	&loop
+		LDA2k ;buffer ;scmp-seg JSR2 #00 = ,&continue JCN
+			NIP2 LDA2 RTN
+			&continue
+		INC2 INC2 GTH2k ,&loop JCN
+	&end
+	POP2 LDA2
+
+RTN
+
+@cmd-ls 
+	&name "ls $1
+	&run
+	;path .File/name DEO2
+	#8000 .File/length DEO2
+	;view .File/read DEO2
+
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+
+	;view #01 ;draw-tx JSR2
+
+RTN
+
+@cmd-cp 
+	&name "cp $1
+	&run
+
+RTN
+
+@cmd-mv 
+	&name "mv $1
+	&run
+
+RTN
+
+@cmd-rm 
+	&name "rm $1
+	&run
+
+RTN
+
+@cmd-tx
+	&name "tx $1 ( print file text )
+	&run
+
+	;buffer #0003 ++ .File/name DEO2
+	#8000 .File/length DEO2
+	;view .File/read DEO2
+
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+
+	.File/success DEI2 #0000 >> ,&continue JCN
+		;&error-txt #02 ;draw-str JSR2
+		RTN
+		&continue
+
+	;view #01 ;draw-tx JSR2
+
+RTN
+	&error-txt "unknown_file $1
+
+@cmd-hx
+	&name "hx $1 ( print file hex )
+	&run
+
+	;buffer #0003 ++ .File/name DEO2
+	#8000 .File/length DEO2
+	;view .File/read DEO2
+
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+
+	.File/success DEI2 #0000 >> ,&continue JCN
+		;&error-txt #02 ;draw-str JSR2
+		RTN
+		&continue
+
+	AUTO-YADDR
+	.Screen/x DEI2 ,&anchor STR2
+	;view #0014 ++ ;view
+	&loop
+		LDAk #01 ;draw-byte JSR2
+		LIT2 &anchor $2 .Screen/x DEO2
+		.Screen/y DEI2k #0010 ++ ROT DEO2
+		INC2 GTH2k ,&loop JCN
+	&end
+	POP2 POP2
+
+RTN
+	&error-txt "unknown_file $1
+
+@cmd-do
+	&name "do $1 ( print file hex )
+	&run
+
+	( release inputs )
+	#0000 .Controller/button DEO2
+
+	;buffer #0003 ++
+	DUP2 ;check-rom JSR2 ,&valid JCN
+		PAD .Screen/x DEO2
+		PAD .Screen/y DEO2
+		;&invalid-txt #02 ;draw-str JSR2
+		#01 ;draw-str JSR2
+		RTN
+		&valid
+	;load-rom JSR2 
+
+RTN
+	&invalid-txt "invalid_rom: $1
+
+@cmd-??
+	&name "-- $1
+	&run
+	PAD .Screen/x DEO2
+	PAD .Screen/y DEO2
+	;&help-txt #01 ;draw-tx JSR2
+	PAD #0020 ++ .Screen/y DEO2
+	;commands/end ;commands
+	&loop
+		PAD #0020 ++ .Screen/x DEO2
+		LDA2k #02 ;draw-str JSR2
+		.Screen/y DEI2k #0010 ++ ROT DEO2
+		INC2 INC2 GTH2k ,&loop JCN
+	&end
+	POP2 LDA2
+
+RTN
+	&help-txt "Available 20 "commands: $1
+
+@commands
+	:cmd-ls :cmd-cp :cmd-mv :cmd-rm 
+	:cmd-hx :cmd-tx :cmd-do
+	&end :cmd-??
+
+@draw-input ( color -- )
+
+	AUTO-YADDR
+	STH
+	PAD .Screen/x DEO2
+	.Screen/height DEI2 PAD -- .Screen/y DEO2
+
+	( marker ) LIT '> #01 ;draw-char JSR2
+
+	#20 #00 ;draw-char JSR2
+
+	;buffer STHr ;draw-str JSR2
+
+JMP2r
+
+@draw-byte ( byte color -- )
+
+	STH
+	DUP #04 SFT ,&parse JSR STHkr ;draw-char JSR2
+	#0f AND ,&parse JSR STHr ;draw-char JSR2
+	RTN
+	&parse ( value -- char )
+		DUP #09 > ,&above JCN
+			#30 + RTN
+		&above
+			#09 - #60 + RTN
+
+RTN
+
+@draw-tx ( str* color -- )
+
+	AUTO-YADDR
+	.Screen/x DEI2 ,&anchor STR2
+	STH
+	&while
+		( outside view )
+		.Screen/x DEI2 .Screen/width DEI2 PAD -- #0010 -- >> ,&lb JCN
+		( linebreak )
+		LDAk #0a ! ,&no-lb JCN
+			&lb
+			LIT2 &anchor $2 .Screen/x DEO2
+			.Screen/y DEI2k #0010 ++ STH2k ROT DEO2
+			STH2r .Screen/height DEI2 PAD -- #0010 -- >> ,&end JCN
+			,&skip JMP
+			&no-lb
+		LDAk STHkr ,draw-char JSR
+		&skip
+		INC2 LDAk ,&while JCN
+	&end
+	POP2
+	POPr
+
+RTN
+
+@draw-str ( str* color -- )
+
+	AUTO-YADDR
+	STH
+	&while
+		LDAk STHkr ,draw-char JSR
+		INC2 LDAk ,&while JCN
+	POP2
+	POPr
+
+RTN
+
+@draw-char ( char color -- )
+
+	SWP
+	[ #20 - #00 SWP #40 SFT2 ;font ++ ] .Screen/addr DEO2
+	.Screen/sprite DEOk DEO
+	.Screen/y DEI2 #0010 -- .Screen/y DEO2
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+
+RTN
+
+( utils )
+
+@slen ( str* -- len* )
+
+	DUP2 ,scap JSR SWP2 --
+
+RTN
+
+@scap ( str* -- str-end* )
+
+	( clamp ) LDAk #00 ! JMP RTN
+	&while INC2 LDAk ,&while JCN
+
+RTN
+
+@sput ( str* char -- )
+
+	ROT ROT ,scap JSR STA
+
+RTN
+
+@spop ( str* -- )
+
+	( clamp ) LDAk #00 ! JMP RTN
+	#00 ROT ROT ,scap JSR #0001 -- STA
+
+RTN
+
+@scmp ( a* b* -- flag )
+
+	STH2
+	&loop
+		LDAk LDAkr STHr = ,&not-diff JCN
+			POP2 POP2r #00 RTN
+			&not-diff
+		LDAk LDAkr STHr #0000 !! ,&not-end JCN
+			POP2 POP2r #01 RTN
+			&not-end
+		INC2 INC2r
+		,&loop JMP
+	POP2 POP2r #00
+
+RTN
+
+@scmp-seg ( a* b* -- flag )
+
+	STH2
+	&loop
+		LDAk LDAkr STHr = ,&not-diff JCN
+			POP2 POP2r #00 RTN
+			&not-diff
+		INC2k LDA #00 ! ,&continue JCN
+			POP2 POP2r #01 RTN
+			&continue
+		INC2 INC2r
+		,&loop JMP
+	POP2 POP2r #00
+
+RTN
+
+@mclr ( addr* len* -- )
+
+	OVR2 ++ SWP2
+	&loop
+		STH2k #00 STH2r STA
+		INC2 GTH2k ,&loop JCN
+	POP2 POP2
+
+JMP2r
+
+@print-hex ( value* -- )
+
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+JMP2r
+
+@print-str ( string* -- )
+
+	#0001 SUB2 
+	&while
+		INC2 LDAk DUP #18 DEO ,&while JCN 
+	POP2
+
+JMP2r
+
+~projects/library/check-rom.tal
+~projects/library/load-rom.tal
+
+@strings
+	&you-said "You 20 "said 20 $1
+
+@font ( terminus01x02 )
+	0000 0000 0000 0000 0000 0000 0000 0000
+	0000 183c 3c3c 1818 1800 1818 0000 0000
+	0066 6666 2400 0000 0000 0000 0000 0000
+	0000 006c 6cfe 6c6c 6cfe 6c6c 0000 0000
+	1818 7cc6 c2c0 7c06 0686 c67c 1818 0000
+	0000 0000 c2c6 0c18 3060 c686 0000 0000
+	0000 386c 6c38 76dc cccc cc76 0000 0000
+	0030 3030 6000 0000 0000 0000 0000 0000
+	0000 0c18 3030 3030 3030 180c 0000 0000
+	0000 3018 0c0c 0c0c 0c0c 1830 0000 0000
+	0000 0000 0066 3cff 3c66 0000 0000 0000
+	0000 0000 0018 187e 1818 0000 0000 0000
+	0000 0000 0000 0000 0018 1818 3000 0000
+	0000 0000 0000 00fe 0000 0000 0000 0000
+	0000 0000 0000 0000 0000 1818 0000 0000
+	0000 0000 0206 0c18 3060 c080 0000 0000
+	0000 386c c6c6 d6d6 c6c6 6c38 0000 0000
+	0000 1838 7818 1818 1818 187e 0000 0000
+	0000 7cc6 060c 1830 60c0 c6fe 0000 0000
+	0000 7cc6 0606 3c06 0606 c67c 0000 0000
+	0000 0c1c 3c6c ccfe 0c0c 0c1e 0000 0000
+	0000 fec0 c0c0 fc06 0606 c67c 0000 0000
+	0000 3860 c0c0 fcc6 c6c6 c67c 0000 0000
+	0000 fec6 0606 0c18 3030 3030 0000 0000
+	0000 7cc6 c6c6 7cc6 c6c6 c67c 0000 0000
+	0000 7cc6 c6c6 7e06 0606 0c78 0000 0000
+	0000 0000 1818 0000 0018 1800 0000 0000
+	0000 0000 1818 0000 0018 1830 0000 0000
+	0000 0006 0c18 3060 3018 0c06 0000 0000
+	0000 0000 007e 0000 7e00 0000 0000 0000
+	0000 0060 3018 0c06 0c18 3060 0000 0000
+	0000 7cc6 c60c 1818 1800 1818 0000 0000
+	0000 007c c6c6 dede dedc c07c 0000 0000
+	0000 1038 6cc6 c6fe c6c6 c6c6 0000 0000
+	0000 fc66 6666 7c66 6666 66fc 0000 0000
+	0000 3c66 c2c0 c0c0 c0c2 663c 0000 0000
+	0000 f86c 6666 6666 6666 6cf8 0000 0000
+	0000 fe66 6268 7868 6062 66fe 0000 0000
+	0000 fe66 6268 7868 6060 60f0 0000 0000
+	0000 3c66 c2c0 c0de c6c6 663a 0000 0000
+	0000 c6c6 c6c6 fec6 c6c6 c6c6 0000 0000
+	0000 3c18 1818 1818 1818 183c 0000 0000
+	0000 1e0c 0c0c 0c0c cccc cc78 0000 0000
+	0000 e666 666c 7878 6c66 66e6 0000 0000
+	0000 f060 6060 6060 6062 66fe 0000 0000
+	0000 c6ee fefe d6c6 c6c6 c6c6 0000 0000
+	0000 c6e6 f6fe dece c6c6 c6c6 0000 0000
+	0000 7cc6 c6c6 c6c6 c6c6 c67c 0000 0000
+	0000 fc66 6666 7c60 6060 60f0 0000 0000
+	0000 7cc6 c6c6 c6c6 c6d6 de7c 0c0e 0000
+	0000 fc66 6666 7c6c 6666 66e6 0000 0000
+	0000 7cc6 c660 380c 06c6 c67c 0000 0000
+	0000 7e7e 5a18 1818 1818 183c 0000 0000
+	0000 c6c6 c6c6 c6c6 c6c6 c67c 0000 0000
+	0000 c6c6 c6c6 c6c6 c66c 3810 0000 0000
+	0000 c6c6 c6c6 d6d6 d6fe ee6c 0000 0000
+	0000 c6c6 6c7c 3838 7c6c c6c6 0000 0000
+	0000 6666 6666 3c18 1818 183c 0000 0000
+	0000 fec6 860c 1830 60c2 c6fe 0000 0000
+	0000 3c30 3030 3030 3030 303c 0000 0000
+	0000 0080 c0e0 7038 1c0e 0602 0000 0000
+	0000 3c0c 0c0c 0c0c 0c0c 0c3c 0000 0000
+	1038 6cc6 0000 0000 0000 0000 0000 0000
+	0000 0000 0000 0000 0000 0000 00ff 0000
+	3030 1800 0000 0000 0000 0000 0000 0000
+	0000 0000 0078 0c7c cccc cc76 0000 0000
+	0000 e060 6078 6c66 6666 667c 0000 0000
+	0000 0000 007c c6c0 c0c0 c67c 0000 0000
+	0000 1c0c 0c3c 6ccc cccc cc76 0000 0000
+	0000 0000 007c c6fe c0c0 c67c 0000 0000
+	0000 386c 6460 f060 6060 60f0 0000 0000
+	0000 0000 0076 cccc cccc cc7c 0ccc 7800
+	0000 e060 606c 7666 6666 66e6 0000 0000
+	0000 1818 0038 1818 1818 183c 0000 0000
+	0000 0606 000e 0606 0606 0606 6666 3c00
+	0000 e060 6066 6c78 786c 66e6 0000 0000
+	0000 3818 1818 1818 1818 183c 0000 0000
+	0000 0000 00ec fed6 d6d6 d6c6 0000 0000
+	0000 0000 00dc 6666 6666 6666 0000 0000
+	0000 0000 007c c6c6 c6c6 c67c 0000 0000
+	0000 0000 00dc 6666 6666 667c 6060 f000
+	0000 0000 0076 cccc cccc cc7c 0c0c 1e00
+	0000 0000 00dc 7666 6060 60f0 0000 0000
+	0000 0000 007c c660 380c c67c 0000 0000
+	0000 1030 30fc 3030 3030 361c 0000 0000
+	0000 0000 00cc cccc cccc cc76 0000 0000
+	0000 0000 0066 6666 6666 3c18 0000 0000
+	0000 0000 00c6 c6d6 d6d6 fe6c 0000 0000
+	0000 0000 00c6 6c38 3838 6cc6 0000 0000
+	0000 0000 00c6 c6c6 c6c6 c67e 060c f800
+	0000 0000 00fe cc18 3060 c6fe 0000 0000
+	0000 0e18 1818 7018 1818 180e 0000 0000
+	0000 1818 1818 0018 1818 1818 0000 0000
+	0000 7018 1818 0e18 1818 1870 0000 0000
+
+@view
