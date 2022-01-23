@@ -61,9 +61,9 @@
 |0100 ( -> )
 
 	( theme ) 
-	#50f5 .System/r DEO2 
-	#c0f5 .System/g DEO2 
-	#a0f5 .System/b DEO2
+	#0f55 .System/r DEO2 
+	#0fc5 .System/g DEO2 
+	#0fa5 .System/b DEO2
 
 	( vectors ) 
 	;on-button .Controller/vector DEO2
@@ -205,12 +205,19 @@ RTN
 		;&error-txt #02 ;draw-str JSR2 RTN &valid
 
 	AUTO-YADDR
-	.Screen/x DEI2 ,&anchor STR2
-	;view #0014 ++ ;view
+	.File/success DEI2 #0000
 	&loop
-		LDAk #01 ;draw-byte JSR2
-		LIT2 &anchor $2 .Screen/x DEO2
-		.Screen/y DEI2k #0010 ++ ROT DEO2
+		DUP2 ;view ++ LDA #01 ;draw-hex JSR2
+		( make shorts )
+		DUP2 #0001 AND2 #0000 == ,&no-short JCN
+			.Screen/x DEI2k #0008 ++ ROT DEO2
+			&no-short
+		( make lines )
+		DUP2 #000f AND2 #000f !! ,&no-lines JCN
+			.Screen/y DEI2k #0010 ++ ROT DEO2
+			PAD .Screen/x DEO2
+			.Screen/y DEI2 .Screen/height DEI2 PAD -- #0010 -- >> ,&end JCN
+			&no-lines
 		INC2 GTH2k ,&loop JCN
 	&end
 	POP2 POP2
@@ -263,9 +270,9 @@ RTN
 	;commands/end ;commands
 	&loop
 		PAD .Screen/x DEO2
-		LDA2k #06 ;draw-str JSR2
+		( name ) LDA2k #08 ;draw-str JSR2
 		PAD #0020 ++ .Screen/x DEO2
-		DUP2 ;commands -- ;commands-docs ++ LDA2 #01 ;draw-str JSR2
+		( docs ) DUP2 ;commands -- ;commands-docs ++ LDA2 #01 ;draw-str JSR2
 		.Screen/y DEI2k #0010 ++ ROT DEO2
 		INC2 INC2 GTH2k ,&loop JCN
 	&end
@@ -287,6 +294,8 @@ RTN
 	:cmd-hx/func :cmd-tx/func :cmd-do/func :cmd-tm/func
 	&end :cmd-??/func
 
+( gui )
+
 @draw-input ( color -- )
 
 	AUTO-YADDR
@@ -306,20 +315,6 @@ RTN
 	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 
 JMP2r
-
-@draw-byte ( byte color -- )
-
-	STH
-	DUP #04 SFT ,&parse JSR STHkr ;draw-char JSR2
-	#0f AND ,&parse JSR STHr ;draw-char JSR2
-	RTN
-	&parse ( value -- char )
-		DUP #09 > ,&above JCN
-			#30 + RTN
-		&above
-			#09 - #60 + RTN
-
-RTN
 
 @draw-tx ( str* color -- )
 
@@ -351,6 +346,20 @@ RTN
 	STH
 	DUP #0a DIV LIT '0 + STHkr ,draw-char JSR
 	#0a MOD LIT '0 + STHr ,draw-char JSR
+
+RTN
+
+@draw-hex ( byte color -- )
+
+	STH
+	DUP #04 SFT ,&parse JSR STHkr ,draw-char JSR
+	#0f AND ,&parse JSR STHr ,draw-char JSR
+	RTN
+	&parse ( value -- char )
+		DUP #09 > ,&above JCN
+			#30 + RTN
+		&above
+			#09 - #60 + RTN
 
 RTN
 
