@@ -54,10 +54,13 @@ tasks:
         for PROJECT in linux-amd64 windows-64bit macos rompack; do
             tar -czf "out/uxn-${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
             ( cd "build/${PROJECT}" && zip -qr "../../out/uxn-${PROJECT}.zip" uxn )
-            if [ "${PROJECT}" != rompack ]; then
+            if [ "${PROJECT}" = rompack ]; then
+                cp "out/uxn-${PROJECT}.tar.gz" out/uxn-essentials.tar.gz
+                cp "out/uxn-${PROJECT}.zip" out/uxn-essentials.zip
+            else
                 cp build/rompack/uxn/* "build/${PROJECT}/"
-                tar -czf "out/uxn-starter-${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
-                ( cd "build/${PROJECT}" && zip -qr "../../out/uxn-starter-${PROJECT}.zip" uxn )
+                tar -czf "out/uxn-essentials-${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
+                ( cd "build/${PROJECT}" && zip -qr "../../out/uxn-essentials-${PROJECT}.zip" uxn )
             fi
         done
     - upload: |
