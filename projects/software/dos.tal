@@ -1,4 +1,4 @@
-( gui/terminal )
+( UXN-DOS )
 
 %+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
 %<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
@@ -37,7 +37,7 @@
 
 %RTN { JMP2r }
 
-%WIDTH { #40 }
+%WIDTH { #38 }
 %HEIGHT { #20 }
 %PAD { #0018 }
 
@@ -53,7 +53,8 @@
 
 |0000
 
-@buffer $80
+@buffer $3
+	&input $80
 @path $40
 @frame $1
 
@@ -62,9 +63,9 @@
 |0100 ( -> )
 
 	( theme ) 
-	#05f5 .System/r DEO2 
-	#0cf5 .System/g DEO2 
-	#0af5 .System/b DEO2
+	#50f8 .System/r DEO2 
+	#c0f8 .System/g DEO2 
+	#a0f8 .System/b DEO2
 
 	( vectors ) 
 	;on-button .Controller/vector DEO2
@@ -119,7 +120,7 @@ BRK
 	&ver
 		WIDTH #00
 		&hor
-			#03 .Screen/sprite DEO
+			#02 .Screen/sprite DEO
 			INC GTHk ,&hor JCN
 		POP2
 		PAD .Screen/x DEO2
@@ -130,6 +131,8 @@ BRK
 
 RTN
 	&blank-icn 8000 0000 0000 0000
+
+( DOS )
 
 @validate ( -- )
 	
@@ -151,15 +154,13 @@ JMP2r
 			NIP2 ;commands -- RTN
 			&continue
 		INC2 INC2 GTH2k ,&loop JCN
-	&end
 	POP2 ;commands --
 
 RTN
 
-@cmd-ls "ls $1
-	&docs "list_folder_content $1
-	&func
+@cmd-ls "ls $1 &docs "list 20 "folder 20 "content $1 &func
 
+	( load )
 	;path .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
@@ -168,53 +169,97 @@ RTN
 
 RTN
 
-@cmd-cp "cp $1 &docs "copy_file_to_name $1
-	&func
+@cmd-mk "mk $1 &docs "make 20 "file $1 &func
+
+	;buffer/input ;file-exists JSR2 #01 ! ,&no-exists JCN
+		;error-exists-txt ;buffer/input ;draw-message JSR2 RTN
+		&no-exists
+	( save )
+	;buffer/input .File/name DEO2
+	#0001 .File/length DEO2
+	;&buf .File/write DEO2
+	( message ) 
+	;make-success-txt ;buffer/input ;draw-message JSR2
 
 RTN
+	&buf 0a
 
-@cmd-mv "mv $1 &docs "move_file_to_name $1
-	&func
+@cmd-cp "cp $1 &docs "copy 20 "file 20 "to 20 "name $1 &func
 
-RTN
-
-@cmd-rm "rm $1 &docs "remove_file $1
-	&func
-
-	;buffer #0003 ++ .File/name DEO2
-	#01 .File/delete DEO
-
-	;&remove-txt #01 ;draw-str JSR2
-	;buffer #0003 ++ #01 ;draw-str JSR2
-
-RTN
-	&remove-txt "removed_file: $1
-
-@cmd-tx "tx $1 &docs "display_file_as_text $1
-	&func
-
-	;buffer #0003 ++ .File/name DEO2
+	( b ) ;buffer/input #20 ;next-char JSR2 STH2k INC2
+	#00 STH2r STA
+	( a ) ;buffer/input
+	( a exists )
+	;buffer/input ;file-exists JSR2 ,&valid JCN
+		;error-unexists-txt ;buffer/input ;draw-message JSR2 POP2 POP2 RTN
+		&valid
+	( b unexists )
+	OVR2 ;file-exists JSR2 #00 = ,&available JCN
+		OVR2 ;error-exists-txt SWP2 ;draw-message JSR2 POP2 POP2 RTN
+		&available
+	( load )
+	.File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
+	( save )
+	DUP2 .File/name DEO2
+	#8000 .File/length DEO2
+	;view .File/write DEO2
+	( message ) 
+	;copy-success-txt SWP2 ;draw-message JSR2
 
-	.File/success DEI2 #0000 >> ,&valid JCN
-		;&error-txt #02 ;draw-str JSR2 RTN &valid
+RTN
 
+@cmd-mv "mv $1 &docs "move 20 "file 20 "to 20 "name $1
+	&func
+
+	( todo )
+
+RTN
+
+@cmd-rm "rm $1 &docs "remove 20 "file $1
+	&func
+
+	( exists )
+	;buffer/input ;file-exists JSR2 ,&valid JCN
+		;error-unexists-txt ;buffer/input ;draw-message JSR2 RTN
+		&valid
+	( delete )
+	;buffer/input .File/name DEO2
+	#01 .File/delete DEO
+	( message ) 
+	;remove-success-txt ;buffer/input ;draw-message JSR2
+
+RTN
+
+@cmd-tx "tx $1 &docs "display 20 "file 20 "as 20 "text $1
+	&func
+
+	( exists )
+	;buffer/input ;file-exists JSR2 ,&valid JCN
+		;error-unexists-txt ;buffer/input ;draw-message JSR2 RTN
+		&valid
+	( load )
+	;buffer/input .File/name DEO2
+	#8000 .File/length DEO2
+	;view .File/read DEO2
+	( message )
 	;view #01 ;draw-tx JSR2
 
 RTN
-	&error-txt "unknown_file $1
 
-@cmd-hx "hx $1 &docs "display_file_as_hex $1
+@cmd-hx "hx $1 &docs "display 20 "file 20 "as 20 "hex $1
 	&func
 
-	;buffer #0003 ++ .File/name DEO2
+	( exists )
+	;buffer/input ;file-exists JSR2 ,&valid JCN
+		;error-unexists-txt ;buffer/input ;draw-message JSR2 RTN
+		&valid
+	( load )
+	;buffer/input .File/name DEO2
 	#8000 .File/length DEO2
 	;view .File/read DEO2
-
-	.File/success DEI2 #0000 >> ,&valid JCN
-		;&error-txt #02 ;draw-str JSR2 RTN &valid
-
+	( message )
 	AUTO-YADDR
 	.File/success DEI2 #0000
 	&loop
@@ -234,15 +279,14 @@ RTN
 	POP2 POP2
 
 RTN
-	&error-txt "unknown_file $1
 
-@cmd-do "do $1 &docs "run_file_as_rom $1
+@cmd-do "do $1 &docs "run 20 "file 20 "as 20 "rom $1
 	&func
 
 	( release inputs )
 	#0000 .Controller/button DEO2
 
-	;buffer #0003 ++
+	;buffer/input
 	DUP2 ;check-rom JSR2 ,&valid JCN
 		PAD .Screen/x DEO2
 		PAD .Screen/y DEO2
@@ -253,9 +297,9 @@ RTN
 	;load-rom JSR2 
 
 RTN
-	&invalid-txt "invalid_rom: $1
+	&invalid-txt "invalid 20 "rom: $1
 
-@cmd-tm "tm $1 &docs "display_time $1
+@cmd-tm "tm $1 &docs "display 20 "time $1
 	&func
 
 	#00 .DateTime/month DEI 4* ;month-txt ++ #01 ;draw-str JSR2
@@ -272,7 +316,28 @@ RTN
 
 RTN
 
-@cmd-?? "-- $1 &docs "display_commands $1
+@cmd-1b "1b $1 &docs "display 20 "1bit 20 "file $1
+	&func
+
+	( todo )
+
+RTN
+
+@cmd-2b "2b $1 &docs "display 20 "2bit 20 "file $1
+	&func
+
+	( todo )
+
+RTN
+
+@cmd-sn "sn $1 &docs "play 20 "sound 20 "file $1
+	&func
+
+	( todo )
+
+RTN
+
+@cmd-?? "-- $1 &docs "display 20 "commands $1
 	&func
 
 	;&help-txt #01 ;draw-tx JSR2
@@ -281,29 +346,41 @@ RTN
 	;commands/end ;commands
 	&loop
 		PAD .Screen/x DEO2
-		( name ) LDA2k #08 ;draw-str JSR2
+		( name ) LDA2k #04 ;draw-str JSR2
 		PAD #0020 ++ .Screen/x DEO2
 		( docs ) DUP2 ;commands -- ;commands-docs ++ LDA2 #01 ;draw-str JSR2
 		.Screen/y DEI2k #0010 ++ ROT DEO2
 		INC2 INC2 GTH2k ,&loop JCN
-	&end
 	POP2 POP2
 
 RTN
 	&help-txt "Commands: $1
 
 @commands
-	:cmd-ls :cmd-cp :cmd-mv :cmd-rm 
+	:cmd-ls :cmd-mk :cmd-cp :cmd-mv :cmd-rm 
 	:cmd-hx :cmd-tx :cmd-do :cmd-tm
+	:cmd-1b :cmd-2b :cmd-sn
 	&end :cmd-??
 @commands-docs
-	:cmd-ls/docs :cmd-cp/docs :cmd-mv/docs :cmd-rm/docs 
+	:cmd-ls/docs :cmd-mk/docs :cmd-cp/docs :cmd-mv/docs :cmd-rm/docs 
 	:cmd-hx/docs :cmd-tx/docs :cmd-do/docs :cmd-tm/docs
+	:cmd-1b/docs :cmd-2b/docs :cmd-sn/docs
 	&end :cmd-??/docs
 @commands-func
-	:cmd-ls/func :cmd-cp/func :cmd-mv/func :cmd-rm/func 
+	:cmd-ls/func :cmd-mk/func :cmd-cp/func :cmd-mv/func :cmd-rm/func 
 	:cmd-hx/func :cmd-tx/func :cmd-do/func :cmd-tm/func
+	:cmd-1b/func :cmd-2b/func :cmd-sn/func
 	&end :cmd-??/func
+
+@file-exists ( name* -- bool )
+
+	.File/name DEO2
+	#0040 .File/length DEO2
+	;&buf .File/stat DEO2
+	.File/success DEI2 #0000 >>
+
+RTN
+	&buf $40
 
 ( gui )
 
@@ -330,6 +407,13 @@ RTN
 	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 
 JMP2r
+
+@draw-message ( a* b* -- )
+
+	SWP2 #02 ;draw-str JSR2
+	#01 ;draw-str JSR2
+	
+RTN
 
 @draw-tx ( str* color -- )
 
@@ -402,6 +486,18 @@ RTN
 
 ( utils )
 
+@next-char ( addr* char -- addr* )
+
+	STH
+	&while
+		LDAk STHkr = ,&end JCN
+		LDAk #00 = ,&end JCN
+		INC2 LDAk ,&while JCN
+	&end
+		POPr
+
+RTN
+
 @slen ( str* -- len* )
 
 	DUP2 ,scap JSR SWP2 --
@@ -425,22 +521,6 @@ RTN
 
 	( clamp ) LDAk #00 ! JMP RTN
 	#00 ROT ROT ,scap JSR #0001 -- STA
-
-RTN
-
-@scmp ( a* b* -- flag )
-
-	STH2
-	&loop
-		LDAk LDAkr STHr = ,&not-diff JCN
-			POP2 POP2r #00 RTN
-			&not-diff
-		LDAk LDAkr STHr #0000 !! ,&not-end JCN
-			POP2 POP2r #01 RTN
-			&not-end
-		INC2 INC2r
-		,&loop JMP
-	POP2 POP2r #00
 
 RTN
 
@@ -491,8 +571,12 @@ JMP2r
 
 JMP2r
 
-~projects/library/check-rom.tal
-~projects/library/load-rom.tal
+@error-exists-txt "file_exists: 20 $1
+@error-unexists-txt "file_does_not_exists: 20 $1
+
+@make-success-txt "made: 20 $1
+@copy-success-txt "copied: 20 $1
+@remove-success-txt "removed: 20 $1
 
 @week-txt
 	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1 
@@ -615,5 +699,8 @@ JMP2r
 	0000 0e18 1818 7018 1818 180e 0000 0000
 	0000 1818 1818 0018 1818 1818 0000 0000
 	0000 7018 1818 0e18 1818 1870 0000 0000
+
+~projects/library/check-rom.tal
+~projects/library/load-rom.tal
 
 @view
