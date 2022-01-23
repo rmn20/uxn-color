@@ -37,9 +37,9 @@
 
 %RTN { JMP2r }
 
-%WIDTH { #50 }
-%HEIGHT { #28 }
-%PAD { #0020 }
+%WIDTH { #40 }
+%HEIGHT { #20 }
+%PAD { #0018 }
 
 ( devices )
 
@@ -55,15 +55,16 @@
 
 @buffer $80
 @path $40
+@frame $1
 
 ( init )
 
 |0100 ( -> )
 
 	( theme ) 
-	#0f55 .System/r DEO2 
-	#0fc5 .System/g DEO2 
-	#0fa5 .System/b DEO2
+	#05f5 .System/r DEO2 
+	#0cf5 .System/g DEO2 
+	#0af5 .System/b DEO2
 
 	( vectors ) 
 	;on-button .Controller/vector DEO2
@@ -90,16 +91,19 @@ BRK
 		#00 ;draw-input JSR2
 		;validate JSR2
 		#01 ;draw-input JSR2
+		.frame LDZk INC SWP STZ
 		&no-enter
 	DUP #08 ! ,&no-backspace JCN
 		#00 ;draw-input JSR2
 		;buffer ;spop JSR2
 		#04 ;draw-input JSR2
+		.frame LDZk INC SWP STZ
 		&no-backspace
 	DUP STHk #1f > STHr #7b < #0101 !! ,&no-valid JCN
 	;buffer ;slen JSR2 #007f >> ,&no-valid JCN
 		STHk ;buffer STHr ;sput JSR2
 		#04 ;draw-input JSR2
+		.frame LDZk INC SWP STZ
 		&no-valid
 	POP
 
@@ -177,7 +181,14 @@ RTN
 @cmd-rm "rm $1 &docs "remove_file $1
 	&func
 
+	;buffer #0003 ++ .File/name DEO2
+	#01 .File/delete DEO
+
+	;&remove-txt #01 ;draw-str JSR2
+	;buffer #0003 ++ #01 ;draw-str JSR2
+
 RTN
+	&remove-txt "removed_file: $1
 
 @cmd-tx "tx $1 &docs "display_file_as_text $1
 	&func
@@ -303,7 +314,11 @@ RTN
 	PAD .Screen/x DEO2
 	.Screen/height DEI2 PAD -- .Screen/y DEO2
 
-	( marker ) LIT '> #01 ;draw-char JSR2
+	( flower )
+	;flowers-icn #00 .frame LDZ #06 MOD 20** ++ .Screen/addr DEO2
+	#81 .Screen/sprite DEOk DEO
+	.Screen/y DEI2 #0010 -- .Screen/y DEO2
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 
 	#20 #00 ;draw-char JSR2
 
@@ -490,6 +505,20 @@ JMP2r
 @cursor-icn
 	aa55 aa55 aa55 aa55 aa55 aa55 aa55 aa55
 	aa55 aa55 aa55 aa55 aa55 aa55 aa55 aa55
+
+@flowers-icn ( by elioat )
+	0000 0020 1408 0810 40a0 4205 0200 40a0
+	0810 103c 7e7e 3c18 4205 0234 7e7e 3c18
+	0000 0020 100c 0818 0040 a042 0522 5024
+	0008 083c 7e7e 3c18 0a04 002c 7e7e 3c18
+	0000 0000 0000 000c 0000 0000 0000 0000
+	1c10 083c 7e7e 3c18 0000 002c 7e7e 3c18
+	0000 0000 0000 0004 0000 0000 0002 0502
+	0810 103c 7e7e 3c18 0000 0034 7e7e 3c18
+	0000 0000 0000 0010 0000 0000 0020 5225
+	080c 083c 7e7e 3c18 0200 002c 7e7e 3c18
+	0000 0000 0800 1800 0000 040a 2450 240a
+	1010 103c 7e7e 3c18 0400 0034 7e7e 3c18
 
 @font ( terminus01x02 )
 	0000 0000 0000 0000 0000 0000 0000 0000
