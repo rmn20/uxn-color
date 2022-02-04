@@ -19,7 +19,7 @@
 %LTS2    { #8000 ++ SWP2 #8000 ++ GTH2 }
 %GTS2    { #8000 ++ SWP2 #8000 ++ LTH2 }
 
-%RADIUS    { #0040 }
+%RADIUS  { #0040 }
 %SCALEX  { 2// .center/x LDZ2 ++ RADIUS -- }
 %SCALEY  { 2// .center/y LDZ2 ++ RADIUS -- }
 %12HOURS { #0c MOD }
@@ -144,7 +144,8 @@ BRK
 		OVR2 OVR2
 		.needles/hx LDZ2 .needles/hy LDZ2 #01 STHr * ;draw-line JSR2
 		( middle )
-		#0001 -- .Screen/y DEO2 #0001 -- .Screen/x DEO2
+		#0001 -- .Screen/y DEO2 
+		#0001 -- .Screen/x DEO2
 		;middle-icn .Screen/addr DEO2
 		#0a .Screen/sprite DEO
 
@@ -153,6 +154,7 @@ RTN
 @draw-text ( addr* -- )
 
 	( auto addr ) #06 .Screen/auto DEO
+	.Screen/y DEI2 ,&anchor-y STR2
 	&while
 		LDAk
 		DUP IS-LC ,&lc JCN
@@ -163,13 +165,13 @@ RTN
 		POP ;font/blank
 		&end
 		.Screen/addr DEO2
-		#0303 .Screen/sprite DEO .Screen/sprite DEO
-		.Screen/y DEI2 #0010 -- .Screen/y DEO2
-		.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+		#03 .Screen/sprite DEOk DEO
+		[ LIT2 &anchor-y $2 ] .Screen/y DEO2
+		.Screen/x DEI2k #0008 ++ ROT DEO2
 		INC2 LDAk ,&while JCN
 	POP2
 	( auto none ) #00 .Screen/auto DEO
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+	.Screen/x DEI2k #0008 ++ ROT DEO2
 
 RTN
 	&lc #61 - TOS 10** ;font/lc ++ ,&end JMP
@@ -211,12 +213,12 @@ RTN
 	#3c00 
 	&loop
 		( dots )
-		DUP TOS 2** ;table ++ LDA2 
+		#00 OVR 2** ;table ++ LDA2 
 			#0018 ;circle JSR2
 			.Screen/x DEO2 .Screen/y DEO2 #01 .Screen/pixel DEO
 		( markers )
 		DUP #05 MOD ,&no-marker JCN
-			DUP TOS 2** ;table ++ LDA2 
+			#00 OVR 2** ;table ++ LDA2 
 			STH2k #0018 ;circle JSR2 SWP2
 			STH2r #001c ;circle JSR2 SWP2
 				#01 ;draw-line JSR2
@@ -243,9 +245,9 @@ RTN
 @circle ( cx cy radius* -- y* x* )
 
 	STH2 SWP
-	TOS 10** STH2kr // .center/x LDZ2 ++ #0080 10** STH2kr // -- 
+	TOS 10** STH2kr // .center/x LDZ2 ++ #0800 STH2kr // -- 
 	STH2 SWP2r
-	TOS 10** STH2kr // .center/y LDZ2 ++  #0080 10** STH2kr // --
+	TOS 10** STH2kr // .center/y LDZ2 ++ #0800 STH2kr // --
 	POP2r STH2r
 
 RTN

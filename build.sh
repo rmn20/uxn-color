@@ -2,6 +2,7 @@
 
 format=0
 console=0
+install=0
 debug=0
 norun=0
 
@@ -14,6 +15,11 @@ while [ $# -gt 0 ]; do
 
 		--console)
 			console=1
+			shift
+			;;
+
+		--install)
+			install=1
 			shift
 			;;
 
@@ -101,7 +107,7 @@ ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
 ${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
 ${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c -o bin/uxncli
 
-if [ -d "$HOME/bin" ]
+if [ $install = 1 ]
 then
 	echo "Installing in $HOME/bin"
 	cp bin/uxnemu bin/uxnasm bin/uxncli $HOME/bin/

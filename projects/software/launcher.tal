@@ -309,7 +309,7 @@ RTN
 		DUP INC .browser/lines LDZ > ,&end JCN
 		( has file )
 		.browser/x LDZ2 .Screen/x DEO2
-		DUP TOS 10** .browser/y LDZ2 ++ .Screen/y DEO2
+		#00 OVR 10** .browser/y LDZ2 ++ .Screen/y DEO2
 		DUP .browser/scroll LDZ + ;get-entry JSR2 
 			DUP2 ;get-type JSR2 ;draw-type JSR2
 			#01 STHkr * ;draw-str JSR2

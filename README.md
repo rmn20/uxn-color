@@ -25,6 +25,7 @@ Build the assembler and emulator by running the `build.sh` script. The assembler
 ./build.sh 
 	--debug # Add debug flags to compiler
 	--format # Format source code
+	--install # Copy to ~/bin
 ```
 
 If you wish to build the emulator without graphics mode:

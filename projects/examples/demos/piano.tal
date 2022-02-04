@@ -365,7 +365,7 @@ RTN
 			.wave-view/y1 LDZ2 #0010 ++ .Screen/y DEO2
 			#03 .Screen/pixel DEO
 		&no-dot
-		DUP TOS .Audio0/addr DEI2 ++ LDA 
+		#00 OVR .Audio0/addr DEI2 ++ LDA 
 		2/
 		TOS 4// .wave-view/y1 LDZ2 ++ .Screen/y DEO2
 		.Screen/x DEI2 INC2 .Screen/x DEO2

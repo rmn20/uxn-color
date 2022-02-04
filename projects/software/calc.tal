@@ -232,7 +232,7 @@ BRK
 @push-input ( key -- )
 
 	DUP #50 + .Audio0/pitch DEO
-	DUP TOS ;keypad/series ++ LDA ;draw-keypad JSR2
+	#00 OVR ;keypad/series ++ LDA ;draw-keypad JSR2
 	( hex/dec )
 	TOS .input/value LDZ2 #00 [ #0a #10 .input/mode LDZ JMP SWP POP ] **
 		++ .input/value STZ2
@@ -454,7 +454,7 @@ RTN
 	#08 #00
 	&loop
 		.input-frame/x LDZ2 #0018 ++ .Screen/x DEO2
-		DUP TOS 8** .input-frame/y LDZ2 ++ #004c -- .Screen/y DEO2
+		#00 OVR 8** .input-frame/y LDZ2 ++ #004c -- .Screen/y DEO2
 		( color ) DUP #08 .stack/length LDZ - #01 - > STH
 		( value ) DUP 2* .stack/items + [ #10 .stack/length LDZ 2* - - ] LDZ2
 			STHr ;draw-number JSR2
@@ -493,9 +493,9 @@ RTN
 	STH
 	#10 #00
 	&loop
-		( color ) DUP TOS ;keypad/color ++ LDA STH
+		( color ) #00 OVR ;keypad/color ++ LDA STH
 		( state ) DUP OVRr STHr = STH
-		( layout ) DUP TOS ;keypad/layout ++ LDA
+		( layout ) #00 OVR ;keypad/layout ++ LDA
 			( layout addr ) TOS 8** ;font-hex ++ STH2
 		( x ) DUP 4MOD TOS 10** STH2
 		( y ) DUP 4/ TOS 10**
@@ -514,7 +514,7 @@ RTN
 	#08 #00
 	&loop
 		( state ) DUP STHkr = STH
-		( glyph ) DUP TOS 8** ;mod-icns ++ STH2
+		( glyph ) #00 OVR 8** ;mod-icns ++ STH2
 		( y ) DUP 4/ TOS 10** .modpad-frame/y LDZ2 ++ STH2
 		( x ) DUP 4MOD TOS 10** .modpad-frame/x LDZ2 ++ STH2
 		STH2r STH2r STH2r STHr #03 ;draw-key JSR2
