@@ -1,0 +1,158 @@
+( isometric cube )
+
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+
+%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
+%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
+
+%ABS2 { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
+%LTS2  { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
+%GTS2  { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
+
+%DEBUG      { ;print-hex/byte JSR2 #0a18 DEO }
+%DEBUG2     { ;print-hex JSR2 #0a18 DEO }
+%RTN        { JMP2r }
+
+( devices )
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
+|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
+
+( variables )
+
+|0000
+
+@cube
+	&v0 $8
+	&v4 $8
+@timer $1
+@color $1
+@line 
+	&x0 $2 &y0 $2
+	&x $2 &y $2 
+	&sx $2 &sy $2 
+	&dx $2 &dy $2 
+	&e1 $2 &e2 $2
+@center
+	&x $2 &y $2
+
+( program )
+
+|0100 ( -> )
+
+	( theme )
+	#0fe5 .System/r DEO2
+	#0fc5 .System/g DEO2
+	#0f25 .System/b DEO2
+
+	.Screen/width DEI2 2// #0040 -- .center/x STZ2
+	.Screen/height DEI2 2// #0040 -- .center/y STZ2
+
+	;on-frame .Screen/vector DEO2
+
+@on-frame ( -> )
+
+	#00 ;draw-cube JSR2
+	.timer LDZk INC SWP STZ
+	#05 ;draw-cube JSR2
+
+BRK
+
+@draw-cube ( frame color -- )
+
+	.color STZ
+	( create box )
+	#0800
+	&loop
+		STHk
+		#00 .timer LDZ [ #00 STHkr INC #07 AND #60 SFT ++ ] #00ff AND2 ;table ++ LDA 2/
+		#00 .timer LDZ [ #00 STHkr #60 SFT ++ ] #00ff AND2 ;table ++ LDA 4/ [ #00 STHkr #62 SFT2 ++ ]
+		.cube/v0 STHr 2* + STZ2
+		INC GTHk ,&loop JCN
+	POP2
+	( vertices )
+	#0800
+	&ver-loop
+		DUP 2* .cube + LDZ2 ;draw-vertex JSR2
+		INC GTHk ,&ver-loop JCN
+	POP2
+	( lines )
+	#0400
+	&line-loop
+		STHk
+		.cube/v0 STHkr 2* + .cube/v0 STHkr INC #03 AND 2* + ;draw-line JSR2
+		.cube/v0 STHkr 2* + .cube/v4 STHkr 2* + ;draw-line JSR2
+		.cube/v4 STHkr 2* + .cube/v4 STHr INC #03 AND 2* + ;draw-line JSR2
+		INC GTHk ,&line-loop JCN
+	POP2
+
+RTN
+
+@draw-line ( a b -- )
+
+	STH STH
+	#00 STHkr LDZ .center/x LDZ2 ++ #00 STHr INC LDZ .center/y LDZ2 ++
+	#00 STHkr LDZ .center/x LDZ2 ++ #00 STHr INC LDZ .center/y LDZ2 ++
+		.color LDZ ;line-slow JSR2
+
+RTN
+
+@draw-vertex ( x y -- )
+
+	#00 SWP #0004 -- .center/y LDZ2 ++ .Screen/y DEO2
+	#00 SWP #0003 -- .center/x LDZ2 ++ .Screen/x DEO2
+	;&icn .Screen/addr DEO2
+	.color LDZ 2* .Screen/sprite DEO
+
+RTN
+	&icn 0000 387c 7c7c 3800
+
+@line-slow ( x1 y1 x2 y2 color -- )
+	
+	( load ) .color STZ #0001 SUB2 .line/y0 STZ2 #0001 SUB2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
+	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
+	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
+	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ADD2 .line/sx STZ2
+	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ADD2 .line/sy STZ2
+	.line/dx LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
+	&loop
+		.line/x LDZ2 .Screen/x DEO2 .line/y LDZ2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
+		.line/x LDZ2 .line/x0 LDZ2 EQU2 .line/y LDZ2 .line/y0 LDZ2 EQU2 #0101 EQU2 ,&end JCN
+		.line/e1 LDZ2 2** .line/e2 STZ2
+		.line/e2 LDZ2 .line/dy LDZ2 LTS2 ,&skipy JCN
+			.line/e1 LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
+			.line/x LDZ2 .line/sx LDZ2 ADD2 .line/x STZ2
+		&skipy
+		.line/e2 LDZ2 .line/dx LDZ2 GTS2 ,&skipx JCN
+			.line/e1 LDZ2 .line/dx LDZ2 ADD2 .line/e1 STZ2
+			.line/y LDZ2 .line/sy LDZ2 ADD2 .line/y STZ2
+		&skipx
+		;&loop JMP2
+
+	&end
+
+RTN
+
+@table ( 256 xy )
+	f7f8 f9fa fbfc fcfd fefe ffff ffff ffff
+	ffff ffff fffe fefd fcfc fbfa f9f8 f7f6
+	f5f3 f2f0 efed ecea e8e6 e4e2 e0de dcda
+	d8d5 d3d1 cecc c9c7 c4c1 bfbc b9b6 b3b0
+	aeab a8a5 a29f 9c98 9592 8f8c 8986 8380
+	7c79 7673 706d 6a67 6360 5d5a 5754 514f
+	4c49 4643 403e 3b38 3633 312e 2c2a 2725
+	2321 1f1d 1b19 1715 1312 100f 0d0c 0a09
+	0807 0605 0403 0302 0101 0000 0000 0000
+	0000 0000 0001 0102 0303 0405 0607 0809
+	0a0c 0d0f 1012 1315 1719 1b1d 1f21 2325
+	272a 2c2e 3133 3638 3b3e 4043 4649 4c4f
+	5154 575a 5d60 6367 6a6d 7073 7679 7c7f
+	8386 898c 8f92 9598 9c9f a2a5 a8ab aeb0
+	b3b6 b9bc bfc1 c4c7 c9cc ced1 d3d5 d8da
+	dcde e0e2 e4e6 e8ea eced eff0 f2f3 f5f6
