@@ -37,7 +37,7 @@
 |80 @Controller &vector $2 &button   $1 &key    $1
 |90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &pad    $3 &scrollx $2 &scrolly $2
 |a0 @File       &vector $2 &success  $2 &stat   $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
-|b0 @DateTime   &year   $2 &month    $1 &day    $1 &hour   $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 
+|b0 @DateTime   &year   $2 &month    $1 &day    $1 &hour   $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1
 
 ( variables )
 
@@ -46,7 +46,7 @@
 @pointer
 	&x  $2 &y  $2
 @browser
-	&x $2 &y $2 &x2 $2 &y2 $2 
+	&x $2 &y $2 &x2 $2 &y2 $2
 	&sel $1 &last $1 &scroll $1
 	&lines $1
 
@@ -54,15 +54,19 @@
 
 |0100 ( -> )
 
-	( theme ) 
-	#f079 .System/r DEO2 
-	#f0c2 .System/g DEO2 
+	( theme )
+	#f079 .System/r DEO2
+	#f0c2 .System/g DEO2
 	#f0a4 .System/b DEO2
 
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
 	;on-mouse .Mouse/vector DEO2
+
+	( resize )
+	#0200 .Screen/width DEO2
+	#0140 .Screen/height DEO2
 
 	( asma debugger )
 	#0d ;asma/log-level STA
@@ -145,18 +149,18 @@ BRK
 	.Controller/button DEI
 	DUP #10 ! ,&no-up JCN
 		.browser/sel LDZ #00 = ,&no-up JCN
-		.browser/sel LDZ #01 - ;select-file JSR2 
+		.browser/sel LDZ #01 - ;select-file JSR2
 		;follow-selection JSR2
 		POP BRK
 		&no-up
 	DUP #20 ! ,&no-down JCN
-		.browser/sel LDZ INC .browser/lines LDZ = ,&no-down JCN 
-		.browser/sel LDZ INC ;select-file JSR2 
+		.browser/sel LDZ INC .browser/lines LDZ = ,&no-down JCN
+		.browser/sel LDZ INC ;select-file JSR2
 		;follow-selection JSR2
 		POP BRK
 		&no-down
 	DUP #01 ! ,&no-a JCN
-		.browser/sel LDZ ;run-file JSR2 
+		.browser/sel LDZ ;run-file JSR2
 		POP BRK
 		&no-a
 	POP
@@ -208,8 +212,8 @@ RTN
 	#01 ;draw-browser JSR2
 
 	( draw mascot )
-	#0010 #0010 #0060 #0060 
-	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01 
+	#0010 #0010 #0060 #0060
+	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01
 		;draw-icn JSR2
 
 	( draw position )
@@ -240,14 +244,14 @@ RTN
 
 	STH
 	( more lines than visible )
-	.browser/lines LDZ LINES-COUNT 
+	.browser/lines LDZ LINES-COUNT
 	DUP2 > ,&can-scroll JCN
 		POPr POP2 RTN
 		&can-scroll
 	( less than max scroll )
 	- INC STHkr > ,&valid-scroll JCN
 		POPr RTN
-		&valid-scroll 
+		&valid-scroll
 	#00 ;draw-browser JSR2
 	STHr .browser/scroll STZ
 	#01 ;draw-browser JSR2
@@ -268,14 +272,14 @@ RTN
 			( assemble tal file )
 			DUP2 ;&output-path ;scpy JSR2
 			;&rom-ext ;&output-path ;scat JSR2
-			;&output-path ;asma-assemble-file JSR2 
+			;&output-path ;asma-assemble-file JSR2
 			;load-dir JSR2
 			;redraw JSR2
 			RTN
 			&no-tal
 		POP2 RTN
 		&valid
-	;load-rom JSR2 
+	;load-rom JSR2
 
 RTN
 	&tal-ext ".tal $1
@@ -298,9 +302,9 @@ RTN
 	STH
 
 	( draw hand )
-	.browser/x LDZ2 #0018 -- .browser/y LDZ2 
-	.browser/sel LDZ .browser/scroll LDZ - TOS 10** ++ 
-	#0010 #0010 
+	.browser/x LDZ2 #0018 -- .browser/y LDZ2
+	.browser/sel LDZ .browser/scroll LDZ - TOS 10** ++
+	#0010 #0010
 		;hand-icn STHkr #02 * ;draw-icn JSR2
 	( draw files )
 	LINES-COUNT #00
@@ -310,7 +314,7 @@ RTN
 		( has file )
 		.browser/x LDZ2 .Screen/x DEO2
 		#00 OVR 10** .browser/y LDZ2 ++ .Screen/y DEO2
-		DUP .browser/scroll LDZ + ;get-entry JSR2 
+		DUP .browser/scroll LDZ + ;get-entry JSR2
 			DUP2 ;get-type JSR2 ;draw-type JSR2
 			#01 STHkr * ;draw-str JSR2
 		INC GTHk ,&loop JCN
@@ -378,7 +382,7 @@ RTN
 	
 	AUTO-XADDR
 	( load ) STH .Screen/addr DEO2 ,&height STR2 ,&width STR2 ,&y STR2 ,&x STR2
-	,&height LDR2 #0000 
+	,&height LDR2 #0000
 	&ver
 		( save ) DUP2 ,&y LDR2 ADD2 .Screen/y DEO2
 		,&x LDR2 .Screen/x DEO2
@@ -421,7 +425,7 @@ RTN
 	#0f AND ,&parse JSR STHr ,draw-char JSR
 
 RTN
-	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r
 	&above #57 ADD JMP2r
 
 @draw-char ( char color -- )
@@ -440,8 +444,8 @@ JMP2r
 
 @load-theme ( -- )
 
-	;theme-txt .File/name DEO2 
-	#0006 .File/length DEO2 
+	;theme-txt .File/name DEO2
+	#0006 .File/length DEO2
 	#fffa .File/read DEO2
 
 	.File/success DEI2 #0006 !! ,&ignore JCN
@@ -457,28 +461,22 @@ RTN
 
 @print-str ( string* -- )
 
-	#0001 SUB2 
+	#0001 SUB2
 	&while
-		INC2 LDAk DUP #18 DEO ,&while JCN 
+		INC2 LDAk DUP #18 DEO ,&while JCN
 	POP2
 
 JMP2r
 
 @print-hex ( value* -- )
 
-	SWP ,&byte JSR 
+	SWP ,&byte JSR
 	&byte ( byte -- )
 		STHk #04 SFT ,&parse JSR #18 DEO
 		STHr #0f AND ,&parse JSR #18 DEO
 	JMP2r
-	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r
 	&above #57 ADD JMP2r
-
-JMP2r
-
-@scat ( src* dst* -- )
-
-	DUP2 ,slen JSR ++ ,scpy JSR
 
 JMP2r
 
@@ -498,6 +496,26 @@ JMP2r
 
 RTN
 
+@scat ( src* dst* -- )
+
+	DUP2 ,slen JSR ADD2 ,scpy JSR
+
+JMP2r
+
+@slen ( str* -- len* )
+
+	DUP2 ,scap JSR SWP2 SUB2
+
+JMP2r
+
+@scap ( str* -- end* )
+
+	LDAk #00 NEQ JMP JMP2r
+	&while
+		INC2 LDAk ,&while JCN
+
+JMP2r
+
 @scpy ( src* dst* -- )
 	
 	STH2
@@ -506,19 +524,6 @@ RTN
 		INC2 LDAk ,&while JCN
 	POP2
 	#00 STH2r STA
-
-JMP2r
-
-@scap ( str* -- str-end* )
-
-	( clamp ) LDAk #00 ! JMP RTN
-	&while INC2 LDAk ,&while JCN
-
-RTN
-
-@slen ( str* -- len* )
-
-	DUP2 ,scap JSR SWP2 --
 
 JMP2r
 
@@ -558,10 +563,10 @@ JMP2r
 
 ~projects/library/check-rom.tal
 ~projects/library/load-rom.tal
-
 ~projects/assets/mascot0cx0c.tal
 ~projects/assets/msx01x02.tal
 
+( directory memory )
 @dir
 	&path ". $1
 	&length $2
