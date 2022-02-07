@@ -1,0 +1,137 @@
+( mandelbrot )
+
+%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+%AUTO-X    { #01 .Screen/auto DEO }
+%NEXT-LINE { #0000 .Screen/x DEO2 .Screen/y DEI2k INC2 ROT DEO2 }
+
+%XMIN { #de69 } ( -8601 )
+%XMAX { #0b33 } ( 2867 )
+%YMIN { #ecc7 } ( -4915 )
+%YMAX { #1333 } ( 4915 )
+%MAXI { #20 } ( 32 )
+%DX { XMAX XMIN -- #004f // } ( (XMAX-XMIN)/79 )
+%DY { YMAX YMIN -- #0018 // } ( (YMAX-YMIN)/24 )
+%X { .x LDZ2 }   %Y { .y LDZ2 }
+%X2 { .x2 LDZ2 } %Y2 { .y2 LDZ2 }
+
+%GTS2 { #8000 ++ SWP2 #8000 ++ << }
+
+%HALT   { #010f DEO }
+%EMIT   { #18 DEO }
+%PRINT  { ;print-str JSR2 #0a EMIT }
+%DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
+%DEBUG2 { ;print-hex JSR2 #0a EMIT }
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
+|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
+
+|0000 ( zero-page )
+
+@x  $2 @y  $2
+@x2 $2 @y2 $2
+
+|0100 ( -> )
+
+	( theme ) 
+	#048c .System/r DEO2 
+	#048c .System/g DEO2 
+	#048c .System/b DEO2
+
+	#0280 .Screen/width DEO2 ( 640 )
+	#01e0 .Screen/height DEO2 ( 480 )
+
+	#0000 .Screen/x DEO2
+	#0000 .Screen/y DEO2
+
+	AUTO-X
+	;draw-mandel JSR2
+
+BRK
+
+@draw-mandel ( -- )
+
+	YMAX YMIN
+	&ver
+		DUP2 ,&y STR2
+		XMAX XMIN
+		&hor
+			DUP2 ,&x STR2
+			#0000 DUP2 DUP2 DUP2 .x STZ2 .y STZ2 .x2 STZ2 .y2 STZ2
+			MAXI #00
+			&loop
+				X Y ;smul2 JSR2 #0b SFT2 [ LIT2 &y $2 ] ++ .y STZ2
+				X2 Y2 -- [ LIT2 &x $2 ] ++ .x STZ2
+				X X ;smul2 JSR2 #0c SFT2 .x2 STZ2
+				Y Y ;smul2 JSR2 #0c SFT2 .y2 STZ2
+				X2 Y2 ++ >> #4000 ,&end JCN
+				INC GTHk ,&loop JCN
+				&end
+			NIP POP #03 .Screen/pixel DEO
+			DX ++ OVR2 OVR2 GTS2 ;&hor JCN2
+		POP2 POP2
+		NEXT-LINE
+		DY ++ OVR2 OVR2 GTS2 ;&ver JCN2
+	POP2 POP2
+
+JMP2r
+
+@print-hex ( value* -- )
+
+	SWP ,&byte JSR 
+	&byte ( byte -- )
+		STHk #04 SFT ,&parse JSR #18 DEO
+		STHr #0f AND ,&parse JSR #18 DEO
+	JMP2r
+	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
+	&above #57 ADD JMP2r
+
+JMP2r
+
+@smul2 ( a* b* -- c* )
+
+	OVR2 POP #80 AND #07 SFT STH 
+	OVR #80 AND #07 SFT STHr ADD #01 AND ,&sign STR
+	#10 SFT2 #01 SFT2
+	SWP2
+	#10 SFT2 #01 SFT2
+	MUL2
+	,&sign LDR ,&flip JCN
+		JMP2r
+		&flip
+	#0000 SWP2 --
+
+JMP2r
+	&sign $1
+
+@sprites
+	0000 0000 0000 0000 0000 0000 0000 0000
+	0000 0018 1800 0000 0000 0000 0000 0000
+	0000 183c 3c18 0000 0000 0000 0000 0000
+	0018 3c7e 7e3c 1800 0000 0000 0000 0000
+	183c 7eff ff7e 3c18 0000 0000 0000 0000
+	3c7e ffff ffff 7e3c 0000 0000 0000 0000
+	7eff ffff ffff ff7e 0000 0000 0000 0000
+	ffff ffff ffff ffff 0000 0000 0000 0000
+	ffff ffe7 e7ff ffff 0000 0018 1800 0000
+	ffff e7c3 c3e7 ffff 0000 183c 3c18 0000
+	ffe7 c381 81c3 e7ff 0018 3c7e 7e3c 1800
+	e7c3 8100 0081 c3e7 183c 7eff ff7e 3c18
+	c381 0000 0000 81c3 3c7e ffff ffff 7e3c
+	8100 0000 0000 0081 7eff ffff ffff ff7e
+	0000 0000 0000 0000 ffff ffff ffff ffff
+	0000 0018 1800 0000 ffff ffff ffff ffff
+	0000 183c 3c18 0000 ffff ffff ffff ffff
+	0018 3c7e 7e3c 1800 ffff ffff ffff ffff
+	183c 7eff ff7e 3c18 ffff ffff ffff ffff
+	3c7e ffff ffff 7e3c ffff ffff ffff ffff
+	7eff ffff ffff ff7e ffff ffff ffff ffff
+	ffff ffff ffff ffff ffff ffff ffff ffff
+	ffff ffe7 e7ff ffff ffff ffe7 e7ff ffff
+	ffff e7c3 c3e7 ffff ffff e7c3 c3e7 ffff
+	ffe7 c381 81c3 e7ff ffe7 c381 81c3 e7ff
+	e7c3 8100 0081 c3e7 e7c3 8100 0081 c3e7
+	c381 0000 0000 81c3 c381 0000 0000 81c3
+	8100 0000 0000 0081 8100 0000 0000 0081
