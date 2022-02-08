@@ -101,7 +101,9 @@ JMP2r
 	ADD2 ( asign ahi-bhi* r21"* )
 	( The result we want is bits 27-12 due to the fixed point representation we use. )
 	#04 SFT2 SWP2 #40 SFT2 ADD2
-	STHr #01 EQU JMP JMP2r
-	DUP2k EOR2 SWP2 SUB2 
-
+	( saturate to +/-7.fff )
+	#7fff GTH2k JMP SWP2 NIP2
+	STHr #01 NEQ ,&result-positive JCN
+	DUP2k EOR2 SWP2 SUB2
+	&result-positive
 JMP2r
