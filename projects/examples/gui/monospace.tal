@@ -46,6 +46,7 @@ BRK
 		( draw ) STHkr .Screen/sprite DEO
 		INC2 LDAk ,&while JCN
 	POPr
+	POP2
 
 JMP2r
 
@@ -65,6 +66,7 @@ JMP2r
 		&end
 		INC2 LDAk ,&while JCN
 	POPr
+	POP2
 
 JMP2r
 
