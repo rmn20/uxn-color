@@ -16,12 +16,6 @@ typedef signed short Sint16;
 typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
-#define VISOR_DEV 0xfa00
-#define VISOR_WST 0xfb00
-#define VISOR_RST 0xfc00
-#define PAGE_DEV 0xfd00
-#define PAGE_WST 0xfe00
-#define PAGE_RST 0xff00
 
 /* clang-format off */
 
