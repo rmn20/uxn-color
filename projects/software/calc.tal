@@ -83,10 +83,10 @@
 	;on-button .Controller/vector DEO2
 
 	( setup synth )
-	#0010 .Audio0/adsr DEO2
+	#0112 .Audio0/adsr DEO2
 	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
-	#dd .Audio0/volume DEO
+	#88 .Audio0/volume DEO
 
 	( center )
 	.Screen/width DEI2 2// .center/x STZ2
@@ -658,18 +658,6 @@ RTN
 
 RTN
 
-@print-hex ( value* -- )
-
-	SWP ,&byte JSR
-	&byte ( byte -- )
-		STHk #04 SFT ,&parse JSR #18 DEO
-		STHr #0f AND ,&parse JSR #18 DEO
-	JMP2r
-	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r
-	&above #57 ADD JMP2r
-
-JMP2r
-
 ( assets )
 
 @keypad
@@ -726,7 +714,7 @@ JMP2r
 	0000 0000 fe00 0000
 	0082 4428 1028 4482
 	0002 0408 1020 4080
-	0078 8484 4836 8876
+	0070 8888 728a 847a
 	0010 1010 1010 1010
 	0000 1028 4482 0000
 	0000 0060 920c 0000
