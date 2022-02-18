@@ -408,7 +408,7 @@ review(char *filename)
 		"Assembled %s in %d bytes(%.2f%% used), %d labels, %d macros.\n",
 		filename,
 		p.length - TRIM,
-		p.length / 652.80,
+		(p.length - TRIM) / 652.80,
 		p.llen,
 		p.mlen);
 }
