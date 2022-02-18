@@ -210,7 +210,7 @@
 	JMP2r
 
 	&preamble
-	"%BRK 20 '{ 20 "00 20 '} 20
+	"%BRK 20 '{ 20 "00 20 '} 20 "@on-reset 20
 	&preamble-end
 
 (
