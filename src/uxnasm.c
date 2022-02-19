@@ -193,6 +193,10 @@ writebyte(Uint8 b)
 		fprintf(stderr, "-- Writing in zero-page: %02x\n", b);
 		return 0;
 	}
+	else if(p.ptr < p.length) {
+		fprintf(stderr, "-- Memory overwrite: %04x -> %04x\n", p.length, p.ptr);
+		return 0;
+	}
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
@@ -213,6 +217,7 @@ writelitbyte(Uint8 b)
 	if(litlast) { /* combine literals */
 		Uint8 hb = p.data[p.ptr - 1];
 		p.ptr -= 2;
+		p.length = p.ptr;
 		return writeshort((hb << 8) + b, 1);
 	}
 	if(!writebyte(findopcode("LIT"))) return 0;
