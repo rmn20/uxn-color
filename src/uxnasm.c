@@ -186,37 +186,39 @@ makereference(char *scope, char *label, Uint16 addr)
 	return 1;
 }
 
-static void
+static int
 writebyte(Uint8 b)
 {
-	if(p.ptr < TRIM)
+	if(p.ptr < TRIM) {
 		fprintf(stderr, "-- Writing in zero-page: %02x\n", b);
+		return 0;
+	}
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
+	return 1;
 }
 
-static void
+static int
 writeshort(Uint16 s, int lit)
 {
 	if(lit)
-		writebyte(findopcode("LIT2"));
-	writebyte(s >> 8);
-	writebyte(s & 0xff);
+		if(!writebyte(findopcode("LIT2"))) return 0;
+	return writebyte(s >> 8) && writebyte(s & 0xff);
 }
 
-static void
+static int
 writelitbyte(Uint8 b)
 {
 	if(litlast) { /* combine literals */
 		Uint8 hb = p.data[p.ptr - 1];
 		p.ptr -= 2;
-		writeshort((hb << 8) + b, 1);
-		return;
+		return writeshort((hb << 8) + b, 1);
 	}
-	writebyte(findopcode("LIT"));
-	writebyte(b);
+	if(!writebyte(findopcode("LIT"))) return 0;
+	if(!writebyte(b)) return 0;
 	litlast = 1;
+	return 1;
 }
 
 static int
@@ -288,47 +290,52 @@ parse(char *w, FILE *f)
 	case '#': /* literals hex */
 		if(!sihx(w + 1) || (slen(w) != 3 && slen(w) != 5))
 			return error("Invalid hex literal", w);
-		if(slen(w) == 3)
-			writelitbyte(shex(w + 1));
-		else if(slen(w) == 5)
-			writeshort(shex(w + 1), 1);
+		if(slen(w) == 3) {
+			if(!writelitbyte(shex(w + 1))) return 0;
+		}
+		else if(slen(w) == 5) {
+			if(!writeshort(shex(w + 1), 1)) return 0;
+		}
 		break;
 	case '.': /* literal byte zero-page */
 		makereference(p.scope, w, p.ptr - litlast);
-		writelitbyte(0xff);
+		if(!writelitbyte(0xff)) return 0;
 		break;
 	case ',': /* literal byte relative */
 		makereference(p.scope, w, p.ptr - litlast);
-		writelitbyte(0xff);
+		if(!writelitbyte(0xff)) return 0;
 		break;
 	case ';': /* literal short absolute */
 		makereference(p.scope, w, p.ptr);
-		writeshort(0xffff, 1);
+		if(!writeshort(0xffff, 1)) return 0;
 		break;
 	case ':': /* raw short absolute */
 		makereference(p.scope, w, p.ptr);
-		writeshort(0xffff, 0);
+		if(!writeshort(0xffff, 0)) return 0;
 		break;
 	case '\'': /* raw char */
-		writebyte((Uint8)w[1]);
+		if(!writebyte((Uint8)w[1])) return 0;
 		break;
 	case '"': /* raw string */
 		i = 0;
 		while((c = w[++i]))
-			writebyte(c);
+			if(!writebyte(c)) return 0;
 		break;
 	case '[': break; /* ignored */
 	case ']': break; /* ignored */
 	default:
 		/* opcode */
-		if(findopcode(w) || scmp(w, "BRK", 4))
-			writebyte(findopcode(w));
+		if(findopcode(w) || scmp(w, "BRK", 4)) {
+			if(!writebyte(findopcode(w))) return 0;
+		}
 		/* raw byte */
-		else if(sihx(w) && slen(w) == 2)
-			writebyte(shex(w));
+		else if(sihx(w) && slen(w) == 2) {
+			if(!writebyte(shex(w))) return 0;
+		}
 		/* raw short */
-		else if(sihx(w) && slen(w) == 4)
-			writeshort(shex(w), 0);
+		else if(sihx(w) && slen(w) == 4) {
+			if(!writeshort(shex(w), 0)) return 0;
+		}
 		/* macro */
 		else if((m = findmacro(w))) {
 			for(i = 0; i < m->len; i++)
