@@ -193,12 +193,10 @@ writebyte(Uint8 b)
 	if(p.ptr < TRIM) {
 		fprintf(stderr, "-- Writing in zero-page: %02x\n", b);
 		return 0;
-	}
-	else if(p.ptr > 0xffff) {
+	} else if(p.ptr > 0xffff) {
 		fprintf(stderr, "-- Writing after the end of RAM: %02x\n", b);
 		return 0;
-	}
-	else if(p.ptr < p.length) {
+	} else if(p.ptr < p.length) {
 		fprintf(stderr, "-- Memory overwrite: %04x -> %04x\n", p.length, p.ptr);
 		return 0;
 	}
@@ -302,8 +300,7 @@ parse(char *w, FILE *f)
 			return error("Invalid hex literal", w);
 		if(slen(w) == 3) {
 			if(!writelitbyte(shex(w + 1))) return 0;
-		}
-		else if(slen(w) == 5) {
+		} else if(slen(w) == 5) {
 			if(!writeshort(shex(w + 1), 1)) return 0;
 		}
 		break;
