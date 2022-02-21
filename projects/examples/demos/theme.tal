@@ -305,18 +305,28 @@ RTN
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) .color STZ .rect/y2 STZ2 .rect/x2 STZ2 DUP2 .Screen/y DEO2 .rect/y1 STZ2 DUP2 .Screen/x DEO2 .rect/x1 STZ2
+	STH
+	DUP2 ,&ver-y2 STR2 ,&hor-y2 STR2
+	DUP2 ,&ver-x2 STR2 ,&hor-x2 STR2
+	DUP2 ,&ver-y1 STR2 ,&hor-y1 STR2
+	DUP2 ,&ver-x1 STR2 ,&hor-x1 STR2
+	( horizontal )
+	[ LIT2 &hor-x2 $2 ] INC2 [ LIT2 &hor-x1 $2 ]
 	&hor
-		( incr ) .Screen/x DEI2 ++ .Screen/x DEO2
-		( draw ) .rect/y1 LDZ2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
-		( draw ) .rect/y2 LDZ2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
-		.Screen/x DEI2 .rect/x2 LDZ2 LTH2 ,&hor JCN
-	.rect/y1 LDZ2 .Screen/y DEO2
+		DUP2 .Screen/x DEO2
+		[ LIT2 &hor-y1 $2 ] .Screen/y DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &hor-y2 $2 ] .Screen/y DEO2 DEO
+		INC2 GTH2k ,&hor JCN
+	POP2 POP2
+	( vertical )
+	[ LIT2 &ver-y2 $2 ] [ LIT2 &ver-y1 $2 ]
 	&ver
-		( draw ) .rect/x1 LDZ2 .Screen/x DEO2 .color LDZ .Screen/pixel DEO
-		( draw ) .rect/x2 LDZ2 .Screen/x DEO2 .color LDZ .Screen/pixel DEO
-		( incr ) .Screen/y DEI2 ++ .Screen/y DEO2
-		.Screen/y DEI2 .rect/y2 LDZ2 ++ LTH2 ,&ver JCN
+		DUP2 .Screen/y DEO2
+		[ LIT2 &ver-x1 $2 ] .Screen/x DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &ver-x2 $2 ] .Screen/x DEO2 DEO
+		INC2 GTH2k ,&ver JCN
+	POP2 POP2
+	POPr
 
 RTN
 

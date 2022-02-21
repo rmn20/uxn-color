@@ -93,28 +93,30 @@ RTN
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) STH
-	STH2k ,&y2 STR2 ,&x2 STR2 
-	STH2k ,&y1 STR2 ,&x1 STR2
-	STH2r STH2r SWP2
-	&ver
-		( save ) DUP2 .Screen/y DEO2
-		( draw ) ,&x1 LDR2 .Screen/x DEO2 STHkr .Screen/pixel DEO
-		( draw ) ,&x2 LDR2 .Screen/x DEO2 STHkr .Screen/pixel DEO
-		( incr ) INC2
-		OVR2 OVR2 GTS2 ,&ver JCN
-	POP2 POP2
-	,&x1 LDR2 ,&x2 LDR2 SWP2
+	STH
+	DUP2 ,&ver-y2 STR2 ,&hor-y2 STR2
+	DUP2 ,&ver-x2 STR2 ,&hor-x2 STR2
+	DUP2 ,&ver-y1 STR2 ,&hor-y1 STR2
+	DUP2 ,&ver-x1 STR2 ,&hor-x1 STR2
+	( horizontal )
+	[ LIT2 &hor-x2 $2 ] INC2 [ LIT2 &hor-x1 $2 ]
 	&hor
-		( save ) DUP2 .Screen/x DEO2
-		( draw ) ,&y1 LDR2 .Screen/y DEO2 STHkr .Screen/pixel DEO
-		( draw ) ,&y2 LDR2 .Screen/y DEO2 STHkr .Screen/pixel DEO
-		( incr ) INC2
-		OVR2 INC2 OVR2 GTS2 ,&hor JCN
-	POP2 POP2 POPr
+		DUP2 .Screen/x DEO2
+		[ LIT2 &hor-y1 $2 ] .Screen/y DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &hor-y2 $2 ] .Screen/y DEO2 DEO
+		INC2 GTH2k ,&hor JCN
+	POP2 POP2
+	( vertical )
+	[ LIT2 &ver-y2 $2 ] [ LIT2 &ver-y1 $2 ]
+	&ver
+		DUP2 .Screen/y DEO2
+		[ LIT2 &ver-x1 $2 ] .Screen/x DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &ver-x2 $2 ] .Screen/x DEO2 DEO
+		INC2 GTH2k ,&ver JCN
+	POP2 POP2
+	POPr
 
 RTN
-	&x1 $2 &y1 $2 &x2 $2 &y2 $2 
 
 @fill-rect ( x1* y1* x2* y2* color -- )
 	

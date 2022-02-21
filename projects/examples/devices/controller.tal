@@ -28,10 +28,6 @@
 	&w $2 &h $2
 	&x0 $2 &y0 $2
 	&x1 $2 &y1 $2
-@color $1
-@rect
-	&x1 $2 &y1 $2 
-	&x2 $2 &y2 $2
 
 ( init )
 
@@ -57,6 +53,11 @@
 	( vectors ) 
 	;on-button .Controller/vector DEO2
 
+	( frame )
+	.frame/x0 LDZ2 .frame/y0 LDZ2
+	.frame/x1 LDZ2 .frame/y1 LDZ2
+		#03 ;line-rect JSR2
+
 	,draw-controller JSR
 
 BRK
@@ -74,10 +75,6 @@ BRK
 
 	.Controller/button DEI STH
 
-	( frame )
-	.frame/x0 LDZ2 .frame/y0 LDZ2
-	.frame/x1 LDZ2 .frame/y1 LDZ2
-		#01 ;line-rect JSR2
 	( d-pad )
 	.frame/x0 LDZ2 #0010 ++ .Screen/x DEO2
 	.frame/y0 LDZ2 #0010 ++ .Screen/y DEO2
@@ -135,7 +132,7 @@ RTN
 
 @draw-short ( short* color -- )
 
-	STH  SWP STHkr ,draw-byte JSR STHr 
+	STH SWP STHkr ,draw-byte JSR STHr 
 
 @draw-byte ( byte color -- )
 
@@ -150,23 +147,28 @@ RTN
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) .color STZ DUP2 STH2 .rect/y2 STZ2 .rect/x2 STZ2 DUP2 STH2 .rect/y1 STZ2 .rect/x1 STZ2
-	STH2r INC2 STH2r
-	&ver
-		( save ) OVR2 .Screen/y DEO2
-		( draw ) .rect/x1 LDZ2 .Screen/x DEO2 .color LDZ DUP .Screen/pixel DEO
-		( draw ) .rect/x2 LDZ2 .Screen/x DEO2 .Screen/pixel DEO
-		( incr ) SWP2 INC2 SWP2
-		OVR2 OVR2 LTS2 ,&ver JCN
-	POP2 POP2
-	.rect/x1 LDZ2 INC2 .rect/x2 LDZ2 #0001 --
+	STH
+	DUP2 ,&ver-y2 STR2 ,&hor-y2 STR2
+	DUP2 ,&ver-x2 STR2 ,&hor-x2 STR2
+	DUP2 ,&ver-y1 STR2 ,&hor-y1 STR2
+	DUP2 ,&ver-x1 STR2 ,&hor-x1 STR2
+	( horizontal )
+	[ LIT2 &hor-x2 $2 ] INC2 [ LIT2 &hor-x1 $2 ]
 	&hor
-		( save ) OVR2 .Screen/x DEO2
-		( draw ) .rect/y1 LDZ2 .Screen/y DEO2 .color LDZ DUP .Screen/pixel DEO
-		( draw ) .rect/y2 LDZ2 .Screen/y DEO2 .Screen/pixel DEO
-		( incr ) SWP2 INC2 SWP2
-		OVR2 OVR2 INC2 LTS2 ,&hor JCN
+		DUP2 .Screen/x DEO2
+		[ LIT2 &hor-y1 $2 ] .Screen/y DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &hor-y2 $2 ] .Screen/y DEO2 DEO
+		INC2 GTH2k ,&hor JCN
 	POP2 POP2
+	( vertical )
+	[ LIT2 &ver-y2 $2 ] [ LIT2 &ver-y1 $2 ]
+	&ver
+		DUP2 .Screen/y DEO2
+		[ LIT2 &ver-x1 $2 ] .Screen/x DEO2 STHkr .Screen/pixel DEOk
+		[ LIT2 &ver-x2 $2 ] .Screen/x DEO2 DEO
+		INC2 GTH2k ,&ver JCN
+	POP2 POP2
+	POPr
 
 RTN
 
