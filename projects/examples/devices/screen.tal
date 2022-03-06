@@ -59,45 +59,35 @@ BRK
 
 @on-frame ( -> )
 
+	AUTO-X
 	.count LDZ2 INC2 [ DUP2 ] .count STZ2
-	
 	.center/x LDZ2 #0048 ++ .Screen/x DEO2
 	.center/y LDZ2 #0050 -- .Screen/y DEO2
-
-	( color ) #01 STH
-
 	SWP
 	DUP #04 SFT [ #00 SWP ] #30 SFT2 ;font-hex ++ .Screen/addr DEO2
-	( draw ) STHkr .Screen/sprite DEO
+	#01 .Screen/sprite DEO
 	#0f AND [ #00 SWP ] #30 SFT2 ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-	( draw ) STHkr .Screen/sprite DEO
+	#01 .Screen/sprite DEO
 	DUP #04 SFT [ #00 SWP ] #30 SFT2 ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-	( draw ) STHkr .Screen/sprite DEO
+	#01 .Screen/sprite DEO
 	#0f AND [ #00 SWP ] #30 SFT2 ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-	( draw ) STHr .Screen/sprite DEO
+	#01 .Screen/sprite DEO
 
 BRK
 
 @draw-table ( -- )
 	
-	#10 #00
-	&loop
-		DUP #30 SFT #00 SWP ;font-hex ++ .Screen/addr DEO2
-		( x-axis )
-		DUP #30 SFT #00 SWP
-		.center/x LDZ2 #0040 -- ++ .Screen/x DEO2
-		.center/y LDZ2 #0050 -- .Screen/y DEO2
-		( draw ) #01 .Screen/sprite DEO
-		( y-axis )
-		DUP #30 SFT #00 SWP
-		.center/y LDZ2 #0040 -- ++ .Screen/y DEO2
-		.center/x LDZ2 #0050 -- .Screen/x DEO2
-		( draw ) #01 .Screen/sprite DEO
-		INC GTHk ,&loop JCN
-	POP2
+	.center/x LDZ2 #0040 -- .Screen/x DEO2
+	.center/y LDZ2 #0050 -- .Screen/y DEO2
+	;font-hex .Screen/addr DEO2
+	#f6 .Screen/auto DEO
+	#01 .Screen/sprite DEO
+	.center/x LDZ2 #0050 -- .Screen/x DEO2
+	.center/y LDZ2 #0040 -- .Screen/y DEO2
+	;font-hex .Screen/addr DEO2
+	#f5 .Screen/auto DEO
+	#01 .Screen/sprite DEO
+	AUTO-NONE
 
 RTN
 
@@ -125,7 +115,7 @@ RTN
 			[ .center/y LDZ2 #0040 -- ++ ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ++
 			[ .center/x LDZ2 #0008 ++ ++ ]
-		STH2r STHr #00 ;draw-circle JSR2
+		STH2r STHr #00 ,draw-circle JSR
 		INC GTHk ,&loop JCN
 	POP2
 	
@@ -140,10 +130,27 @@ RTN
 			[ .center/y LDZ2 ++ ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ++
 			[ .center/x LDZ2 #0008 ++ ++ ]
-		STH2r STHr #80 ;draw-circle JSR2
+		STH2r STHr #80 ,draw-circle JSR
 		INC GTHk ,&loop JCN
 	POP2
 	
+RTN
+
+@draw-circle ( x* y* color depth -- )
+	
+	ADD STH
+	;preview_icn .Screen/addr DEO2
+	.Screen/y DEO2
+	.Screen/x DEO2
+	AUTO-X
+	STHr .Screen/sprite DEOk
+	AUTO-Y
+	SWP #10 + SWP DEOk
+	.Screen/x DEI2k #0008 -- ROT DEO2
+	AUTO-X
+	SWP #10 + SWP DEOk
+	SWP #10 + SWP DEO
+
 RTN
 
 @draw-autobytes ( -- )
@@ -174,35 +181,15 @@ RTN
 
 RTN
 
-@draw-circle ( x* y* color depth -- )
-	
-	ADD STH
-	;preview_icn .Screen/addr DEO2
-	.Screen/y DEO2
-	.Screen/x DEO2
-
-	#00 STHkr + .Screen/sprite DEO
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		#10 STHkr + .Screen/sprite DEO
-	.Screen/x DEI2 #0008 -- .Screen/x DEO2
-	.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-		#20 STHkr + .Screen/sprite DEO
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
-		#30 STHr + .Screen/sprite DEO
-
-RTN
-
 @draw-pixels ( -- )
 	
 	.center/y LDZ2 #0040 -- .Screen/y DEO2
 	.center/x LDZ2 #0048 ++ .Screen/x DEO2
-		#00 .Screen/pixel DEO
-	.center/x LDZ2 #0049 ++ .Screen/x DEO2
-		#01 .Screen/pixel DEO
-	.center/x LDZ2 #004a ++ .Screen/x DEO2
-		#02 .Screen/pixel DEO
-	.center/x LDZ2 #004b ++ .Screen/x DEO2
-		#03 .Screen/pixel DEO
+	AUTO-X
+	#00 .Screen/pixel DEO
+	#01 .Screen/pixel DEO
+	#02 .Screen/pixel DEO
+	#03 .Screen/pixel DEO
 
 RTN
 
