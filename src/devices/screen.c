@@ -166,7 +166,7 @@ screen_deo(Device *d, Uint8 port)
 		n = d->dat[0x6] >> 4;
 		dx = (d->dat[0x6] & 0x01) << 3;
 		dy = (d->dat[0x6] & 0x02) << 2;
-		if(addr > 0xfff8 - twobpp * 8 * (n + 1))
+		if(addr > 0x10000 - ((n + 1) << (3 + twobpp)))
 			return;
 		for(i = 0; i <= n; i++) {
 			screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, &d->u->ram[addr], d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
