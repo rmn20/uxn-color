@@ -157,7 +157,7 @@ screen_deo(Device *d, Uint8 port)
 		break;
 	}
 	case 0xf: {
-		Uint16 x, y, addr;
+		Uint16 x, y, addr, auto_i;
 		Uint8 twobpp = !!(d->dat[0xf] & 0x80);
 		Layer *layer = (d->dat[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
 		DEVPEEK16(x, 0x8);
@@ -166,9 +166,17 @@ screen_deo(Device *d, Uint8 port)
 		if(addr > 0xfff8 - twobpp * 8)
 			return;
 		screen_blit(&uxn_screen, layer, x, y, &d->u->ram[addr], d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20, twobpp);
-		if(d->dat[0x6] & 0x04) DEVPOKE16(0xc, addr + 8 + twobpp * 8); /* auto addr+length */
-		if(d->dat[0x6] & 0x01) DEVPOKE16(0x8, x + 8);                 /* auto x+8 */
-		if(d->dat[0x6] & 0x02) DEVPOKE16(0xa, y + 8);                 /* auto y+8 */
+		auto_i = d->dat[0x6] + 0x40;
+		if((auto_i >> 6) > ((auto_i & 0x30) >> 4)) {
+			d->dat[0x6] = auto_i & 0x3f;
+			DEVPOKE16(0x8, x + ((auto_i & 0x01) << 3) - ((auto_i & 0x02) * (auto_i & 0x30) >> 2));
+			DEVPOKE16(0xa, y + ((auto_i & 0x02) << 2) - ((auto_i & 0x01) * (auto_i & 0x30) >> 1));
+		} else {
+			d->dat[0x6] = auto_i;
+			DEVPOKE16(0x8, x + ((auto_i & 0x02) << 2));
+			DEVPOKE16(0xa, y + ((auto_i & 0x01) << 3));
+		}
+		if(auto_i & 0x04) DEVPOKE16(0xc, addr + 8 + twobpp * 8); /* auto addr+length */
 		break;
 	}
 	}

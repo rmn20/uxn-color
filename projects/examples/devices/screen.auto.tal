@@ -1,0 +1,30 @@
+( devices )
+
+|00 @System     &vector $2 &wst      $1 &rst    $1 &swsz   $1 &swap   $1 &pad     $2 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
+|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
+
+( variables )
+
+|0000
+
+( program )
+
+|0100 ( -> )
+	( theme ) 
+	#0fe5 .System/r DEO2 
+	#0fc5 .System/g DEO2 
+	#0f25 .System/b DEO2
+
+	#35 .Screen/auto DEO
+
+	;font #0210 ADD2 .Screen/addr DEO2
+	#3400 &loop
+		#04 .Screen/sprite DEO
+		INC
+		GTHk ,&loop JCN
+
+BRK
+
+~projects/assets/msx01x02.tal
+
+
