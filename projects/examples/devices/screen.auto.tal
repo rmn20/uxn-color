@@ -18,7 +18,7 @@
 	#35 .Screen/auto DEO
 
 	;font #0210 ADD2 .Screen/addr DEO2
-	#3400 &loop
+	#0d00 &loop
 		#04 .Screen/sprite DEO
 		INC
 		GTHk ,&loop JCN
