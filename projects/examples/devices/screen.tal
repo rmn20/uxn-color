@@ -53,6 +53,7 @@
 	;draw-2bpp JSR2
 	;draw-pixels JSR2
 	;draw-autobytes JSR2
+	AUTO-NONE
 	
 BRK
 
@@ -149,16 +150,27 @@ RTN
 
 	.center/x LDZ2 #0090 ++ .Screen/x DEO2
 	.center/y LDZ2 #0040 -- .Screen/y DEO2
-	#02 #03 ;23x-icns #04 ;draw-x JSR2
+	;23x-icns .Screen/addr DEO2
+	#16 .Screen/auto DEO
+	#04 .Screen/sprite DEOk DEOk DEO
+
 	.center/x LDZ2 #00a8 ++ .Screen/x DEO2
 	.center/y LDZ2 #0030 -- .Screen/y DEO2
-	#02 #03 ;23y-icns #0c ;draw-y JSR2
+	;23y-icns .Screen/addr DEO2
+	#25 .Screen/auto DEO
+	#0c .Screen/sprite DEOk DEO
+
 	.center/x LDZ2 #00a0 ++ .Screen/x DEO2
 	.center/y LDZ2 #0040 -- .Screen/y DEO2
-	#03 #02 ;32x-icns #01 ;draw-x JSR2
+	;32x-icns .Screen/addr DEO2
+	#26 .Screen/auto DEO
+	#01 .Screen/sprite DEOk DEO
+
 	.center/x LDZ2 #0090 ++ .Screen/x DEO2
 	.center/y LDZ2 #0028 -- .Screen/y DEO2
-	#03 #02 ;32y-icns #03 ;draw-y JSR2
+	;32y-icns .Screen/addr DEO2
+	#15 .Screen/auto DEO
+	#03 .Screen/sprite DEOk DEOk DEO
 
 RTN
 
@@ -191,52 +203,6 @@ RTN
 		#02 .Screen/pixel DEO
 	.center/x LDZ2 #004b ++ .Screen/x DEO2
 		#03 .Screen/pixel DEO
-
-RTN
-
-@draw-x ( w h addr* color -- )
-
-	STH
-	.Screen/addr DEO2
-	SWP ,&w STR
-	.Screen/x DEI2 ,&x STR2
-	AUTO-XADDR
-	#00
-	&ver
-		[ LIT &w $1 ] #00
-		&hor
-			STHkr .Screen/sprite DEO
-			INC GTHk ,&hor JCN
-		POP2
-		.Screen/y DEI2k #0008 ++ ROT DEO2
-		[ LIT2 &x $2 ] .Screen/x DEO2
-		INC GTHk ,&ver JCN
-	POP2
-	POPr
-	AUTO-NONE
-
-RTN
-
-@draw-y ( w h addr* color -- )
-
-	STH
-	.Screen/addr DEO2
-	,&h STR
-	.Screen/y DEI2 ,&y STR2
-	AUTO-YADDR
-	#00
-	&hor
-		[ LIT &h $1 ] #00
-		&ver
-			STHkr .Screen/sprite DEO
-			INC GTHk ,&ver JCN
-		POP2
-		.Screen/x DEI2k #0008 ++ ROT DEO2
-		[ LIT2 &y $2 ] .Screen/y DEO2
-		INC GTHk ,&hor JCN
-	POP2
-	POPr
-	AUTO-NONE
 
 RTN
 
