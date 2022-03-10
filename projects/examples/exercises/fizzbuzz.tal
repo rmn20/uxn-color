@@ -3,41 +3,30 @@
 	for multiples of five, print "Buzz"
 	for multiples of both three and five, print "FizzBuzz" )
 
-%MOD  { DIVk MUL SUB }
-%HALT { #01 #0f DEO }
-%EMIT { #18 DEO }
-%RTN  { JMP2r }
-
-@program
-
-|0100 ( -> )
+|0100 ( -> ) @program
 
 	#6400
 	&loop
-		LITr 00
-		DUP #03 MOD ,&no3 JCN ;fizz-txt ;print-str JSR2 INCr &no3
-		DUP #05 MOD ,&no5 JCN ;buzz-txt ;print-str JSR2 INCr &no5
-		STHr ,&resume JCN
-		( print decimal )
-		DUPk #0a DIV #30 ADD EMIT
-		#0a MOD #30 ADD EMIT
-		&resume
-		( add linebreak ) #0a EMIT
+		( dec )
+		DUPk #0a DIV ,print-num JSR
+		#0a ,mod JSR ,print-num JSR
+		( space )
+		#2018 DEO
+		( text )
+		DUP #03 ,mod JSR ,&no3 JCN ;s/fizz ,print-str JSR &no3
+		DUP #05 ,mod JSR ,&no5 JCN ;s/buzz ,print-str JSR &no5
+		( linebreak ) #0a18 DEO
 		INC GTHk ,&loop JCN
 	POP2
-
-	HALT
+	( halt ) 
+	#010f DEO
 
 BRK
 
-@print-str ( addr* -- )
-	
-	&loop
-		LDAk EMIT 
-		INC2 LDAk ,&loop JCN
-	POP2
+@mod ( a b -- c ) DIVk MUL SUB JMP2r
+@print-num ( num -- ) #30 ADD #18 DEO JMP2r
+@print-str ( addr* -- ) &loop LDAk #18 DEO INC2 LDAk ,&loop JCN POP2 JMP2r
 
-RTN
-
-@fizz-txt "Fizz $1
-@buzz-txt "Buzz $1
+@s 
+	&fizz "Fizz $1
+	&buzz "Buzz $1
