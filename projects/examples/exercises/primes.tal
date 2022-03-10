@@ -2,56 +2,42 @@
 	An integer greater than one is called a prime number 
 	if its only positive divisors are one and itself. )
 
-%RTN { JMP2r }
-%HALT { #0101 #0e DEO2 }
-%MOD2 { DIV2k MUL2 SUB2 }
-%EMIT { #18 DEO }
-
 |0100 ( -> ) @main
 
 	#0000 #0001
 	&loop
 		DUP2 ,is-prime JSR #00 EQU ,&skip JCN
-			DUP2 ,print-hex/short JSR
-			#20 EMIT
+			DUP2 ,print/short JSR
+			#20 ( emit ) #18 DEO
 			&skip
 		INC2 NEQ2k ,&loop JCN
 	POP2 POP2
-	HALT
+	#0101 #0e DEO2
 	
 BRK
 
 @is-prime ( number* -- flag )
 
 	DUP2 #0001 NEQ2 ,&not-one JCN
-		POP2 #00 RTN
+		POP2 #00 JMP2r
 		&not-one
 	STH2k
 	( range ) #01 SFT2 #0002
 	&loop
-		STH2kr OVR2 MOD2 #0000 NEQ2 ,&continue JCN
+		STH2kr OVR2 ( mod2 ) [ DIV2k MUL2 SUB2 ] ORA ,&continue JCN
 			POP2 POP2 
-			POP2r #00 RTN
+			POP2r #00 JMP2r
 			&continue
 		INC2 GTH2k ,&loop JCN
 	POP2 POP2 
 	POP2r #01
 
-RTN
+JMP2r
 
-@print-hex ( value* -- )
-	
-	&short ( value* -- )
-		SWP ,&echo JSR 
-	&byte ( value -- )
-		,&echo JSR
-	RTN
+@print ( short* -- )
 
-	&echo ( value -- )
-	STHk #04 SFT ,&parse JSR EMIT
-	STHr #0f AND ,&parse JSR EMIT
-	RTN
-	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 ADD RTN &above #09 SUB #60 ADD RTN
+	&short ( short* -- ) SWP ,&byte JSR
+	&byte ( byte -- ) DUP #04 SFT ,&char JSR
+	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD ( emit ) #18 DEO
 
-RTN
+JMP2r
