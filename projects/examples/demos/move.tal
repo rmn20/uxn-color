@@ -4,13 +4,9 @@
 |0020 @Screen &vector $2 &width  $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 |0080 @Controller &vector $2 &button $1 &key $1
 
-( variables )
-
 |0000
 
 @slime $1
-
-( init )
 
 |0100 ( -> ) @program
 	

@@ -1,20 +1,11 @@
-( GUI Animation )
-
-%2// { #01 SFT2 }
-%AUTO-XADDR  { #05 .Screen/auto DEO }
-
-( devices )
+( DVD Bounce )
 
 |00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
 
 |0000
 
-@dvd 
-	&x $2 &y $2 
-	&dx $1 &dy $1
-
-( program )
+@dvd &x $2 &y $2 &dx $1 &dy $1
 
 |0100 ( -> )
 	
@@ -22,57 +13,41 @@
 	#4cfd .System/r DEO2 
 	#4cf3 .System/g DEO2 
 	#dcf2 .System/b DEO2
-
 	( vectors )
 	;on-frame .Screen/vector DEO2
-
 	( starting position )
-	.Screen/width DEI2 2// .dvd/x STZ2
-	.Screen/height DEI2 2// .dvd/y STZ2
-	
-	AUTO-XADDR
-
-	#01 ;draw-dvd JSR2
+	.Screen/width DEI2 #01 SFT2 .dvd/x STZ2
+	.Screen/height DEI2 #01 SFT2 .dvd/y STZ2
+	#36 .Screen/auto DEO
+	#01 ,draw-dvd JSR
 	
 BRK
 
 @on-frame ( -> )
 
-	#00 ;draw-dvd JSR2
-
+	#00 ,draw-dvd JSR
 	( case: hit-right ) .dvd/x LDZ2 .Screen/width DEI2 #0020 SUB2 EQU2
 	( case: hit-left ) .dvd/x LDZ2 #0000 EQU2 
 	#0000 EQU2 ,&no-flipx JCN 
-		.dvd/dx LDZk #00 EQU SWP STZ &no-flipx
-
+		.dvd/dx LDZk #00 EQU SWP STZ 
+		&no-flipx
 	( case: hit-bottom ) .dvd/y LDZ2 .Screen/height DEI2 #0010 SUB2 EQU2
 	( case: hit-top ) .dvd/y LDZ2 #0000 EQU2 
 	#0000 EQU2 ,&no-flipy JCN 
-		.dvd/dy LDZk #00 EQU SWP STZ &no-flipy
-
+		.dvd/dy LDZk #00 EQU SWP STZ 
+		&no-flipy
 	( incr ) .dvd/x LDZ2 #0001 #00 .dvd/dx LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/x STZ2
 	( incr ) .dvd/y LDZ2 #0001 #00 .dvd/dy LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/y STZ2
-
-	#01 ;draw-dvd JSR2
+	#01 ,draw-dvd JSR
 
 BRK
 
 @draw-dvd ( color -- )
 	
-	STH
 	;dvd_icn .Screen/addr DEO2
 	.dvd/x LDZ2 .Screen/x DEO2
 	.dvd/y LDZ2 .Screen/y DEO2
-	#0800
-	&loop
-		DUP #04 NEQ ,&no-lb JCN
-			.Screen/x DEI2k #0020 SUB2 ROT DEO2
-			.Screen/y DEI2k #0008 ADD2 ROT DEO2
-			&no-lb
-		STHkr .Screen/sprite DEO
-		INC GTHk ,&loop JCN
-	POP2
-	POPr
+	.Screen/sprite DEOk DEO
 
 JMP2r
 

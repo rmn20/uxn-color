@@ -4,16 +4,12 @@
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel  $1 &sprite $1
 |90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &pad    $3 &scrollx $2 &scrolly $2
 
-( variables )
-
 |0000
 
 @cat
 	&x $2 &y $2 &timer $1
 @pointer
 	&x $2 &y $2
-
-( program )
 
 |0100 ( -> )
 	
@@ -98,11 +94,10 @@ JMP2r
 
 @draw-tail ( frame -- )
 
-	DUP ,&last LDR NEQ ,&changed JCN
-		POP JMP2r &changed
+	STHk ,&last LDR NEQ ,&changed JCN
+		POPr JMP2r &changed
 	( only redraw on change )
-	DUP
-	;frames ROT #00 SWP ADD2 LDA
+	STHr #00 OVR ;frames ADD2 LDA
 	#00 SWP #40 SFT2 ;body/tail ADD2
 		.Screen/addr DEO2
 	.cat/x LDZ2 .Screen/x DEO2
