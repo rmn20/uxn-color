@@ -39,11 +39,7 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Cleaning.."
-rm -f ./bin/uxnasm
-rm -f ./bin/uxnemu
-rm -f ./bin/uxncli
-rm -f ./bin/launcher.rom
-rm -f ./bin/asma.rom
+rm -f ./bin/*
 
 # When clang-format is present
 
