@@ -39,21 +39,21 @@
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
 	.Screen/height DEI2 #01 SFT2 .center/y STZ2
 	.center/x LDZ2 #0020 SUB2
-		DUP2 .keypad-frame/x STZ2 #0040 ADD2 .keypad-frame/x2 STZ2
+		DUP2 .keypad-frame/x STZ2 #003f ADD2 .keypad-frame/x2 STZ2
 	.center/y LDZ2 #0018 SUB2
 		DUP2 .keypad-frame/y STZ2 #003f ADD2 .keypad-frame/y2 STZ2
 	.keypad-frame/x LDZ2
-		DUP2 .modpad-frame/x STZ2 #0040 ADD2 .modpad-frame/x2 STZ2
+		DUP2 .modpad-frame/x STZ2 #003f ADD2 .modpad-frame/x2 STZ2
 	.keypad-frame/y LDZ2 #0040 ADD2
 		DUP2 .modpad-frame/y STZ2 #001f ADD2 .modpad-frame/y2 STZ2
 	.keypad-frame/x LDZ2
-		DUP2 .bitpad-frame/x STZ2 #0040 ADD2 .bitpad-frame/x2 STZ2
+		DUP2 .bitpad-frame/x STZ2 #003f ADD2 .bitpad-frame/x2 STZ2
 	.modpad-frame/y2 LDZ2 #0008 ADD2
 		DUP2 .bitpad-frame/y STZ2 #000f ADD2 .bitpad-frame/y2 STZ2
 	.center/x LDZ2 #0020 SUB2
-		DUP2 .input-frame/x STZ2 #0040 ADD2 .input-frame/x2 STZ2
+		DUP2 .input-frame/x STZ2 #003f ADD2 .input-frame/x2 STZ2
 	.center/y LDZ2 #002a SUB2
-		DUP2 .input-frame/y STZ2 #0010 ADD2 .input-frame/y2 STZ2
+		DUP2 .input-frame/y STZ2 #000f ADD2 .input-frame/y2 STZ2
 	( theme support )
 	;load-theme JSR2
 
@@ -152,7 +152,7 @@ BRK
 
 @click-bitpad ( state* x* y* -> )
 
-	( y ) .bitpad-frame/y LDZ2 SUB2 #03 SFT2 NIP #30 SFT STH
+	( y ) .bitpad-frame/y LDZ2 SUB2 #33 SFT2 NIP STH
 	( x ) .bitpad-frame/x LDZ2 SUB2 #03 SFT2 NIP
 	( value ) STHr ADD STHk
 
@@ -438,7 +438,7 @@ JMP2r
 		( layout ) #00 OVR ;keypad/layout ADD2 LDA
 			( layout addr ) #00 SWP #30 SFT2 ;font-hex ADD2 STH2
 		( x ) #00 OVR #03 AND #40 SFT2 STH2
-		( y ) #00 OVR #02 SFT #40 SFT2
+		( y ) #00 OVR #42 SFT2
 		( origin-x ) STH2r .keypad-frame/x LDZ2 ADD2 SWP2
 		( origin-y ) .keypad-frame/y LDZ2 ADD2
 			STH2r STHr STHr ;draw-key JSR2
@@ -455,7 +455,7 @@ JMP2r
 	&loop
 		( state ) DUP STHkr EQU STH
 		( glyph ) #00 OVR #30 SFT2 ;mod-icns ADD2 STH2
-		( y ) #00 OVR #02 SFT #40 SFT2 .modpad-frame/y LDZ2 ADD2 STH2
+		( y ) #00 OVR #42 SFT2 .modpad-frame/y LDZ2 ADD2 STH2
 		( x ) #00 OVR #03 AND #40 SFT2 .modpad-frame/x LDZ2 ADD2 STH2
 		STH2r STH2r STH2r STHr #03 ;draw-key JSR2
 		INC GTHk ,&loop JCN
@@ -468,7 +468,7 @@ JMP2r
 
 	#1000
 	&loop
-		( y ) #00 OVR #03 SFT #30 SFT2 .bitpad-frame/y LDZ2 ADD2 .Screen/y DEO2
+		( y ) #00 OVR #33 SFT2 .bitpad-frame/y LDZ2 ADD2 .Screen/y DEO2
 		( x ) #00 OVR #07 AND #30 SFT2 .bitpad-frame/x LDZ2 ADD2 .Screen/x DEO2
 		( state ) DUP #0f SWP SUB .input/value LDZ2 ROT SFT2 #0001 AND2
 		( addr ) #30 SFT2 ;bit-icns ADD2 .Screen/addr DEO2
@@ -521,13 +521,10 @@ JMP2r
 	.input/mode LDZ ,&decimal JCN
 		#01 .Screen/auto DEO
 		#00 ,&digit JSR
-		SWP
+		SWP ,&byte JSR
+	&byte
 		STHk #04 SFT ,&digit JSR
-		STHr #0f AND ,&digit JSR
-		STHk #04 SFT ,&digit JSR
-		STHr #0f AND ,&digit JSR
-		#00 .Screen/auto DEO
-	JMP2r
+		STHr #0f AND 
 	&digit ( num -- )
 		,&addr JSR .Screen/addr DEO2
 		[ LIT &color $1 ] .Screen/sprite DEO
