@@ -16,10 +16,10 @@
 	#f07f .System/r DEO2
 	#f0e0 .System/g DEO2
 	#f0c0 .System/b DEO2
-	( gba screen size 00c0 x 00a0 )
+	( gba screen size 00f0 x 00a0 )
 	( nds screen size 0100 x 00c0 )
-	#0100 .Screen/width DEO2
-	#00c0 .Screen/height DEO2
+	#00f0 .Screen/width DEO2
+	#00a0 .Screen/height DEO2
 	( find screen center )
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
 	.Screen/height DEI2 #01 SFT2 .center/y STZ2
@@ -35,7 +35,7 @@ BRK
 
 	#01 .Screen/auto DEO
 	.count LDZ2 INC2 [ DUP2 ] .count STZ2
-	.center/x LDZ2 #0040 ADD2 .Screen/x DEO2
+	.center/x LDZ2 #0028 ADD2 .Screen/x DEO2
 	.center/y LDZ2 #0048 SUB2 .Screen/y DEO2
 	;draw-short JSR2
 
@@ -43,7 +43,7 @@ BRK
 
 @draw-sprites ( -- )
 	
-	.center/x LDZ2 #0060 SUB2 .Screen/x DEO2
+	.center/x LDZ2 #0068 SUB2 .Screen/x DEO2
 	.center/y LDZ2 #0048 SUB2 .Screen/y DEO2
 	;font-hex .Screen/addr DEO2
 	#f6 .Screen/auto DEO
@@ -54,7 +54,7 @@ BRK
 	#00 #00
 	&loop
 		( move ) DUP #0f AND #40 SFT #01 SFT #00 SWP
-			.center/x LDZ2 #0060 SUB2 ADD2 .Screen/x DEO2
+			.center/x LDZ2 #0068 SUB2 ADD2 .Screen/x DEO2
 		( move ) DUP #f0 AND #01 SFT #00 SWP
 			.center/y LDZ2 #0038 SUB2 ADD2 .Screen/y DEO2
 		( draw ) DUP .Screen/sprite DEO
@@ -71,7 +71,7 @@ JMP2r
 		( y ) DUP #02 SFT [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 #0038 SUB2 ADD2 ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2
-			[ .center/x LDZ2 #0020 SUB2 ADD2 ]
+			[ .center/x LDZ2 #0018 SUB2 ADD2 ]
 		STH2r STHr #00 ,draw-circle JSR
 		INC GTHk ,&loop JCN
 	POP2
@@ -86,7 +86,7 @@ JMP2r
 		( y ) DUP #02 SFT [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 #0008 ADD2 ADD2 ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2
-			[ .center/x LDZ2 #0020 SUB2 ADD2 ]
+			[ .center/x LDZ2 #0018 SUB2 ADD2 ]
 		STH2r STHr #80 ,draw-circle JSR
 		INC GTHk ,&loop JCN
 	POP2
