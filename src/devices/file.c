@@ -19,29 +19,32 @@ WITH REGARD TO THIS SOFTWARE.
 #include <sys/stat.h>
 #include <unistd.h>
 
-static FILE *f;
-static DIR *dir;
-static char *current_filename = "";
-static struct dirent *de;
+typedef struct {
+	FILE *f;
+	DIR *dir;
+	char *current_filename;
+	struct dirent *de;
+	enum { IDLE,
+		FILE_READ,
+		FILE_WRITE,
+		DIR_READ } state;
+} UxnFile;
 
-static enum { IDLE,
-	FILE_READ,
-	FILE_WRITE,
-	DIR_READ } state;
+static UxnFile uxn_file[POLYFILEY];
 
 static void
-reset(void)
+reset(UxnFile *c)
 {
-	if(f != NULL) {
-		fclose(f);
-		f = NULL;
+	if(c->f != NULL) {
+		fclose(c->f);
+		c->f = NULL;
 	}
-	if(dir != NULL) {
-		closedir(dir);
-		dir = NULL;
+	if(c->dir != NULL) {
+		closedir(c->dir);
+		c->dir = NULL;
 	}
-	de = NULL;
-	state = IDLE;
+	c->de = NULL;
+	c->state = IDLE;
 }
 
 static Uint16
@@ -61,20 +64,20 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 }
 
 static Uint16
-file_read_dir(char *dest, Uint16 len)
+file_read_dir(UxnFile *c, char *dest, Uint16 len)
 {
 	static char pathname[4096];
 	char *p = dest;
-	if(de == NULL) de = readdir(dir);
-	for(; de != NULL; de = readdir(dir)) {
+	if(c->de == NULL) c->de = readdir(c->dir);
+	for(; c->de != NULL; c->de = readdir(c->dir)) {
 		Uint16 n;
-		if(de->d_name[0] == '.' && de->d_name[1] == '\0')
+		if(c->de->d_name[0] == '.' && c->de->d_name[1] == '\0')
 			continue;
-		if(strlen(current_filename) + 1 + strlen(de->d_name) < sizeof(pathname))
-			sprintf(pathname, "%s/%s", current_filename, de->d_name);
+		if(strlen(c->current_filename) + 1 + strlen(c->de->d_name) < sizeof(pathname))
+			sprintf(pathname, "%s/%s", c->current_filename, c->de->d_name);
 		else
 			pathname[0] = '\0';
-		n = get_entry(p, len, pathname, de->d_name, 1);
+		n = get_entry(p, len, pathname, c->de->d_name, 1);
 		if(!n) break;
 		p += n;
 		len -= n;
@@ -83,68 +86,69 @@ file_read_dir(char *dest, Uint16 len)
 }
 
 static Uint16
-file_init(void *filename)
+file_init(UxnFile *c, void *filename)
 {
-	reset();
-	current_filename = filename;
+	reset(c);
+	c->current_filename = filename;
 	return 0;
 }
 
 static Uint16
-file_read(void *dest, Uint16 len)
+file_read(UxnFile *c, void *dest, Uint16 len)
 {
-	if(state != FILE_READ && state != DIR_READ) {
-		reset();
-		if((dir = opendir(current_filename)) != NULL)
-			state = DIR_READ;
-		else if((f = fopen(current_filename, "rb")) != NULL)
-			state = FILE_READ;
+	if(c->state != FILE_READ && c->state != DIR_READ) {
+		reset(c);
+		if((c->dir = opendir(c->current_filename)) != NULL)
+			c->state = DIR_READ;
+		else if((c->f = fopen(c->current_filename, "rb")) != NULL)
+			c->state = FILE_READ;
 	}
-	if(state == FILE_READ)
-		return fread(dest, 1, len, f);
-	if(state == DIR_READ)
-		return file_read_dir(dest, len);
+	if(c->state == FILE_READ)
+		return fread(dest, 1, len, c->f);
+	if(c->state == DIR_READ)
+		return file_read_dir(c, dest, len);
 	return 0;
 }
 
 static Uint16
-file_write(void *src, Uint16 len, Uint8 flags)
+file_write(UxnFile *c, void *src, Uint16 len, Uint8 flags)
 {
 	Uint16 ret = 0;
-	if(state != FILE_WRITE) {
-		reset();
-		if((f = fopen(current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
-			state = FILE_WRITE;
+	if(c->state != FILE_WRITE) {
+		reset(c);
+		if((c->f = fopen(c->current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
+			c->state = FILE_WRITE;
 	}
-	if(state == FILE_WRITE) {
-		if((ret = fwrite(src, 1, len, f)) > 0 && fflush(f) != 0)
+	if(c->state == FILE_WRITE) {
+		if((ret = fwrite(src, 1, len, c->f)) > 0 && fflush(c->f) != 0)
 			ret = 0;
 	}
 	return ret;
 }
 
 static Uint16
-file_stat(void *dest, Uint16 len)
+file_stat(UxnFile *c, void *dest, Uint16 len)
 {
-	char *basename = strrchr(current_filename, '/');
+	char *basename = strrchr(c->current_filename, '/');
 	if(basename != NULL)
 		basename++;
 	else
-		basename = current_filename;
-	return get_entry(dest, len, current_filename, basename, 0);
+		basename = c->current_filename;
+	return get_entry(dest, len, c->current_filename, basename, 0);
 }
 
 static Uint16
-file_delete(void)
+file_delete(UxnFile *c)
 {
-	return unlink(current_filename);
+	return unlink(c->current_filename);
 }
 
 /* IO */
 
 void
-file_deo(Device *d, Uint8 port)
+file_i_deo(int instance, Device *d, Uint8 port)
 {
+	UxnFile *c = &uxn_file[instance];
 	Uint16 addr, len, res;
 	switch(port) {
 	case 0x5:
@@ -152,16 +156,16 @@ file_deo(Device *d, Uint8 port)
 		DEVPEEK16(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_stat(&d->u->ram[addr], len);
+		res = file_stat(c, &d->u->ram[addr], len);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0x6:
-		res = file_delete();
+		res = file_delete(c);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0x9:
 		DEVPEEK16(addr, 0x8);
-		res = file_init(&d->u->ram[addr]);
+		res = file_init(c, (char *)&d->u->ram[addr]);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xd:
@@ -169,7 +173,7 @@ file_deo(Device *d, Uint8 port)
 		DEVPEEK16(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_read(&d->u->ram[addr], len);
+		res = file_read(c, &d->u->ram[addr], len);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xf:
@@ -177,8 +181,14 @@ file_deo(Device *d, Uint8 port)
 		DEVPEEK16(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_write(&d->u->ram[addr], len, d->dat[0x7]);
+		res = file_write(c, &d->u->ram[addr], len, d->dat[0x7]);
 		DEVPOKE16(0x2, res);
 		break;
 	}
+}
+
+Uint8
+file_i_dei(int instance, Device *d, Uint8 port)
+{
+	return d->dat[port];
 }
