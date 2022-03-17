@@ -265,9 +265,9 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
 	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
 	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file     */ devfile0 = uxn_port(u, 0xa, file_dei, file_deo);
-	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
+	/* file0    */ devfile0 = uxn_port(u, 0xa, file_dei, file_deo);
+	/* file1    */ uxn_port(u, 0xb, file_dei, file_deo);
+	/* datetime */ uxn_port(u, 0xc, datetime_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
