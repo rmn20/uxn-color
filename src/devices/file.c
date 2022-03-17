@@ -22,7 +22,7 @@ WITH REGARD TO THIS SOFTWARE.
 typedef struct {
 	FILE *f;
 	DIR *dir;
-	char *current_filename;
+	char current_filename[4096];
 	struct dirent *de;
 	enum { IDLE,
 		FILE_READ,
@@ -66,7 +66,7 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 static Uint16
 file_read_dir(UxnFile *c, char *dest, Uint16 len)
 {
-	static char pathname[4096];
+	static char pathname[4352];
 	char *p = dest;
 	if(c->de == NULL) c->de = readdir(c->dir);
 	for(; c->de != NULL; c->de = readdir(c->dir)) {
@@ -86,10 +86,18 @@ file_read_dir(UxnFile *c, char *dest, Uint16 len)
 }
 
 static Uint16
-file_init(UxnFile *c, void *filename)
+file_init(UxnFile *c, char *filename, size_t max_len)
 {
+	char *p = c->current_filename;
+	size_t len = sizeof(c->current_filename);
 	reset(c);
-	c->current_filename = filename;
+	if(len > max_len) len = max_len;
+	while(len) {
+		if((*p++ = *filename++) == '\0')
+			return 0;
+		len--;
+	}
+	c->current_filename[0] = '\0';
 	return 0;
 }
 
@@ -165,7 +173,7 @@ file_i_deo(int instance, Device *d, Uint8 port)
 		break;
 	case 0x9:
 		DEVPEEK16(addr, 0x8);
-		res = file_init(c, (char *)&d->u->ram[addr]);
+		res = file_init(c, (char *)&d->u->ram[addr], 0x10000 - addr);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xd:
