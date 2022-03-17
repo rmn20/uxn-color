@@ -198,5 +198,14 @@ file_i_deo(int instance, Device *d, Uint8 port)
 Uint8
 file_i_dei(int instance, Device *d, Uint8 port)
 {
+	UxnFile *c = &uxn_file[instance];
+	Uint16 res;
+	switch(port) {
+	case 0xc:
+	case 0xd:
+		res = file_read(c, &d->dat[port], 1);
+		DEVPOKE16(0x2, res);
+		break;
+	}
 	return d->dat[port];
 }
