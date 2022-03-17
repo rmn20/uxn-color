@@ -145,14 +145,14 @@ file_delete(void)
 void
 file_deo(Device *d, Uint8 port)
 {
-	Uint16 a, b, res;
+	Uint16 addr, len, res;
 	switch(port) {
 	case 0x5:
-		DEVPEEK16(a, 0x4);
-		DEVPEEK16(b, 0xa);
-		if(b > 0x10000 - a)
-			b = 0x10000 - a;
-		res = file_stat(&d->u->ram[a], b);
+		DEVPEEK16(addr, 0x4);
+		DEVPEEK16(len, 0xa);
+		if(len > 0x10000 - addr)
+			len = 0x10000 - addr;
+		res = file_stat(&d->u->ram[addr], len);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0x6:
@@ -160,24 +160,24 @@ file_deo(Device *d, Uint8 port)
 		DEVPOKE16(0x2, res);
 		break;
 	case 0x9:
-		DEVPEEK16(a, 0x8);
-		res = file_init(&d->u->ram[a]);
+		DEVPEEK16(addr, 0x8);
+		res = file_init(&d->u->ram[addr]);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xd:
-		DEVPEEK16(a, 0xc);
-		DEVPEEK16(b, 0xa);
-		if(b > 0x10000 - a)
-			b = 0x10000 - a;
-		res = file_read(&d->u->ram[a], b);
+		DEVPEEK16(addr, 0xc);
+		DEVPEEK16(len, 0xa);
+		if(len > 0x10000 - addr)
+			len = 0x10000 - addr;
+		res = file_read(&d->u->ram[addr], len);
 		DEVPOKE16(0x2, res);
 		break;
 	case 0xf:
-		DEVPEEK16(a, 0xe);
-		DEVPEEK16(b, 0xa);
-		if(b > 0x10000 - a)
-			b = 0x10000 - a;
-		res = file_write(&d->u->ram[a], b, d->dat[0x7]);
+		DEVPEEK16(addr, 0xe);
+		DEVPEEK16(len, 0xa);
+		if(len > 0x10000 - addr)
+			len = 0x10000 - addr;
+		res = file_write(&d->u->ram[addr], len, d->dat[0x7]);
 		DEVPOKE16(0x2, res);
 		break;
 	}
