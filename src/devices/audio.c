@@ -31,7 +31,7 @@ static Uint32 advances[12] = {
 	0xb504f, 0xbfc88, 0xcb2ff, 0xd7450, 0xe411f, 0xf1a1c
 };
 
-UxnAudio uxn_audio[POLYPHONY];
+static UxnAudio uxn_audio[POLYPHONY];
 
 /* clang-format on */
 
