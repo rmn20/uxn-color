@@ -1,60 +1,23 @@
 ( GUI Labels )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
-
-%=~ { EQUk NIP } %!~ { NEQk NIP }
-%<~ { LTHk NIP } %>~ { GTHk NIP }
-
-%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
-%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
-%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
-%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
-%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
-
-%IS-VALID { DUP #1f > SWP #7f < AND }
-
-%RTN { JMP2r }
-%TOS { #00 SWP }
-%AUTO-NONE   { #00 .Screen/auto DEO }
-%AUTO-Y      { #02 .Screen/auto DEO }
-%AUTO-YADDR  { #06 .Screen/auto DEO }
-
-%HALT   { #010f DEO }
-%EMIT   { #18 DEO }
-%PRINT  { ;print-str JSR2 #0a EMIT }
-%DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
-%DEBUG2 { ;print-hex JSR2 #0a EMIT }
-
-( devices )
-
-|00 @System [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
-|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
-
-( variables )
+|00 @System &vector $2 &pad $6 &r $2 &g $2 &b $2
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 
 |0000
 
-@label [ &x $2 &y $2 &color $1 &addr $2 ]
-@center [ &x $2 &y $2 ]
-
-( program )
+@center &x $2 &y $2
 
 |0100
 	
-	( theme ) 
-	#f0d7 .System/r DEO2 
-	#f0de .System/g DEO2 
+	( theme )
+	#f0d7 .System/r DEO2
+	#f0de .System/g DEO2
 	#f0dc .System/b DEO2
-	
 	( find screen center )
-	.Screen/width DEI2 2// .center/x STZ2
-	.Screen/height DEI2 2// .center/y STZ2
-
+	.Screen/width DEI2 #01 SFT2 .center/x STZ2
+	.Screen/height DEI2 #01 SFT2 .center/y STZ2
 	( ver )
-	AUTO-Y
+	#02 .Screen/auto DEO
 	#0000 .Screen/y DEO2
 	.center/x LDZ2 .Screen/x DEO2
 	.Screen/height DEI2 #0000
@@ -63,17 +26,17 @@
 		.Screen/y DEI2k INC2 ROT DEO2
 		INC2 GTH2k ,&ver JCN
 	POP2 POP2
-
+	( left )
 	.center/x LDZ2 .Screen/x DEO2
-	.center/y LDZ2 #0020 -- .Screen/y DEO2
+	.center/y LDZ2 #0020 SUB2 .Screen/y DEO2
 	;left-txt #09 ;draw-uf2 JSR2
-
+	( center )
 	.center/x LDZ2 .Screen/x DEO2
 	.center/y LDZ2 .Screen/y DEO2
 	;center-txt #09 ;draw-uf2-center JSR2
-
+	( right )
 	.center/x LDZ2 .Screen/x DEO2
-	.center/y LDZ2 #0020 ++ .Screen/y DEO2
+	.center/y LDZ2 #0020 ADD2 .Screen/y DEO2
 	;right-txt #09 ;draw-uf2-right JSR2
 
 BRK
@@ -81,87 +44,43 @@ BRK
 @draw-uf2-center ( text* color -- )
 	
 	STH
-	DUP2 ,get-width JSR 2// .Screen/x DEI2 SWP2 -- .Screen/x DEO2
+	DUP2 ,get-width JSR #01 SFT2 STH2 .Screen/x DEI2k STH2r SUB2 ROT DEO2
 	STHr ,draw-uf2 JSR
 
-RTN
+JMP2r
 
 @draw-uf2-right ( text* color -- )
 
 	STH
-	DUP2 ,get-width JSR .Screen/x DEI2 SWP2 -- .Screen/x DEO2
+	DUP2 ,get-width JSR STH2 .Screen/x DEI2k STH2r SUB2 ROT DEO2
 	STHr ,draw-uf2 JSR
 
-RTN
+JMP2r
 
 @get-width ( text* -- width* )
 
 	LIT2r 0000
 	&while
-		LDAk TOS ;font ++ LDA TOS STH2 ADD2r
+		LDAk #0000 ROT ;font ADD2 LDA STH2 ADD2r
 		INC2 LDAk ,&while JCN
 	POP2
 	STH2r
 
-RTN
+JMP2r
 
 @draw-uf2 ( text* color -- )
 
 	STH
-	AUTO-YADDR
+	#15 .Screen/auto DEO
 	&while
-		LDAk STHkr ,draw-glyph JSR
+		LDAk STHkr SWP
+		#00 SWP #20 SUB
+			( addr ) DUP2 #50 SFT2 ;font/glyphs ADD2 .Screen/addr DEO2
+			( anchor ) ;font ADD2 LDA #00 SWP .Screen/x DEI2 ADD2 STH2
+		.Screen/sprite DEOk DEO
+		STH2r .Screen/x DEO2
 		INC2 LDAk ,&while JCN
 	POP2 POPr
-	AUTO-NONE
-
-RTN
-
-@draw-glyph ( char color -- )
-
-	.Screen/x DEI2 STH2 
-	.Screen/y DEI2 STH2 
-	( glyph ) OVR ,get-glyph JSR .Screen/addr DEO2
-	DUP .Screen/sprite DEOk DEO 
-	STH2kr .Screen/y DEO2
-	( get width ) SWP TOS ;font ++ LDA 
-	DUP #09 < ,&narrow JCN
-		.Screen/x DEI2k #0008 ++ ROT DEO2
-		OVR .Screen/sprite DEOk DEO 
-		STH2kr .Screen/y DEO2
-		&narrow
-	POP2r
-	( width ) TOS STH2r ++ .Screen/x DEO2
-	POP
-
-RTN
-
-@get-glyph ( char -- addr* )
-
-	#09 =~ ,&tab JCN ( tab )
-	#0a =~ ,&linebreak JCN ( linebreak )
-	#0d =~ ,&linebreak JCN ( linebreak )
-	DUP IS-VALID ,&valid JCN
-		POP ;unknown-icn RTN
-	&linebreak
-		POP ;linebreak-icn RTN
-	&tab
-		POP ;tab-icn RTN
-	&valid
-	TOS 20** ;font
-	#0100 ++ ++
-
-RTN
-
-@print-hex ( value* -- )
-
-	SWP ,&byte JSR 
-	&byte ( byte -- )
-		STHk #04 SFT ,&parse JSR #18 DEO
-		STHr #0f AND ,&parse JSR #18 DEO
-	JMP2r
-	&parse ( byte -- char ) DUP #09 GTH ,&above JCN #30 ADD JMP2r 
-	&above #57 ADD JMP2r
 
 JMP2r
 
@@ -170,24 +89,22 @@ JMP2r
 @right-txt "Right 20 "Aligned 20 "Label $1
 
 @unknown-icn
-	aa55 aa55 aa55 aa55 
 	aa55 aa55 aa55 aa55
-	aa55 aa55 aa55 aa55 
+	aa55 aa55 aa55 aa55
+	aa55 aa55 aa55 aa55
 	aa55 aa55 aa55 aa55
 @tab-icn
-	0000 0000 0000 1008 
-	1000 0000 0000 0000 
+	0000 0000 0000 1008
+	1000 0000 0000 0000
 	0000 0000 0000 0000
 	0000 0000 0000 0000
 @linebreak-icn
-	0000 0000 0000 1028 
+	0000 0000 0000 1028
 	1000 0000 0000 0000
 	0000 0000 0000 0000
 	0000 0000 0000 0000
 
 @font ( venice14 )
-	0000 0000 0000 0000 0009 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
 	0505 0809 080c 0d05 0707 0a09 0609 0608
 	0808 0808 0908 0808 0808 0505 0708 0709
 	000d 0a08 0b0a 090a 0c08 070c 090e 0c09
@@ -202,70 +119,7 @@ JMP2r
 	090c 0808 0505 0000 0907 0000 0000 0000
 	0000 0000 0000 0000 0000 0000 0000 0000
 	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
-	0000 0000 0000 0000 0000 0000 0000 0000
+	&glyphs ( starting at #20 )
 	0000 0000 0000 0000 0000 0000 0000 0000
 	0000 0000 0000 0000 0000 0000 0000 0000
 	0000 3030 3030 3030 3000 3030 0000 0000
