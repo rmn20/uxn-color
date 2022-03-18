@@ -10,4 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-void file_deo(Device *d, Uint8 port);
+#define POLYFILEY 1
+
+void file_i_deo(int instance, Device *d, Uint8 port);
+Uint8 file_i_dei(int instance, Device *d, Uint8 port);

@@ -42,7 +42,7 @@ static SDL_Rect gRect;
 
 /* devices */
 
-static Device *devscreen, *devmouse, *devctrl, *devaudio0;
+static Device *devscreen, *devmouse, *devctrl, *devaudio0, *devfile0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 
@@ -58,21 +58,21 @@ error(char *msg, const char *err)
 static void
 audio_callback(void *u, Uint8 *stream, int len)
 {
-	int i, running = 0;
+	int instance, running = 0;
 	Sint16 *samples = (Sint16 *)stream;
 	SDL_memset(stream, 0, len);
-	for(i = 0; i < POLYPHONY; i++)
-		running += audio_render(&uxn_audio[i], samples, samples + len / 2);
+	for(instance = 0; instance < POLYPHONY; instance++)
+		running += audio_render(instance, samples, samples + len / 2);
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
 	(void)u;
 }
 
 void
-audio_finished_handler(UxnAudio *c)
+audio_finished_handler(int instance)
 {
 	SDL_Event event;
-	event.type = audio0_event + (c - uxn_audio);
+	event.type = audio0_event + instance;
 	SDL_PushEvent(&event);
 }
 
@@ -185,11 +185,11 @@ console_deo(Device *d, Uint8 port)
 static Uint8
 audio_dei(Device *d, Uint8 port)
 {
-	UxnAudio *c = &uxn_audio[d - devaudio0];
+	int instance = d - devaudio0;
 	if(!audio_id) return d->dat[port];
 	switch(port) {
-	case 0x4: return audio_get_vu(c);
-	case 0x2: DEVPOKE16(0x2, c->i); /* fall through */
+	case 0x4: return audio_get_vu(instance);
+	case 0x2: DEVPOKE16(0x2, audio_get_position(instance)); /* fall through */
 	default: return d->dat[port];
 	}
 }
@@ -197,24 +197,26 @@ audio_dei(Device *d, Uint8 port)
 static void
 audio_deo(Device *d, Uint8 port)
 {
-	UxnAudio *c = &uxn_audio[d - devaudio0];
+	int instance = d - devaudio0;
 	if(!audio_id) return;
 	if(port == 0xf) {
-		Uint16 addr, adsr;
 		SDL_LockAudioDevice(audio_id);
-		DEVPEEK16(adsr, 0x8);
-		DEVPEEK16(c->len, 0xa);
-		DEVPEEK16(addr, 0xc);
-		if(c->len > 0x10000 - addr)
-			c->len = 0x10000 - addr;
-		c->addr = &d->u->ram[addr];
-		c->volume[0] = d->dat[0xe] >> 4;
-		c->volume[1] = d->dat[0xe] & 0xf;
-		c->repeat = !(d->dat[0xf] & 0x80);
-		audio_start(c, adsr, d->dat[0xf] & 0x7f);
+		audio_start(instance, d);
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
+}
+
+static void
+file_deo(Device *d, Uint8 port)
+{
+	file_i_deo(d - devfile0, d, port);
+}
+
+static Uint8
+file_dei(Device *d, Uint8 port)
+{
+	return file_i_dei(d - devfile0, d, port);
 }
 
 static Uint8
@@ -263,7 +265,7 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
 	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
 	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file     */ uxn_port(u, 0xa, nil_dei, file_deo);
+	/* file     */ devfile0 = uxn_port(u, 0xa, file_dei, file_deo);
 	/* datetime */ uxn_port(u, 0xb, datetime_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xc, nil_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
