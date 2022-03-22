@@ -30,7 +30,7 @@ tasks:
         cp bin/asma.rom ../out/
         mv bin ../build/uxn-lin64/uxn
     - build-essentials: |
-        for F in uxn/projects/software/calc.tal uxn/projects/software/launcher.tal uxn/projects/examples/demos/piano.tal uxn/projects/examples/software/clock.tal catclock/src/main.tal dexe/src/main.tal donsol/src/main.tal left/src/main.tal nasu/src/main.tal noodle/src/main.tal orca-toy/src/main.tal:orca.rom turye/src/main.tal; do
+        for F in uxn/projects/software/calc.tal uxn/projects/software/launcher.tal uxn/projects/examples/demos/piano.tal uxn/projects/examples/software/clock.tal catclock/src/catclock.tal dexe/src/dexe.tal donsol/src/main.tal left/src/left.tal nasu/src/nasu.tal noodle/src/noodle.tal orca-toy/src/orca.tal:orca.rom turye/src/turye.tal; do
             PROJECT="${F%%/*}"
             if [ "${F}" = "${F%:*}" ]; then
                 ROMNAME="${F##*/}"
