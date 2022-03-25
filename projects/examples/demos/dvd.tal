@@ -1,7 +1,7 @@
 ( DVD Bounce )
 
-|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
-|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
+|00 @System &vector $2 &wst $1 &rst $1 &eaddr $2 &ecode $1 &pad $1 &r $2 &g $2 &b $2 &debug $1 &halt $1
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 
 |0000
 
@@ -9,15 +9,19 @@
 
 |0100 ( -> )
 	
-	( theme ) 
-	#4cfd .System/r DEO2 
-	#4cf3 .System/g DEO2 
+	( theme )
+	#4cfd .System/r DEO2
+	#4cf3 .System/g DEO2
 	#dcf2 .System/b DEO2
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	( starting position )
 	.Screen/width DEI2 #01 SFT2 .dvd/x STZ2
 	.Screen/height DEI2 #01 SFT2 .dvd/y STZ2
+	( set collisions )
+	.Screen/width DEI2 #0020 SUB2 ;on-frame/hit-hor STA2
+	.Screen/height DEI2 #0010 SUB2 ;on-frame/hit-ver STA2
+	( drawing mode )
 	#36 .Screen/auto DEO
 	#01 ,draw-dvd JSR
 	
@@ -26,21 +30,23 @@ BRK
 @on-frame ( -> )
 
 	#00 ,draw-dvd JSR
-	( case: hit-right ) .dvd/x LDZ2 .Screen/width DEI2 #0020 SUB2 EQU2
-	( case: hit-left ) .dvd/x LDZ2 #0000 EQU2 
-	#0000 EQU2 ,&no-flipx JCN 
-		.dvd/dx LDZk #00 EQU SWP STZ 
-		&no-flipx
-	( case: hit-bottom ) .dvd/y LDZ2 .Screen/height DEI2 #0010 SUB2 EQU2
-	( case: hit-top ) .dvd/y LDZ2 #0000 EQU2 
-	#0000 EQU2 ,&no-flipy JCN 
-		.dvd/dy LDZk #00 EQU SWP STZ 
-		&no-flipy
-	( incr ) .dvd/x LDZ2 #0001 #00 .dvd/dx LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/x STZ2
-	( incr ) .dvd/y LDZ2 #0001 #00 .dvd/dy LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/y STZ2
+	( x )
+	.dvd/x LDZ2
+		STH2k #0000 EQU2 ,&flip-x JCN
+		STH2kr [ LIT2 &hit-hor $2 ] EQU2 ,&flip-x JCN
+	&no-x
+	STH2r [ #00 .dvd/dx LDZ ] #10 SFT2 ADD2 #ffff ADD2 .dvd/x STZ2
+	( y )
+	.dvd/y LDZ2
+		STH2k #0000 EQU2 ,&flip-y JCN
+		STH2kr [ LIT2 &hit-ver $2 ] EQU2 ,&flip-y JCN
+	&no-y
+	STH2r [ #00 .dvd/dy LDZ ] #10 SFT2 ADD2 #ffff ADD2 .dvd/y STZ2
 	#01 ,draw-dvd JSR
 
 BRK
+	&flip-x .dvd/dx LDZk #00 EQU SWP STZ ,&no-x JMP
+	&flip-y .dvd/dy LDZk #00 EQU SWP STZ ,&no-y JMP
 
 @draw-dvd ( color -- )
 	
