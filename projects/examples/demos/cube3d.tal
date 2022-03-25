@@ -1,59 +1,29 @@
-( isometric cube )
+( Cube3d:
+	Just a cube, y'know )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
-
-%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
-%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
-%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
-%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
-%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
-
-%ABS2 { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
-%LTS2  { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
-%GTS2  { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
-
-%DEBUG      { ;print-hex/byte JSR2 #0a18 DEO }
-%DEBUG2     { ;print-hex JSR2 #0a18 DEO }
-%RTN        { JMP2r }
-
-( devices )
-
-|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
-|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
-
-( variables )
+|00 @System &vector $2 &wst $1 &rst $1 &eaddr $2 &ecode $1 &pad $1 &r $2 &g $2 &b $2 &debug $1 &halt $1
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 
 |0000
 
-@cube
-	&v0 $8
-	&v4 $8
 @timer $1
 @color $1
-@line 
-	&x0 $2 &y0 $2
-	&x $2 &y $2 
-	&sx $2 &sy $2 
-	&dx $2 &dy $2 
-	&e1 $2 &e2 $2
-@center
-	&x $2 &y $2
+@cube &v0 $8 &v4 $8
+@line &x $2 &y $2 &dx $2 &dy $2 &e1 $2
+@center &x $2 &y $2
 
 ( program )
 
 |0100 ( -> )
 
 	( theme )
-	#0fe5 .System/r DEO2
-	#0fc5 .System/g DEO2
-	#0f25 .System/b DEO2
-
-	.Screen/width DEI2 2// #0040 -- .center/x STZ2
-	.Screen/height DEI2 2// #0040 -- .center/y STZ2
-
+	#4fcd .System/r DEO2
+	#4fc3 .System/g DEO2
+	#dfc2 .System/b DEO2
+	( center )
+	.Screen/width DEI2 #01 SFT2 #0040 SUB2 .center/x STZ2
+	.Screen/height DEI2 #01 SFT2 #0040 SUB2 .center/y STZ2
+	( begin. )
 	;on-frame .Screen/vector DEO2
 
 @on-frame ( -> )
@@ -71,73 +41,79 @@ BRK
 	#0800
 	&loop
 		STHk
-		#00 .timer LDZ [ #00 STHkr INC #07 AND #60 SFT ++ ] #00ff AND2 ;table ++ LDA 2/
-		#00 .timer LDZ [ #00 STHkr #60 SFT ++ ] #00ff AND2 ;table ++ LDA 4/ [ #00 STHkr #62 SFT2 ++ ]
-		.cube/v0 STHr 2* + STZ2
+		#00 .timer LDZ [ #00 STHkr INC #07 AND #60 SFT ADD2 ] #00ff AND2 ;table ADD2 LDA #01 SFT
+		#00 .timer LDZ [ #00 STHkr #60 SFT ADD2 ] #00ff AND2 ;table ADD2 LDA #02 SFT [ #00 STHkr #62 SFT2 ADD2 ]
+		.cube/v0 STHr #10 SFT ADD STZ2
 		INC GTHk ,&loop JCN
 	POP2
 	( vertices )
 	#0800
 	&ver-loop
-		DUP 2* .cube + LDZ2 ;draw-vertex JSR2
+		DUP #10 SFT .cube ADD LDZ2 ;draw-vertex JSR2
 		INC GTHk ,&ver-loop JCN
 	POP2
 	( lines )
 	#0400
 	&line-loop
 		STHk
-		.cube/v0 STHkr 2* + .cube/v0 STHkr INC #03 AND 2* + ;draw-line JSR2
-		.cube/v0 STHkr 2* + .cube/v4 STHkr 2* + ;draw-line JSR2
-		.cube/v4 STHkr 2* + .cube/v4 STHr INC #03 AND 2* + ;draw-line JSR2
+		.cube/v0 STHkr #10 SFT ADD .cube/v0 STHkr INC #03 AND #10 SFT ADD ,trace JSR
+		.cube/v0 STHkr #10 SFT ADD .cube/v4 STHkr #10 SFT ADD ,trace JSR
+		.cube/v4 STHkr #10 SFT ADD .cube/v4 STHr INC #03 AND #10 SFT ADD ,trace JSR
 		INC GTHk ,&line-loop JCN
 	POP2
 
-RTN
+JMP2r
 
-@draw-line ( a b -- )
+@trace ( a b -- )
 
 	STH STH
-	#00 STHkr LDZ .center/x LDZ2 ++ #00 STHr INC LDZ .center/y LDZ2 ++
-	#00 STHkr LDZ .center/x LDZ2 ++ #00 STHr INC LDZ .center/y LDZ2 ++
-		.color LDZ ;line-slow JSR2
+	#00 STHkr LDZ .center/x LDZ2 ADD2 #00 STHr INC LDZ .center/y LDZ2 ADD2
+	#00 STHkr LDZ .center/x LDZ2 ADD2 #00 STHr INC LDZ .center/y LDZ2 ADD2
+		.color LDZ ;draw-line JSR2
 
-RTN
+JMP2r
 
 @draw-vertex ( x y -- )
 
-	#00 SWP #0004 -- .center/y LDZ2 ++ .Screen/y DEO2
-	#00 SWP #0003 -- .center/x LDZ2 ++ .Screen/x DEO2
+	#00 SWP #0004 SUB2 .center/y LDZ2 ADD2 .Screen/y DEO2
+	#00 SWP #0003 SUB2 .center/x LDZ2 ADD2 .Screen/x DEO2
 	;&icn .Screen/addr DEO2
-	.color LDZ 2* .Screen/sprite DEO
+	.color LDZ .Screen/sprite DEO
 
-RTN
+JMP2r
 	&icn 0000 387c 7c7c 3800
 
-@line-slow ( x1 y1 x2 y2 color -- )
-	
-	( load ) .color STZ #0001 SUB2 .line/y0 STZ2 #0001 SUB2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
-	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
-	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
-	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ADD2 .line/sx STZ2
-	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ADD2 .line/sy STZ2
+@draw-line ( x1* y1* x2* y2* color -- )
+
+	( load ) STH ,&y STR2 ,&x STR2 .line/y STZ2 .line/x STZ2
+	,&x LDR2 .line/x LDZ2 SUB2 ;abs2 JSR2 .line/dx STZ2
+	#0000 ,&y LDR2 .line/y LDZ2 SUB2 ;abs2 JSR2 SUB2 .line/dy STZ2
+	#ffff #00 .line/x LDZ2 ,&x LDR2 ;lts2 JSR2 #10 SFT2 ADD2 ,&sx STR2
+	#ffff #00 .line/y LDZ2 ,&y LDR2 ;lts2 JSR2 #10 SFT2 ADD2 ,&sy STR2
 	.line/dx LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
 	&loop
-		.line/x LDZ2 .Screen/x DEO2 .line/y LDZ2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
-		.line/x LDZ2 .line/x0 LDZ2 EQU2 .line/y LDZ2 .line/y0 LDZ2 EQU2 #0101 EQU2 ,&end JCN
-		.line/e1 LDZ2 2** .line/e2 STZ2
-		.line/e2 LDZ2 .line/dy LDZ2 LTS2 ,&skipy JCN
+		.line/x LDZ2 DUP2 .Screen/x DEO2 [ LIT2 &x $2 ] EQU2
+		.line/y LDZ2 DUP2 .Screen/y DEO2 [ LIT2 &y $2 ] EQU2
+			STHkr .Screen/pixel DEO
+			AND ,&end JCN
+		.line/e1 LDZ2 #10 SFT2 DUP2
+		.line/dy LDZ2 ;lts2 JSR2 ,&skipy JCN
 			.line/e1 LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
-			.line/x LDZ2 .line/sx LDZ2 ADD2 .line/x STZ2
+			.line/x LDZ2 [ LIT2 &sx $2 ] ADD2 .line/x STZ2
 		&skipy
-		.line/e2 LDZ2 .line/dx LDZ2 GTS2 ,&skipx JCN
+		.line/dx LDZ2 ;gts2 JSR2 ,&skipx JCN
 			.line/e1 LDZ2 .line/dx LDZ2 ADD2 .line/e1 STZ2
-			.line/y LDZ2 .line/sy LDZ2 ADD2 .line/y STZ2
+			.line/y LDZ2 [ LIT2 &sy $2 ] ADD2 .line/y STZ2
 		&skipx
-		;&loop JMP2
-
+		,&loop JMP
 	&end
+	POPr
 
-RTN
+JMP2r
+
+@abs2 DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 JMP2r
+@lts2 #8000 ADD2 SWP2 #8000 ADD2 GTH2 JMP2r
+@gts2 #8000 ADD2 SWP2 #8000 ADD2 LTH2 JMP2r
 
 @table ( 256 xy )
 	f7f8 f9fa fbfc fcfd fefe ffff ffff ffff

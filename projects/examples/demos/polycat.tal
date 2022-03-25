@@ -1,15 +1,15 @@
-( polycat )
+( Polycat:
+	A cat with one eye, and the hind and tail of a lizard.
+	Original character by Rekka Bellum )
 
-|00 @System     &vector $2 &wst      $1 &rst    $1 &pad    $4 &r      $2 &g       $2 &b       $2 &debug  $1 &halt $1
-|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel  $1 &sprite $1
-|90 @Mouse      &vector $2 &x        $2 &y      $2 &state  $1 &pad    $3 &scrollx $2 &scrolly $2
+|00 @System &vector $2 &wst $1 &rst $1 &pad $4 &r $2 &g $2 &b $2 &debug $1 &halt $1
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixeld $1 &sprite $1
+|90 @Mouse &vector $2 &x $2 &y $2 &state $1 &pad $3 &scrollx $2 &scrolly $2
 
 |0000
 
-@cat
-	&x $2 &y $2 &timer $1
-@pointer
-	&x $2 &y $2
+@cat &x $2 &y $2 &timer $1
+@pointer &x $2 &y $2
 
 |0100 ( -> )
 	
@@ -25,28 +25,20 @@
 	( find center )
 	.Screen/width DEI2 #01 SFT2 .cat/x STZ2
 	.Screen/height DEI2 #01 SFT2 .cat/y STZ2
-	( set screen mode auto-x )
-	#05 .Screen/auto DEO
-	( init )
-	#ff ;draw-eye/last STA
-	#ff ;draw-tail/last STA
-	,draw-polycat JSR
-	,draw-ground JSR
-
-BRK
-
-@draw-ground ( -- )
-
+	( draw ground )
+	#f6 .Screen/auto DEO
 	.cat/y LDZ2 #0018 ADD2 .Screen/y DEO2
 	.cat/x LDZ2 #0010 SUB2 .Screen/x DEO2
 	;ground .Screen/addr DEO2
-	#1000
-	&loop
-		#01 .Screen/sprite DEO
-		INC GTHk ,&loop JCN
-	POP2
+	#01 .Screen/sprite DEO
+	( init )
+	#ff ;draw-eye/last STA
+	#ff ;draw-tail/last STA
+	( set screen mode auto-x )
+	#05 .Screen/auto DEO
+	,draw-polycat JSR
 
-JMP2r
+BRK
 
 @draw-polycat ( -- )
 
