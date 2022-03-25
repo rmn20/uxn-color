@@ -1,16 +1,15 @@
-( The Fibonacci Sequence 
-	A series of numbers where the next number is made of the two numbers before it )
+( Fibonacci:
+	A series of numbers where the next number 
+	is made of the two numbers before it )
 
-%HALT { #010f DEO }
-%EMIT { #18 DEO }
-%PRINT { DUP2 ,print JSR #0a EMIT }
+|0100 ( -> ) @reset
 
-|0100 ( -> )
-
-	#0000 INC2k ADD2k 
-	&loop 
-		PRINT ADD2k LTH2k ,&loop JCN
-	HALT
+	#0000 INC2k ADD2k
+	&loop
+		( print ) DUP2 ,print JSR
+		( linebreak ) #0a18 DEO
+		ADD2k LTH2k ,&loop JCN
+	( halt ) #010f DEO
 
 BRK
 
@@ -18,6 +17,6 @@ BRK
 
 	&short ( short* -- ) SWP ,&byte JSR
 	&byte ( byte -- ) DUP #04 SFT ,&char JSR
-	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD EMIT
+	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
 
 JMP2r

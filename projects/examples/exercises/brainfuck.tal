@@ -1,33 +1,28 @@
-( brainfuck interpreter )
+( Brainfuck:
+	>	Move the pointer to the right
+	<	Move the pointer to the left
+	+	Increment the memory cell at the pointer
+	-	Decrement the memory cell at the pointer
+	.	Output the character signified by the cell at the pointer
+	,	Input a character and store it in the cell at the pointer
+	[	Jump past the matching ] if the cell at the pointer is 0
+	]	Jump back to the matching [ if the cell at the pointer is nonzero )
 
-%DEC { #01 SUB }
-%DEC2 { #0001 SUB2 }
-%DECr { LITr 01 SUBr }
-%HALT { #0101 #0e DEO2 }
-%EMIT { #18 DEO }
-
-|0100 ( -> )
+|0100 ( -> ) @reset
 
 	;memory
 	;program
 	&while
-		( Move the pointer to the right )
 		LDAk LIT '> NEQ ,&movr JCN [ SWP2 INC2 SWP2 ] &movr
-		( Move the pointer to the left )
-		LDAk LIT '< NEQ ,&movl JCN [ SWP2 DEC2 SWP2 ] &movl
-		( Increment the memory cell at the pointer )
+		LDAk LIT '< NEQ ,&movl JCN [ SWP2 #0001 SUB2 SWP2 ] &movl
 		LDAk LIT '+ NEQ ,&incr JCN [ OVR2 STH2k LDA INC STH2r STA ] &incr
-		( Decrement the memory cell at the pointer )
-		LDAk LIT '- NEQ ,&decr JCN [ OVR2 STH2k LDA DEC STH2r STA ] &decr
-		( Output the character signified by the cell at the pointer )
-		LDAk LIT '. NEQ ,&emit JCN [ OVR2 LDA EMIT ] &emit
-		( Jump past the matching ] if the cell at the pointer is 0 )
+		LDAk LIT '- NEQ ,&decr JCN [ OVR2 STH2k LDA #01 SUB STH2r STA ] &decr
+		LDAk LIT '. NEQ ,&emit JCN [ OVR2 LDA #18 DEO ] &emit
 		LDAk LIT '[ NEQ ,&next JCN [ ,goto-next JSR ] &next
-		( Jump back to the matching [ if the cell at the pointer is nonzero )
 		LDAk LIT '] NEQ ,&prev JCN [ ,goto-back JSR ] &prev
 		INC2 LDAk ,&while JCN
 	POP2
-	HALT
+	( halt ) #010f DEO
 	
 BRK
 
@@ -40,7 +35,7 @@ BRK
 		LDAk LIT '[ NEQ JMP INCr
 		LDAk LIT '] NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
-			DECr
+			LITr 01 SUBr
 			&no-end
 		INC2 LDAk ,&loop JCN
 	&end
@@ -52,14 +47,14 @@ JMP2r
 
 	OVR2 LDA #00 NEQ JMP JMP2r
 	( depth ) LITr 00
-	DEC2
+	#0001 SUB2
 	&loop
 		LDAk LIT '] NEQ JMP INCr
 		LDAk LIT '[ NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
-			DECr
+			LITr 01 SUBr
 			&no-end
-		DEC2 LDAk ,&loop JCN
+		#0001 SUB2 LDAk ,&loop JCN
 	&end
 	( depth ) POPr
 
