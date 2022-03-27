@@ -50,7 +50,7 @@ BRK
 
 @on-frame ( -> )
 	( Because an interrupted infinite loop will (almost certainly) leave
-    items on the stacks, clear both stacks here. )
+	items on the stacks, clear both stacks here. )
 	#00 .System/wst DEO
 	#00 .System/rst DEO
 
