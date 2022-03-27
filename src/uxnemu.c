@@ -32,7 +32,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
-#define BENCH 0
 
 static SDL_Window *gWindow;
 static SDL_Texture *gTexture;
@@ -44,7 +43,7 @@ static SDL_Rect gRect;
 
 static Device *devscreen, *devmouse, *devctrl, *devaudio0, *devfile0;
 static Uint8 zoom = 1;
-static Uint32 stdin_event, audio0_event;
+static Uint32 stdin_event, audio0_event, redraw_event;
 
 static int
 error(char *msg, const char *err)
@@ -83,6 +82,20 @@ stdin_handler(void *p)
 	event.type = stdin_event;
 	while(fread(&event.cbutton.button, 1, 1, stdin) > 0)
 		SDL_PushEvent(&event);
+	return 0;
+	(void)p;
+}
+
+static int
+redraw_handler(void *p)
+{
+	SDL_Event event;
+	event.type = redraw_event;
+	for(;;) {
+		SDL_Delay(16);
+		if(SDL_HasEvent(redraw_event) == SDL_FALSE)
+			SDL_PushEvent(&event);
+	}
 	return 0;
 	(void)p;
 }
@@ -155,7 +168,9 @@ init(void)
 		error("sdl_joystick", SDL_GetError());
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
+	redraw_event = SDL_RegisterEvents(1);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
+	SDL_CreateThread(redraw_handler, "redraw", NULL);
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
@@ -374,14 +389,13 @@ console_input(Uxn *u, char c)
 static int
 run(Uxn *u)
 {
+	SDL_Event event;
 	Device *devsys = &u->dev[0];
 	redraw();
-	while(!devsys->dat[0xf]) {
-		SDL_Event event;
-		double elapsed, begin;
-		if(!BENCH)
-			begin = SDL_GetPerformanceCounter();
-		while(SDL_PollEvent(&event) != 0) {
+	while(SDL_WaitEvent(&event)) {
+			/* .System/halt */
+			if(devsys->dat[0xf])
+				return error("Run", "Ended.");
 			/* Window */
 			if(event.type == SDL_QUIT)
 				return error("Run", "Quit.");
@@ -420,8 +434,14 @@ run(Uxn *u)
 				else
 					do_shortcut(u, &event);
 				ksym = event.key.keysym.sym;
-				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
-					break;
+				while(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, redraw_event, redraw_event) == 0) {
+					SDL_Delay(4);
+					SDL_PumpEvents();
+				}
+				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym) {
+					SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYUP, SDL_KEYUP);
+					SDL_PushEvent(&event);
+				}
 			} else if(event.type == SDL_KEYUP)
 				controller_up(devctrl, get_button(&event));
 			else if(event.type == SDL_JOYAXISMOTION) {
@@ -437,16 +457,14 @@ run(Uxn *u)
 			/* Console */
 			else if(event.type == stdin_event)
 				console_input(u, event.cbutton.button);
-		}
-		uxn_eval(u, GETVECTOR(devscreen));
-		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
-			redraw();
-		if(!BENCH) {
-			elapsed = (SDL_GetPerformanceCounter() - begin) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
-			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
-		}
+			/* .Screen/vector and redraw */
+			else if(event.type == redraw_event) {
+				uxn_eval(u, GETVECTOR(devscreen));
+				if(uxn_screen.fg.changed || uxn_screen.bg.changed)
+					redraw();
+			}
 	}
-	return error("Run", "Ended.");
+	return error("SDL_WaitEvent", SDL_GetError());
 }
 
 int
