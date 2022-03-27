@@ -47,6 +47,7 @@ typedef struct Uxn {
 
 int uxn_boot(Uxn *u, Uint8 *ram);
 int uxn_eval(Uxn *u, Uint16 pc);
+int uxn_interrupt(void);
 int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));
 #endif /* UXN_UXN_H */

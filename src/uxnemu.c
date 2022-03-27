@@ -32,6 +32,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
+#define TIMEOUT_FRAMES 10
 
 static SDL_Window *gWindow;
 static SDL_Texture *gTexture;
@@ -43,7 +44,7 @@ static SDL_Rect gRect;
 
 static Device *devscreen, *devmouse, *devctrl, *devaudio0, *devfile0;
 static Uint8 zoom = 1;
-static Uint32 stdin_event, audio0_event, redraw_event;
+static Uint32 stdin_event, audio0_event, redraw_event, interrupt_event;
 
 static int
 error(char *msg, const char *err)
@@ -89,12 +90,19 @@ stdin_handler(void *p)
 static int
 redraw_handler(void *p)
 {
-	SDL_Event event;
+	int dropped_frames = 0;
+	SDL_Event event, interrupt;
 	event.type = redraw_event;
+	interrupt.type = interrupt_event;
 	for(;;) {
 		SDL_Delay(16);
-		if(SDL_HasEvent(redraw_event) == SDL_FALSE)
+		if(SDL_HasEvent(redraw_event) == SDL_FALSE) {
 			SDL_PushEvent(&event);
+			dropped_frames = 0;
+		}
+		else if(++dropped_frames == TIMEOUT_FRAMES) {
+			SDL_PushEvent(&interrupt);
+		}
 	}
 	return 0;
 	(void)p;
@@ -169,6 +177,7 @@ init(void)
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	redraw_event = SDL_RegisterEvents(1);
+	interrupt_event = SDL_RegisterEvents(1);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 	SDL_CreateThread(redraw_handler, "redraw", NULL);
 	SDL_StartTextInput();
@@ -465,6 +474,12 @@ run(Uxn *u)
 		}
 	}
 	return error("SDL_WaitEvent", SDL_GetError());
+}
+
+int
+uxn_interrupt(void)
+{
+	return SDL_PeepEvents(NULL, 1, SDL_GETEVENT, interrupt_event, interrupt_event) < 1;
 }
 
 int

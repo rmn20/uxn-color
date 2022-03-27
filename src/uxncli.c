@@ -101,6 +101,12 @@ load(Uxn *u, char *filepath)
 	return 1;
 }
 
+int
+uxn_interrupt(void)
+{
+	return 1;
+}
+
 static int
 start(Uxn *u)
 {

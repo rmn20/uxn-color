@@ -20,7 +20,8 @@ static const char *errors[] = {
 	"Working-stack overflow",
 	"Return-stack overflow",
 	"Working-stack division by zero",
-	"Return-stack division by zero"};
+	"Return-stack division by zero",
+	"Execution timeout"};
 
 static void
 system_print(Stack *s, char *name)

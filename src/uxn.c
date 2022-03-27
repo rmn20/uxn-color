@@ -30,16 +30,25 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEVW8(x, y) { dev->dat[(x) & 0xf] = y; dev->deo(dev, (x) & 0x0f); }
 #define DEVW(d, x, y) { dev = (d); if(bs) { DEVW8((x), (y) >> 8); DEVW8((x) + 1, (y)); } else { DEVW8((x), (y)) } }
 #define WARP(x) { if(bs) pc = (x); else pc += (Sint8)(x); }
+#define LIMIT 0x40000 /* around 3 ms */
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
 	unsigned int a, b, c, j, k, bs, instr, errcode;
+	unsigned int limit = LIMIT;
 	Uint8 kptr, *sp;
 	Stack *src, *dst;
 	Device *dev;
 	if(!pc || u->dev[0].dat[0xf]) return 0;
 	while((instr = u->ram[pc++])) {
+		if(!limit--) {
+			if(!uxn_interrupt()) {
+				errcode = 6;
+				goto timeout;
+			}
+			limit = LIMIT;
+		}
 		/* Return Mode */
 		if(instr & 0x40) {
 			src = &u->rst; dst = &u->wst;
@@ -101,6 +110,7 @@ err:
 	/* set 1 in errcode if it involved the return stack instead of the working stack */
 	/*        (stack overflow & ( opcode was STH / JSR )) ^ Return Mode */
 	errcode |= ((errcode >> 1 & ((instr & 0x1e) == 0x0e)) ^ instr >> 6) & 1;
+timeout:
 	return uxn_halt(u, errcode, pc - 1);
 }
 
