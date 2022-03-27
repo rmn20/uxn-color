@@ -11,6 +11,8 @@
 	;filepath-txt .File0/name DEO2
 	;part1 ,append JSR
 	;part2 ,append JSR
+	( close file before changing device )
+	.File0/name DEI2k ROT DEO2
 	( read a file with file1 )
 	;filepath-txt .File1/name DEO2
 	,stream JSR
