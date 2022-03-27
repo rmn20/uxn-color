@@ -393,76 +393,76 @@ run(Uxn *u)
 	Device *devsys = &u->dev[0];
 	redraw();
 	while(SDL_WaitEvent(&event)) {
-			/* .System/halt */
-			if(devsys->dat[0xf])
-				return error("Run", "Ended.");
-			/* Window */
-			if(event.type == SDL_QUIT)
-				return error("Run", "Quit.");
-			else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
+		/* .System/halt */
+		if(devsys->dat[0xf])
+			return error("Run", "Ended.");
+		/* Window */
+		if(event.type == SDL_QUIT)
+			return error("Run", "Quit.");
+		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
+			redraw();
+		else if(event.type == SDL_DROPFILE) {
+			screen_resize(&uxn_screen, WIDTH, HEIGHT);
+			start(u, event.drop.file);
+			SDL_free(event.drop.file);
+		}
+		/* Audio */
+		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
+			Device *d = devaudio0 + (event.type - audio0_event);
+			uxn_eval(u, GETVECTOR(d));
+		}
+		/* Mouse */
+		else if(event.type == SDL_MOUSEMOTION)
+			mouse_pos(devmouse,
+				clamp(event.motion.x - PAD, 0, uxn_screen.width - 1),
+				clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
+		else if(event.type == SDL_MOUSEBUTTONUP)
+			mouse_up(devmouse, SDL_BUTTON(event.button.button));
+		else if(event.type == SDL_MOUSEBUTTONDOWN)
+			mouse_down(devmouse, SDL_BUTTON(event.button.button));
+		else if(event.type == SDL_MOUSEWHEEL)
+			mouse_scroll(devmouse, event.wheel.x, event.wheel.y);
+		/* Controller */
+		else if(event.type == SDL_TEXTINPUT)
+			controller_key(devctrl, event.text.text[0]);
+		else if(event.type == SDL_KEYDOWN) {
+			int ksym;
+			if(get_key(&event))
+				controller_key(devctrl, get_key(&event));
+			else if(get_button(&event))
+				controller_down(devctrl, get_button(&event));
+			else
+				do_shortcut(u, &event);
+			ksym = event.key.keysym.sym;
+			while(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, redraw_event, redraw_event) == 0) {
+				SDL_Delay(4);
+				SDL_PumpEvents();
+			}
+			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym) {
+				SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYUP, SDL_KEYUP);
+				SDL_PushEvent(&event);
+			}
+		} else if(event.type == SDL_KEYUP)
+			controller_up(devctrl, get_button(&event));
+		else if(event.type == SDL_JOYAXISMOTION) {
+			Uint8 vec = get_vector_joystick(&event);
+			if(!vec)
+				controller_up(devctrl, (0x03 << (!event.jaxis.axis * 2)) << 4);
+			else
+				controller_down(devctrl, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
+		} else if(event.type == SDL_JOYBUTTONDOWN)
+			controller_down(devctrl, get_button_joystick(&event));
+		else if(event.type == SDL_JOYBUTTONUP)
+			controller_up(devctrl, get_button_joystick(&event));
+		/* Console */
+		else if(event.type == stdin_event)
+			console_input(u, event.cbutton.button);
+		/* .Screen/vector and redraw */
+		else if(event.type == redraw_event) {
+			uxn_eval(u, GETVECTOR(devscreen));
+			if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 				redraw();
-			else if(event.type == SDL_DROPFILE) {
-				screen_resize(&uxn_screen, WIDTH, HEIGHT);
-				start(u, event.drop.file);
-				SDL_free(event.drop.file);
-			}
-			/* Audio */
-			else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-				Device *d = devaudio0 + (event.type - audio0_event);
-				uxn_eval(u, GETVECTOR(d));
-			}
-			/* Mouse */
-			else if(event.type == SDL_MOUSEMOTION)
-				mouse_pos(devmouse,
-					clamp(event.motion.x - PAD, 0, uxn_screen.width - 1),
-					clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
-			else if(event.type == SDL_MOUSEBUTTONUP)
-				mouse_up(devmouse, SDL_BUTTON(event.button.button));
-			else if(event.type == SDL_MOUSEBUTTONDOWN)
-				mouse_down(devmouse, SDL_BUTTON(event.button.button));
-			else if(event.type == SDL_MOUSEWHEEL)
-				mouse_scroll(devmouse, event.wheel.x, event.wheel.y);
-			/* Controller */
-			else if(event.type == SDL_TEXTINPUT)
-				controller_key(devctrl, event.text.text[0]);
-			else if(event.type == SDL_KEYDOWN) {
-				int ksym;
-				if(get_key(&event))
-					controller_key(devctrl, get_key(&event));
-				else if(get_button(&event))
-					controller_down(devctrl, get_button(&event));
-				else
-					do_shortcut(u, &event);
-				ksym = event.key.keysym.sym;
-				while(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, redraw_event, redraw_event) == 0) {
-					SDL_Delay(4);
-					SDL_PumpEvents();
-				}
-				if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym) {
-					SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYUP, SDL_KEYUP);
-					SDL_PushEvent(&event);
-				}
-			} else if(event.type == SDL_KEYUP)
-				controller_up(devctrl, get_button(&event));
-			else if(event.type == SDL_JOYAXISMOTION) {
-				Uint8 vec = get_vector_joystick(&event);
-				if(!vec)
-					controller_up(devctrl, (0x03 << (!event.jaxis.axis * 2)) << 4);
-				else
-					controller_down(devctrl, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
-			} else if(event.type == SDL_JOYBUTTONDOWN)
-				controller_down(devctrl, get_button_joystick(&event));
-			else if(event.type == SDL_JOYBUTTONUP)
-				controller_up(devctrl, get_button_joystick(&event));
-			/* Console */
-			else if(event.type == stdin_event)
-				console_input(u, event.cbutton.button);
-			/* .Screen/vector and redraw */
-			else if(event.type == redraw_event) {
-				uxn_eval(u, GETVECTOR(devscreen));
-				if(uxn_screen.fg.changed || uxn_screen.bg.changed)
-					redraw();
-			}
+		}
 	}
 	return error("SDL_WaitEvent", SDL_GetError());
 }
