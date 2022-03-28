@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "uxn.h"
 
@@ -81,7 +82,7 @@ stdin_handler(void *p)
 {
 	SDL_Event event;
 	event.type = stdin_event;
-	while(fread(&event.cbutton.button, 1, 1, stdin) > 0 && SDL_PushEvent(&event) >= 0)
+	while(read(0, &event.cbutton.button, 1) > 0 && SDL_PushEvent(&event) >= 0)
 		;
 	return 0;
 	(void)p;
@@ -514,6 +515,7 @@ main(int argc, char **argv)
 	if(!loaded && !start(&u, "launcher.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
 	run(&u);
+	close(0); /* make stdin thread exit */
 	SDL_Quit();
 	return 0;
 }
