@@ -43,7 +43,7 @@ static SDL_Rect gRect;
 
 /* devices */
 
-static Device *devscreen, *devmouse, *devctrl, *devaudio0, *devfile0;
+static Device *devscreen, *devmouse, *devctrl, *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event, redraw_event, interrupt_event;
 
@@ -231,18 +231,6 @@ audio_deo(Device *d, Uint8 port)
 	}
 }
 
-static void
-file_deo(Device *d, Uint8 port)
-{
-	file_i_deo(d - devfile0, d, port);
-}
-
-static Uint8
-file_dei(Device *d, Uint8 port)
-{
-	return file_i_dei(d - devfile0, d, port);
-}
-
 static Uint8
 nil_dei(Device *d, Uint8 port)
 {
@@ -289,7 +277,7 @@ start(Uxn *u, char *rom)
 	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
 	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
 	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file0    */ devfile0 = uxn_port(u, 0xa, file_dei, file_deo);
+	/* file0    */ uxn_port(u, 0xa, file_dei, file_deo);
 	/* file1    */ uxn_port(u, 0xb, file_dei, file_deo);
 	/* datetime */ uxn_port(u, 0xc, datetime_dei, nil_deo);
 	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
