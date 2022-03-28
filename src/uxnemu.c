@@ -81,8 +81,8 @@ stdin_handler(void *p)
 {
 	SDL_Event event;
 	event.type = stdin_event;
-	while(fread(&event.cbutton.button, 1, 1, stdin) > 0)
-		SDL_PushEvent(&event);
+	while(fread(&event.cbutton.button, 1, 1, stdin) > 0 && SDL_PushEvent(&event) >= 0)
+		;
 	return 0;
 	(void)p;
 }
@@ -90,18 +90,17 @@ stdin_handler(void *p)
 static int
 redraw_handler(void *p)
 {
-	int dropped_frames = 0;
+	int dropped_frames = 0, stop = 0;
 	SDL_Event event, interrupt;
 	event.type = redraw_event;
 	interrupt.type = interrupt_event;
-	for(;;) {
+	while(!stop) {
 		SDL_Delay(16);
 		if(SDL_HasEvent(redraw_event) == SDL_FALSE) {
-			SDL_PushEvent(&event);
+			stop = SDL_PushEvent(&event) < 0;
 			dropped_frames = 0;
-		}
-		else if(++dropped_frames == TIMEOUT_FRAMES) {
-			SDL_PushEvent(&interrupt);
+		} else if(++dropped_frames == TIMEOUT_FRAMES) {
+			stop = SDL_PushEvent(&interrupt) < 0;
 		}
 	}
 	return 0;
@@ -178,8 +177,8 @@ init(void)
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	redraw_event = SDL_RegisterEvents(1);
 	interrupt_event = SDL_RegisterEvents(1);
-	SDL_CreateThread(stdin_handler, "stdin", NULL);
-	SDL_CreateThread(redraw_handler, "redraw", NULL);
+	SDL_DetachThread(SDL_CreateThread(stdin_handler, "stdin", NULL));
+	SDL_DetachThread(SDL_CreateThread(redraw_handler, "redraw", NULL));
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
