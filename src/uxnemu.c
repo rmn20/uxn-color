@@ -263,7 +263,8 @@ load(Uxn *u, char *rom)
 static int
 start(Uxn *u, char *rom)
 {
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8))))
+	free(u->ram);
+	if(!uxn_boot(u, calloc(0x10000, 1)))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
@@ -474,7 +475,7 @@ int
 main(int argc, char **argv)
 {
 	SDL_DisplayMode DM;
-	Uxn u;
+	Uxn u = {0};
 	int i, loaded = 0;
 
 	if(!init())
