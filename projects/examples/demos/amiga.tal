@@ -9,7 +9,7 @@
 	@timer $1
 	@frame $1
 
-|0100 @reset
+|0100
 
 	( vectors )
 	;on-frame .Screen/vector DEO2
@@ -24,7 +24,7 @@
 	#0020 .ball/x STZ2
 	#0020 .ball/y STZ2
 	( initial velocity )
-	#0002 .ball/vx STZ2
+	#0008 .ball/vx STZ2
 	#0000 .ball/vy STZ2
 	( once )
 	;make-shadow JSR2
@@ -60,17 +60,26 @@ JMP2r
 @move-ball ( -- )
 
 	,clear-ball JSR
+	.ball/vx LDZ2k STH2k ROT STZ2
+	.ball/x LDZ2k STH2r ADD2 ,check-flip-vx JSR ROT STZ2
 	.ball/vy LDZ2k INC2 STH2k ROT STZ2
 	.ball/y LDZ2k STH2r ADD2 ,check-flip-vy JSR ROT STZ2
 	,draw-ball JSR
 
 JMP2r
 
+@check-flip-vx ( x -- x )
+
+	( left ) DUP2 #0010 LTH2 ,&flip JCN 
+	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ,&flip JCN ,&else JMP
+	&flip .ball/vx LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
+	&else
+
+JMP2r
+
 @check-flip-vy ( y -- y )
 
-	DUP2 #0028 ADD2
-	.Screen/height DEI2 #0028 SUB2
-	GTH2 ,&flip JCN ,&else JMP
+	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ,&flip JCN ,&else JMP
 	&flip .ball/vy LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
 	&else
 
