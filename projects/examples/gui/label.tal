@@ -8,11 +8,11 @@
 @center &x $2 &y $2
 
 |0100
-	
+
 	( theme )
-	#f0d7 .System/r DEO2
-	#f0de .System/g DEO2
-	#f0dc .System/b DEO2
+	#a0dc .System/r DEO2
+	#a0dc .System/g DEO2
+	#a0dc .System/b DEO2
 	( find screen center )
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
 	.Screen/height DEI2 #01 SFT2 .center/y STZ2
@@ -28,32 +28,32 @@
 	POP2 POP2
 	( left )
 	.center/x LDZ2 .Screen/x DEO2
-	.center/y LDZ2 #0020 SUB2 .Screen/y DEO2
-	;left-txt #09 ;draw-uf2 JSR2
+	.center/y LDZ2 #0018 SUB2 .Screen/y DEO2
+	;left-txt ,draw-uf2 JSR
 	( center )
 	.center/x LDZ2 .Screen/x DEO2
 	.center/y LDZ2 .Screen/y DEO2
-	;center-txt #09 ;draw-uf2-center JSR2
+	;center-txt ,draw-uf2-center JSR
 	( right )
 	.center/x LDZ2 .Screen/x DEO2
-	.center/y LDZ2 #0020 ADD2 .Screen/y DEO2
-	;right-txt #09 ;draw-uf2-right JSR2
+	.center/y LDZ2 #0018 ADD2 .Screen/y DEO2
+	;right-txt ,draw-uf2-right JSR
 
 BRK
 
 @draw-uf2-center ( text* color -- )
-	
-	STH
-	DUP2 ,get-width JSR #01 SFT2 STH2 .Screen/x DEI2k STH2r SUB2 ROT DEO2
-	STHr ,draw-uf2 JSR
+
+	DUP2 ,get-width JSR #01 SFT2 STH2 
+	.Screen/x DEI2k STH2r SUB2 ROT DEO2
+	,draw-uf2 JSR
 
 JMP2r
 
 @draw-uf2-right ( text* color -- )
 
-	STH
-	DUP2 ,get-width JSR STH2 .Screen/x DEI2k STH2r SUB2 ROT DEO2
-	STHr ,draw-uf2 JSR
+	DUP2 ,get-width JSR STH2 
+	.Screen/x DEI2k STH2r SUB2 ROT DEO2
+	,draw-uf2 JSR
 
 JMP2r
 
@@ -68,41 +68,23 @@ JMP2r
 
 JMP2r
 
-@draw-uf2 ( text* color -- )
+@draw-uf2 ( text* -- )
 
-	STH
 	#15 .Screen/auto DEO
 	&while
-		LDAk STHkr SWP
-		#00 SWP #20 SUB
-			( addr ) DUP2 #50 SFT2 ;font/glyphs ADD2 .Screen/addr DEO2
-			( anchor ) ;font ADD2 LDA #00 SWP .Screen/x DEI2 ADD2 STH2
-		.Screen/sprite DEOk DEO
-		STH2r .Screen/x DEO2
+		LDAk #20 SUB #00 SWP
+			DUP2 #50 SFT2 ;font/glyphs ADD2 .Screen/addr DEO2
+			;font ADD2 LDA #00 SWP .Screen/x DEI2 ADD2
+		#01 .Screen/sprite DEOk DEO
+		.Screen/x DEO2
 		INC2 LDAk ,&while JCN
-	POP2 POPr
+	POP2
 
 JMP2r
 
 @left-txt "Left 20 "Aligned 20 "Label $1
 @center-txt "Center 20 "Aligned 20 "Label $1
 @right-txt "Right 20 "Aligned 20 "Label $1
-
-@unknown-icn
-	aa55 aa55 aa55 aa55
-	aa55 aa55 aa55 aa55
-	aa55 aa55 aa55 aa55
-	aa55 aa55 aa55 aa55
-@tab-icn
-	0000 0000 0000 1008
-	1000 0000 0000 0000
-	0000 0000 0000 0000
-	0000 0000 0000 0000
-@linebreak-icn
-	0000 0000 0000 1028
-	1000 0000 0000 0000
-	0000 0000 0000 0000
-	0000 0000 0000 0000
 
 @font ( venice14 )
 	0505 0809 080c 0d05 0707 0a09 0609 0608
