@@ -51,6 +51,7 @@ static int
 error(char *msg, const char *err)
 {
 	fprintf(stderr, "%s: %s\n", msg, err);
+	fflush(stderr);
 	return 0;
 }
 
@@ -256,6 +257,7 @@ load(Uxn *u, char *rom)
 	f->close(f);
 	if(r < 1) return 0;
 	fprintf(stderr, "Loaded %s\n", rom);
+	fflush(stderr);
 	SDL_SetWindowTitle(gWindow, rom);
 	return 1;
 }
@@ -311,6 +313,7 @@ capture_screen(void)
 	SDL_SaveBMP(surface, fname);
 	SDL_FreeSurface(surface);
 	fprintf(stderr, "Saved %s\n", fname);
+	fflush(stderr);
 }
 
 static void
