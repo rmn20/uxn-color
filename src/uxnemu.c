@@ -16,6 +16,9 @@
 #include "devices/controller.h"
 #include "devices/mouse.h"
 #include "devices/datetime.h"
+#ifdef _WIN32
+#include <processthreadsapi.h>
+#endif
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
@@ -40,6 +43,7 @@ static SDL_Texture *gTexture;
 static SDL_Renderer *gRenderer;
 static SDL_AudioDeviceID audio_id;
 static SDL_Rect gRect;
+static SDL_Thread *stdin_thread;
 
 /* devices */
 
@@ -179,7 +183,7 @@ init(void)
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	redraw_event = SDL_RegisterEvents(1);
 	interrupt_event = SDL_RegisterEvents(1);
-	SDL_DetachThread(SDL_CreateThread(stdin_handler, "stdin", NULL));
+	SDL_DetachThread(stdin_thread = SDL_CreateThread(stdin_handler, "stdin", NULL));
 	SDL_DetachThread(SDL_CreateThread(redraw_handler, "redraw", NULL));
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
@@ -507,7 +511,12 @@ main(int argc, char **argv)
 	if(!loaded && !start(&u, "launcher.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
 	run(&u);
+#ifdef _WIN32
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
+#else
 	close(0); /* make stdin thread exit */
+#endif
 	SDL_Quit();
 	return 0;
 }
