@@ -66,7 +66,7 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 static Uint16
 file_read_dir(UxnFile *c, char *dest, Uint16 len)
 {
-	static char pathname[4352];
+	static char pathname[4356];
 	char *p = dest;
 	if(c->de == NULL) c->de = readdir(c->dir);
 	for(; c->de != NULL; c->de = readdir(c->dir)) {
