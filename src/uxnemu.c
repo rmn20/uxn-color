@@ -88,21 +88,23 @@ stdin_handler(void *p)
 	(void)p;
 }
 
-static Uint32
-redraw_handler(Uint32 interval, void *p)
+static int
+redraw_handler(void *p)
 {
-	static int dropped_frames = 0;
-	static unsigned int bump_interval = 0;
-	SDL_Event event;
-	if(SDL_HasEvent(redraw_event) == SDL_FALSE) {
-		event.type = redraw_event;
-		dropped_frames = 0;
-	} else if(++dropped_frames == TIMEOUT_FRAMES) {
-		event.type = interrupt_event;
+	int dropped_frames = 0, stop = 0;
+	SDL_Event event, interrupt;
+	event.type = redraw_event;
+	interrupt.type = interrupt_event;
+	while(!stop) {
+		SDL_Delay(16);
+		if(SDL_HasEvent(redraw_event) == SDL_FALSE) {
+			stop = SDL_PushEvent(&event) < 0;
+			dropped_frames = 0;
+		} else if(++dropped_frames == TIMEOUT_FRAMES) {
+			stop = SDL_PushEvent(&interrupt) < 0;
+		}
 	}
-	SDL_PushEvent(&event);
-	return 16 + (bump_interval++ % 3 == 0);
-	(void)interval;
+	return 0;
 	(void)p;
 }
 
@@ -158,7 +160,7 @@ init(void)
 	as.callback = audio_callback;
 	as.samples = 512;
 	as.userdata = NULL;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0)
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return error("sdl", SDL_GetError());
 	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(gWindow == NULL)
@@ -177,7 +179,7 @@ init(void)
 	redraw_event = SDL_RegisterEvents(1);
 	interrupt_event = SDL_RegisterEvents(1);
 	SDL_DetachThread(SDL_CreateThread(stdin_handler, "stdin", NULL));
-	SDL_AddTimer(16, redraw_handler, NULL);
+	SDL_DetachThread(SDL_CreateThread(redraw_handler, "redraw", NULL));
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
