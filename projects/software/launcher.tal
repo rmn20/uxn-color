@@ -1,10 +1,5 @@
 ( launcher )
 
-%+  { ADD } %-   { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH } %>   { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
-
 %2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
 %4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
 %8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
@@ -26,7 +21,7 @@
 %DEBUG  { ;print-hex/byte JSR2 #0a EMIT }
 %DEBUG2 { ;print-hex JSR2 #0a EMIT }
 
-%LINES-COUNT { .browser/y2 LDZ2 .browser/y LDZ2 -- 10// NIP }
+%LINES-COUNT { .browser/y2 LDZ2 .browser/y LDZ2 SUB2 10// NIP }
 
 ( devices )
 
@@ -82,7 +77,7 @@
 	( place )
 	#0088 .browser/x STZ2
 	#0010 .browser/y STZ2
-	.Screen/height DEI2 #33 SFT2 #0011 -- .browser/y2 STZ2
+	.Screen/height DEI2 #33 SFT2 #0011 SUB2 .browser/y2 STZ2
 
 	( draw mascot )
 	#0010 #0010 #0060 #0060 ;mascot-icn #01 ;draw-icn JSR2
@@ -115,28 +110,28 @@ BRK
 	( draw new cursor )
 	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
-	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
+	#41 .Mouse/state DEI #01 EQU ADD .Screen/sprite DEO
 
 	( wheel )
 	.Mouse/scrolly INC DEI
-	DUP #ff ! ,&no-up JCN
-		.browser/scroll LDZ #00 = ,&no-up JCN
-		DUP .browser/scroll LDZ + ;scroll-to JSR2
+	DUP #ff NEQ ,&no-up JCN
+		.browser/scroll LDZ #00 EQU ,&no-up JCN
+		DUP .browser/scroll LDZ ADD ;scroll-to JSR2
 		&no-up
-	DUP #01 ! ,&no-down JCN
-		.browser/scroll LDZ .browser/lines LDZ = ,&no-down JCN
-		DUP .browser/scroll LDZ + ;scroll-to JSR2
+	DUP #01 NEQ ,&no-down JCN
+		.browser/scroll LDZ .browser/lines LDZ EQU ,&no-down JCN
+		DUP .browser/scroll LDZ ADD ;scroll-to JSR2
 		&no-down
 	POP
 
 	( within browser )
-	.Mouse/y DEI2 .browser/y LDZ2 << ,&outside JCN
-	.Mouse/y DEI2 .browser/y2 LDZ2 #0010 -- >> ,&outside JCN
+	.Mouse/y DEI2 .browser/y LDZ2 LTH2 ,&outside JCN
+	.Mouse/y DEI2 .browser/y2 LDZ2 #0010 SUB2 GTH2 ,&outside JCN
 	( select choice )
-	.Mouse/y DEI2 .browser/y LDZ2 --
-		10// NIP .browser/scroll LDZ + ;select-file JSR2
+	.Mouse/y DEI2 .browser/y LDZ2 SUB2
+		10// NIP .browser/scroll LDZ ADD ;select-file JSR2
 	( run choice )
-	.Mouse/state DEI #00 = ,&no-click JCN
+	.Mouse/state DEI #00 EQU ,&no-click JCN
 		.browser/sel LDZ ;run-file JSR2
 		&no-click
 	&outside
@@ -147,26 +142,26 @@ BRK
 
 	( controller )
 	.Controller/button DEI
-	DUP #10 ! ,&no-up JCN
-		.browser/sel LDZ #00 = ,&no-up JCN
-		.browser/sel LDZ #01 - ;select-file JSR2
+	DUP #10 NEQ ,&no-up JCN
+		.browser/sel LDZ #00 EQU ,&no-up JCN
+		.browser/sel LDZ #01 SUB ;select-file JSR2
 		;follow-selection JSR2
 		POP BRK
 		&no-up
-	DUP #20 ! ,&no-down JCN
-		.browser/sel LDZ INC .browser/lines LDZ = ,&no-down JCN
+	DUP #20 NEQ ,&no-down JCN
+		.browser/sel LDZ INC .browser/lines LDZ EQU ,&no-down JCN
 		.browser/sel LDZ INC ;select-file JSR2
 		;follow-selection JSR2
 		POP BRK
 		&no-down
-	DUP #01 ! ,&no-a JCN
+	DUP #01 NEQ ,&no-a JCN
 		.browser/sel LDZ ;run-file JSR2
 		POP BRK
 		&no-a
 	POP
 	( keyboard )
 	.Controller/key DEI
-	DUP #0d ! ,&no-enter JCN
+	DUP #0d NEQ ,&no-enter JCN
 		.browser/sel LDZ ;run-file JSR2
 		POP BRK
 		&no-enter
@@ -185,7 +180,7 @@ BRK
 	( split with null-char )
 	;dir/data
 	&while
-		LDAk #1f > ,&no-lb JCN
+		LDAk #1f GTH ,&no-lb JCN
 			( split ) STH2k #00 STH2r STA
 			( count lines ) .browser/lines LDZk INC SWP STZ
 			&no-lb
@@ -197,23 +192,23 @@ RTN
 @select-file ( id -- )
 
 	( has changed )
-	DUP .browser/last LDZ ! ,&has-changed JCN
+	DUP .browser/last LDZ NEQ ,&has-changed JCN
 		POP RTN
 		&has-changed
 	( beyond )
-	DUP .browser/lines LDZ < ,&valid JCN
+	DUP .browser/lines LDZ LTH ,&valid JCN
 		POP RTN
 		&valid
 
 	#00 ;draw-browser JSR2
 	DUP .browser/sel STZ
 	DUP .browser/last STZ
-		#30 + .Audio0/pitch DEO
+		#30 ADD .Audio0/pitch DEO
 	#01 ;draw-browser JSR2
 
 	( draw mascot )
 	#0010 #0010 #0060 #0060
-	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 ** ++ ] #01
+	;mascot-icn [ .browser/sel LDZ #03 AND TOS #0480 MUL2 ADD2 ] #01
 		;draw-icn JSR2
 
 	( draw position )
@@ -222,18 +217,18 @@ RTN
 	#0080 .Screen/y DEO2
 	.browser/sel LDZ #02 ;draw-byte JSR2
 	LIT '/ #02 ;draw-char JSR2
-	.browser/lines LDZ #01 - #02 ;draw-byte JSR2
+	.browser/lines LDZ #01 SUB #02 ;draw-byte JSR2
 	AUTO-NONE
 
 RTN
 
 @follow-selection ( -- )
 
-	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ -
-	DUP2 > ,&no-down JCN
+	LINES-COUNT .browser/sel LDZ .browser/scroll LDZ SUB
+	DUP2 GTH ,&no-down JCN
 		.browser/scroll LDZ INC ,scroll-to JSR
 		&no-down
-	DUP2 SWP < ,&no-up JCN
+	DUP2 SWP LTH ,&no-up JCN
 		.browser/sel LDZ ,scroll-to JSR
 		&no-up
 	POP2
@@ -245,11 +240,11 @@ RTN
 	STH
 	( more lines than visible )
 	.browser/lines LDZ LINES-COUNT
-	DUP2 > ,&can-scroll JCN
+	DUP2 GTH ,&can-scroll JCN
 		POPr POP2 RTN
 		&can-scroll
 	( less than max scroll )
-	- INC STHkr > ,&valid-scroll JCN
+	SUB INC STHkr GTH ,&valid-scroll JCN
 		POPr RTN
 		&valid-scroll
 	#00 ;draw-browser JSR2
@@ -264,11 +259,11 @@ RTN
 	#0000 .Controller/button DEO2
 	#00 .Mouse/state DEO
 
-	;get-entry JSR2 #0005 ++
+	;get-entry JSR2 #0005 ADD2
 	
 	DUP2 ;check-rom JSR2 ,&valid JCN
 		( check if tal file )
-		DUP2 ;scap JSR2 #0004 -- ;&tal-ext ;scmp JSR2 #01 ! ,&no-tal JCN
+		DUP2 ;scap JSR2 #0004 SUB2 ;&tal-ext ;scmp JSR2 #01 NEQ ,&no-tal JCN
 			( assemble tal file )
 			DUP2 ;&output-path ;scpy JSR2
 			;&rom-ext ;&output-path ;scat JSR2
@@ -297,26 +292,26 @@ RTN
 @draw-browser ( mask -- )
 
 	( when empty )
-	.browser/lines LDZ #01 = ;draw-browser-empty JCN2
+	.browser/lines LDZ #01 EQU ;draw-browser-empty JCN2
 
 	STH
 
 	( draw hand )
-	.browser/x LDZ2 #0018 -- .browser/y LDZ2
-	.browser/sel LDZ .browser/scroll LDZ - TOS 10** ++
+	.browser/x LDZ2 #0018 SUB2 .browser/y LDZ2
+	.browser/sel LDZ .browser/scroll LDZ SUB TOS 10** ADD2
 	#0010 #0010
-		;hand-icn STHkr #02 * ;draw-icn JSR2
+		;hand-icn STHkr #02 MUL ;draw-icn JSR2
 	( draw files )
 	LINES-COUNT #00
 	&loop
 		( reached end )
-		DUP INC .browser/lines LDZ > ,&end JCN
+		DUP INC .browser/lines LDZ GTH ,&end JCN
 		( has file )
 		.browser/x LDZ2 .Screen/x DEO2
-		#00 OVR 10** .browser/y LDZ2 ++ .Screen/y DEO2
-		DUP .browser/scroll LDZ + ;get-entry JSR2
+		#00 OVR 10** .browser/y LDZ2 ADD2 .Screen/y DEO2
+		DUP .browser/scroll LDZ ADD ;get-entry JSR2
 			DUP2 ;get-type JSR2 ;draw-type JSR2
-			#01 STHkr * ;draw-str JSR2
+			#01 STHkr MUL ;draw-str JSR2
 		INC GTHk ,&loop JCN
 		&end
 	POP2
@@ -337,7 +332,7 @@ RTN
 
 @get-type ( line* -- type )
 
-	;scap JSR2 #0004 -- ;&rom-ext ;scmp JSR2
+	;scap JSR2 #0004 SUB2 ;&rom-ext ;scmp JSR2
 
 RTN
 	&rom-ext ".rom $1
@@ -348,10 +343,10 @@ RTN
 	( counter ) LITr 00
 	;dir/length LDA2 #0000
 	&loop
-		EQUkr STHr #00 = ,&no-reached JCN
-			POP2r NIP2 ;dir/data ++ RTN
+		EQUkr STHr #00 EQU ,&no-reached JCN
+			POP2r NIP2 ;dir/data ADD2 RTN
 			&no-reached
-		DUP2 ;dir/data ++ LDA #00 ! ,&no-lb JCN
+		DUP2 ;dir/data ADD2 LDA #00 NEQ ,&no-lb JCN
 			INCr
 			&no-lb
 		INC2 GTH2k ,&loop JCN
@@ -363,17 +358,17 @@ RTN
 
 @draw-type ( type -- )
 
-	STHk TOS 20** ;file-icns ++ .Screen/addr DEO2
+	STHk TOS 20** ;file-icns ADD2 .Screen/addr DEO2
 	AUTO-XADDR
-	#02 STHkr - .Screen/sprite DEOk DEO
+	#02 STHkr SUB .Screen/sprite DEOk DEO
 
-	.Screen/x DEI2k #0010 -- ROT DEO2
-	.Screen/y DEI2k #0008 ++ ROT DEO2
+	.Screen/x DEI2k #0010 SUB2 ROT DEO2
+	.Screen/y DEI2k #0008 ADD2 ROT DEO2
 	
-	#02 STHr - .Screen/sprite DEOk DEO
+	#02 STHr SUB .Screen/sprite DEOk DEO
 
-	.Screen/x DEI2k #0008 ++ ROT DEO2
-	.Screen/y DEI2k #0008 -- ROT DEO2
+	.Screen/x DEI2k #0008 ADD2 ROT DEO2
+	.Screen/y DEI2k #0008 SUB2 ROT DEO2
 	AUTO-NONE
 
 RTN
@@ -431,10 +426,10 @@ RTN
 @draw-char ( char color -- )
 
 	SWP
-	[ #20 - #00 SWP #40 SFT2 ;font ++ ] .Screen/addr DEO2
+	[ #20 SUB #00 SWP #40 SFT2 ;font ADD2 ] .Screen/addr DEO2
 	.Screen/sprite DEOk DEO
-	.Screen/x DEI2k #0008 ++ ROT DEO2
-	.Screen/y DEI2k #0010 -- ROT DEO2
+	.Screen/x DEI2k #0008 ADD2 ROT DEO2
+	.Screen/y DEI2k #0010 SUB2 ROT DEO2
 
 JMP2r
 
@@ -448,7 +443,7 @@ JMP2r
 	#0006 .File/length DEO2
 	#fffa .File/read DEO2
 
-	.File/success DEI2 #0006 !! ,&ignore JCN
+	.File/success DEI2 #0006 NEQ2 ,&ignore JCN
 		#fffa LDA2 .System/r DEO2
 		#fffc LDA2 .System/g DEO2
 		#fffe LDA2 .System/b DEO2
@@ -484,10 +479,10 @@ JMP2r
 
 	STH2
 	&loop
-		LDAk LDAkr STHr = ,&not-diff JCN
+		LDAk LDAkr STHr EQU ,&not-diff JCN
 			POP2 POP2r #00 RTN
 			&not-diff
-		LDAk LDAkr STHr #0000 !! ,&not-end JCN
+		LDAk LDAkr STHr #0000 NEQ2 ,&not-end JCN
 			POP2 POP2r #01 RTN
 			&not-end
 		INC2 INC2r

@@ -54,8 +54,8 @@ static char ops[][4] = {
 	"LDZ", "STZ", "LDR", "STR", "LDA", "STA", "DEI", "DEO",
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
 };
-static char sym_glyph[] = {'?', '!', '>', '<', '+', '-', '*', '/'};
-static Uint8 sym_value[] = {0x08, 0x09, 0x0a, 0x1b, 0x18, 0x19, 0x1a, 0x1b};
+static char symchr[] = {'?', '!', '>', '<', '+', '-', '*', '/'};
+static Uint8 symval[] = {0x08, 0x09, 0x0a, 0x1b, 0x18, 0x19, 0x1a, 0x1b};
 
 static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if(!a[i] || ++i >= len) return 1; return 0; } /* string compare */
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
@@ -102,26 +102,33 @@ findlabel(char *name)
 }
 
 static Uint8
+findmode(char *s)
+{
+	int i = 0;
+	while(s[0]) {
+		switch(s[0]) {
+		case '2': i |= (1 << 5); break; /* mode: short */
+		case 'r': i |= (1 << 6); break; /* mode: return */
+		case 'k': i |= (1 << 7); break; /* mode: keep */
+		}
+		s++;
+	}
+	return i;
+}
+
+static Uint8
 findopcode(char *s)
 {
 	int i;
 	for(i = 0; i < 0x20; i++) {
-		int m = 0;
 		if(!scmp(ops[i], s, 3))
 			continue;
 		if(!i) i |= (1 << 7); /* force keep for LIT */
-		while(s[3 + m]) {
-			if(s[3 + m] == '2')
-				i |= (1 << 5); /* mode: short */
-			else if(s[3 + m] == 'r')
-				i |= (1 << 6); /* mode: return */
-			else if(s[3 + m] == 'k')
-				i |= (1 << 7); /* mode: keep */
-			else
-				return 0; /* failed to match */
-			m++;
-		}
-		return i;
+		return i |= findmode(s + 3);
+	}
+	for(i = 0; i < 0x08; ++i) {
+		if(s[0] == symchr[i])
+			return symval[i] |= findmode(s + 1);
 	}
 	return 0;
 }
