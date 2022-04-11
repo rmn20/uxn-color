@@ -19,17 +19,17 @@ typedef signed char Sint8;
 typedef unsigned short Uint16;
 
 typedef struct {
-	char name[64], items[64][64];
+	char name[0x40], items[0x40][0x40];
 	Uint8 len;
 } Macro;
 
 typedef struct {
-	char name[64];
+	char name[0x40];
 	Uint16 addr, refs;
 } Label;
 
 typedef struct {
-	char name[64], rune;
+	char name[0x40], rune;
 	Uint16 addr;
 } Reference;
 
@@ -37,10 +37,10 @@ typedef struct {
 	Uint8 data[LENGTH];
 	unsigned int ptr, length;
 	Uint16 llen, mlen, rlen;
-	Label labels[512];
-	Macro macros[256];
-	Reference refs[2048];
-	char scope[64];
+	Label labels[0x400];
+	Macro macros[0x100];
+	Reference refs[0x800];
+	char scope[0x40];
 } Program;
 
 Program p;
@@ -54,6 +54,8 @@ static char ops[][4] = {
 	"LDZ", "STZ", "LDR", "STR", "LDA", "STA", "DEI", "DEO",
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
 };
+static char sym_glyph[] = {'?', '!', '>', '<', '+', '-', '*', '/'};
+static Uint8 sym_value[] = {0x08, 0x09, 0x0a, 0x1b, 0x18, 0x19, 0x1a, 0x1b};
 
 static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if(!a[i] || ++i >= len) return 1; return 0; } /* string compare */
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
@@ -76,7 +78,7 @@ error(const char *name, const char *msg)
 static char *
 sublabel(char *src, char *scope, char *name)
 {
-	return scat(scat(scpy(scope, src, 64), "/"), name);
+	return scat(scat(scpy(scope, src, 0x40), "/"), name);
 }
 
 static Macro *
@@ -84,7 +86,7 @@ findmacro(char *name)
 {
 	int i;
 	for(i = 0; i < p.mlen; i++)
-		if(scmp(p.macros[i].name, name, 64))
+		if(scmp(p.macros[i].name, name, 0x40))
 			return &p.macros[i];
 	return NULL;
 }
@@ -94,7 +96,7 @@ findlabel(char *name)
 {
 	int i;
 	for(i = 0; i < p.llen; i++)
-		if(scmp(p.labels[i].name, name, 64))
+		if(scmp(p.labels[i].name, name, 0x40))
 			return &p.labels[i];
 	return NULL;
 }
@@ -128,25 +130,25 @@ static int
 makemacro(char *name, FILE *f)
 {
 	Macro *m;
-	char word[64];
+	char word[0x40];
 	if(findmacro(name))
 		return error("Macro duplicate", name);
 	if(sihx(name) && slen(name) % 2 == 0)
 		return error("Macro name is hex number", name);
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Macro name is invalid", name);
-	if(p.mlen == 256)
+	if(p.mlen == 0x100)
 		return error("Macros limit exceeded", name);
 	m = &p.macros[p.mlen++];
-	scpy(name, m->name, 64);
+	scpy(name, m->name, 0x40);
 	while(fscanf(f, "%63s", word) == 1) {
 		if(word[0] == '{') continue;
 		if(word[0] == '}') break;
 		if(word[0] == '%')
 			return error("Macro error", name);
-		if(m->len >= 64)
+		if(m->len >= 0x40)
 			return error("Macro size exceeded", name);
-		scpy(word, m->items[m->len++], 64);
+		scpy(word, m->items[m->len++], 0x40);
 	}
 	return 1;
 }
@@ -161,27 +163,27 @@ makelabel(char *name)
 		return error("Label name is hex number", name);
 	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Label name is invalid", name);
-	if(p.llen == 512)
+	if(p.llen == 0x400)
 		return error("Labels limit exceeded", name);
 	l = &p.labels[p.llen++];
 	l->addr = p.ptr;
 	l->refs = 0;
-	scpy(name, l->name, 64);
+	scpy(name, l->name, 0x40);
 	return 1;
 }
 
 static int
 makereference(char *scope, char *label, Uint16 addr)
 {
-	char subw[64];
+	char subw[0x40];
 	Reference *r;
-	if(p.rlen == 2048)
+	if(p.rlen == 0x800)
 		return error("References limit exceeded", label);
 	r = &p.refs[p.rlen++];
 	if(label[1] == '&')
-		scpy(sublabel(subw, scope, label + 2), r->name, 64);
+		scpy(sublabel(subw, scope, label + 2), r->name, 0x40);
 	else
-		scpy(label + 1, r->name, 64);
+		scpy(label + 1, r->name, 0x40);
 	r->rune = label[0];
 	r->addr = addr;
 	return 1;
@@ -190,16 +192,12 @@ makereference(char *scope, char *label, Uint16 addr)
 static int
 writebyte(Uint8 b)
 {
-	if(p.ptr < TRIM) {
-		fprintf(stderr, "-- Writing in zero-page: %02x\n", b);
-		return 0;
-	} else if(p.ptr > 0xffff) {
-		fprintf(stderr, "-- Writing after the end of RAM: %02x\n", b);
-		return 0;
-	} else if(p.ptr < p.length) {
-		fprintf(stderr, "-- Memory overwrite: %04x -> %04x\n", p.length, p.ptr);
-		return 0;
-	}
+	if(p.ptr < TRIM)
+		return error("Writing in zero-page", "");
+	else if(p.ptr > 0xffff)
+		return error("Writing after the end of RAM", "");
+	else if(p.ptr < p.length)
+		return error("Memory overwrite", "");
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
@@ -233,7 +231,7 @@ static int
 doinclude(const char *filename)
 {
 	FILE *f;
-	char w[64];
+	char w[0x40];
 	if(!(f = fopen(filename, "r")))
 		return error("Include missing", filename);
 	while(fscanf(f, "%63s", w) == 1)
@@ -247,7 +245,7 @@ static int
 parse(char *w, FILE *f)
 {
 	int i;
-	char word[64], subw[64], c;
+	char word[0x40], subw[0x40], c;
 	Macro *m;
 	if(slen(w) >= 63)
 		return error("Invalid token", w);
@@ -287,7 +285,7 @@ parse(char *w, FILE *f)
 	case '@': /* label */
 		if(!makelabel(w + 1))
 			return error("Invalid label", w);
-		scpy(w + 1, p.scope, 64);
+		scpy(w + 1, p.scope, 0x40);
 		litlast = 0;
 		break;
 	case '&': /* sublabel */
@@ -401,8 +399,8 @@ resolve(void)
 static int
 assemble(FILE *f)
 {
-	char w[64];
-	scpy("on-reset", p.scope, 64);
+	char w[0x40];
+	scpy("on-reset", p.scope, 0x40);
 	while(fscanf(f, "%63s", w) == 1)
 		if(!parse(w, f))
 			return error("Unknown token", w);
