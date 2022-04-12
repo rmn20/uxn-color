@@ -54,8 +54,6 @@ static char ops[][4] = {
 	"LDZ", "STZ", "LDR", "STR", "LDA", "STA", "DEI", "DEO",
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
 };
-static char symchr[] = {'?', '!', '>', '<', '+', '-', '*', '/'};
-static Uint8 symval[] = {0x08, 0x09, 0x0a, 0x0b, 0x18, 0x19, 0x1a, 0x1b};
 
 static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if(!a[i] || ++i >= len) return 1; return 0; } /* string compare */
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
@@ -125,10 +123,6 @@ findopcode(char *s)
 			continue;
 		if(!i) i |= (1 << 7); /* force keep for LIT */
 		return i |= findmode(s + 3);
-	}
-	for(i = 0; i < 0x08; ++i) {
-		if(s[0] == symchr[i])
-			return symval[i] |= findmode(s + 1);
 	}
 	return 0;
 }
