@@ -100,29 +100,26 @@ findlabel(char *name)
 }
 
 static Uint8
-findmode(char *s)
-{
-	int i = 0;
-	while(s[0]) {
-		switch(s[0]) {
-		case '2': i |= (1 << 5); break; /* mode: short */
-		case 'r': i |= (1 << 6); break; /* mode: return */
-		case 'k': i |= (1 << 7); break; /* mode: keep */
-		}
-		s++;
-	}
-	return i;
-}
-
-static Uint8
 findopcode(char *s)
 {
 	int i;
 	for(i = 0; i < 0x20; i++) {
+		int m = 0;
 		if(!scmp(ops[i], s, 3))
 			continue;
 		if(!i) i |= (1 << 7); /* force keep for LIT */
-		return i |= findmode(s + 3);
+		while(s[3 + m]) {
+			if(s[3 + m] == '2')
+				i |= (1 << 5); /* mode: short */
+			else if(s[3 + m] == 'r')
+				i |= (1 << 6); /* mode: return */
+			else if(s[3 + m] == 'k')
+				i |= (1 << 7); /* mode: keep */
+			else
+				return 0; /* failed to match */
+			m++;
+		}
+		return i;
 	}
 	return 0;
 }
