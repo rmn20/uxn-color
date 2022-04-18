@@ -949,11 +949,11 @@
 	&_entry     :&GTH      :&ROT &_disasm "LIT 00
 	&INC         $2         $2          "INC 00
 	&POP         $2         $2          "POP 00
-	&DUP         $2         $2          "DUP 00
 	&NIP        :&MUL      :&OVR        "NIP 00
 	&SWP         $2         $2          "SWP 00
-	&OVR        :&ORA      :&POP        "OVR 00
 	&ROT        :&NIP      :&STR        "ROT 00
+	&DUP         $2         $2          "DUP 00
+	&OVR        :&ORA      :&POP        "OVR 00
 	&EQU         $2         $2          "EQU 00
 	&NEQ         $2         $2          "NEQ 00
 	&GTH        :&DIV      :&JSR        "GTH 00
