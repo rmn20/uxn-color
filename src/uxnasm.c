@@ -435,6 +435,8 @@ main(int argc, char *argv[])
 		return !error("Assembly", "Failed to assemble rom.");
 	if(!(dst = fopen(argv[2], "wb")))
 		return !error("Invalid Output", argv[2]);
+	if(p.length <= TRIM)
+		return !error("Assembly", "Output rom is empty.");
 	fwrite(p.data + TRIM, p.length - TRIM, 1, dst);
 	review(argv[2]);
 	return 0;
