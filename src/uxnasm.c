@@ -45,6 +45,7 @@ typedef struct {
 
 Program p;
 static int litlast = 0;
+static int jsrlast = 0;
 
 /* clang-format off */
 
@@ -199,7 +200,23 @@ writebyte(Uint8 b)
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 	litlast = 0;
+	jsrlast = 0;
 	return 1;
+}
+
+static int
+writeopcode(char *w)
+{
+	Uint8 res;
+	if(jsrlast && scmp(w, "JMP2r", 5)) { /* combine JSR2 JMP2r */
+		p.data[p.ptr - 1] = findopcode("JMP2");
+		jsrlast = 0;
+		return 1;
+	}
+	res = writebyte(findopcode(w));
+	if(scmp(w, "JSR2", 4))
+		jsrlast = 1;
+	return res;
 }
 
 static int
@@ -329,7 +346,7 @@ parse(char *w, FILE *f)
 	default:
 		/* opcode */
 		if(findopcode(w) || scmp(w, "BRK", 4)) {
-			if(!writebyte(findopcode(w))) return 0;
+			if(!writeopcode(w)) return 0;
 		}
 		/* raw byte */
 		else if(sihx(w) && slen(w) == 2) {
