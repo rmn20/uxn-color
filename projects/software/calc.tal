@@ -456,8 +456,8 @@ JMP2r
 		( state ) DUP STHkr EQU STH
 		( glyph ) #00 OVR #30 SFT2 ;mod-icns ADD2 STH2
 		( y ) #00 OVR #42 SFT2 .modpad-frame/y LDZ2 ADD2 STH2
-		( x ) #00 OVR #03 AND #40 SFT2 .modpad-frame/x LDZ2 ADD2 STH2
-		STH2r STH2r STH2r STHr #03 ;draw-key JSR2
+		( x ) #00 OVR #03 AND #40 SFT2 .modpad-frame/x LDZ2 ADD2
+		STH2r STH2r STHr #03 ;draw-key JSR2
 		INC GTHk ,&loop JCN
 	POP2
 	POPr
@@ -572,7 +572,7 @@ JMP2r
 @within-rect ( x* y* rect -- flag )
 	
 	STH
-	( y < rect.y1 ) DUP2 STHkr #02 ADD LDZ2 LTH2 ,&skip JCN
+	( y < rect.y1 ) DUP2 STHkr INC INC LDZ2 LTH2 ,&skip JCN
 	( y > rect.y2 ) DUP2 STHkr #06 ADD LDZ2 GTH2 ,&skip JCN
 	SWP2
 	( x < rect.x1 ) DUP2 STHkr LDZ2 LTH2 ,&skip JCN
