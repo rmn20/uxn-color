@@ -93,7 +93,7 @@
 	DUP2 #00 ,set-occupied JSR
 	;&possible-moves ( x y possible* / addr* )
 	OVR2 #01   SUB  ,&check-move JSR ( up )
-	OVR2 #01   ADD  ,&check-move JSR ( down )
+	OVR2 INC   INC  ,&check-move JSR ( down )
 	OVR2 #0100 SUB2 ,&check-move JSR ( left )
 	OVR2 #0100 ADD2 ,&check-move JSR ( right )
 	;&possible-moves SUB2 ( x y num-possible-times-2* / addr* )

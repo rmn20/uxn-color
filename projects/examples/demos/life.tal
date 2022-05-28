@@ -124,8 +124,8 @@ JMP2r
 
 @run-cell ( x y -- )
 
-	( x y ) DUP2
-	( neighbours ) DUP2 ;get-neighbours JSR2
+	( x y ) DUP2k
+	( neighbours ) ;get-neighbours JSR2
 	( state ) ROT ROT ;get-cell JSR2
 	#00 EQU ,&dead JCN
 		DUP #02 LTH ,&dies JCN
@@ -219,7 +219,7 @@ JMP2r
 @within-rect ( x* y* rect -- flag )
 	
 	STH
-	( y < rect.y1 ) DUP2 STHkr #02 ADD LDZ2 LTH2 ,&skip JCN
+	( y < rect.y1 ) DUP2 STHkr INC INC LDZ2 LTH2 ,&skip JCN
 	( y > rect.y2 ) DUP2 STHkr #06 ADD LDZ2 GTH2 ,&skip JCN
 	SWP2
 	( x < rect.x1 ) DUP2 STHkr LDZ2 LTH2 ,&skip JCN

@@ -1,30 +1,5 @@
 ( a blank file )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
-
-%2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
-%4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
-%8*  { #30 SFT } %8/  { #03 SFT } %8**  { #30 SFT2 } %8//  { #03 SFT2 }
-%10* { #40 SFT } %10/ { #04 SFT } %10** { #40 SFT2 } %10// { #04 SFT2 }
-%20* { #50 SFT } %20/ { #05 SFT } %20** { #50 SFT2 } %20// { #05 SFT2 }
-
-%2MOD  { #01 AND } %2MOD2  { #0001 AND2 }
-%4MOD  { #03 AND } %4MOD2  { #0003 AND2 }
-%8MOD  { #07 AND } %8MOD2  { #0007 AND2 }
-%10MOD { #0f AND } %10MOD2 { #000f AND2 }
-
-%HALT   { #010f DEO }
-%EMIT   { #18 DEO }
-%DEBUG  { ;print/byte JSR2 #0a EMIT }
-%DEBUG2 { ;print/short JSR2 #0a EMIT }
-
-%RTN        { JMP2r }
-
-( devices )
-
 |00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
 |10 @Console    &vector $2 &read     $1 &pad    $5 &write  $1 &error  $1
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
@@ -55,27 +30,17 @@ BRK
 
 @print ( short* -- )
 
-	&short ( short* -- ) SWP ,&byte JSR
+	SWP ,&byte JSR
 	&byte ( byte -- ) DUP #04 SFT ,&char JSR
-	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD EMIT
+	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
 
-RTN
+JMP2r
 
-@print-dec ( value* -- )
+@print-str ( str* -- )
 
-	#2710 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
-	#03e8 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
-	#0064 DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
-	#000a DIV2k DUP #30 ADD #18 DEO MUL2 SUB2
-	#30 ADD #18 DEO POP
-
-RTN
-
-@print-str ( string* -- )
-
-	#0001 --
 	&while
-		INC2 LDAk DUP #18 DEO ,&while JCN 
+		LDAk #18 DEO
+		INC2 LDAk ,&while JCN
 	POP2
 
-RTN
+JMP2r

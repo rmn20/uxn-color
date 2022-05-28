@@ -1,4 +1,4 @@
-( a blank file )
+( logic )
 
 %+  { ADD } %-   { SUB }              %/   { DIV }  
 %<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
