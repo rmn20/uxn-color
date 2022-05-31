@@ -208,12 +208,18 @@ static int
 writeopcode(char *w)
 {
 	Uint8 res;
-	if(jsrlast && scmp(w, "JMP2r", 5)) { /* combine JSR2 JMP2r */
-		p.data[p.ptr - 1] = findopcode("JMP2");
-		return jsrlast--;
+	/* tail-call optimization */
+	if(scmp(w, "JMP2r", 5)) {
+		if(jsrlast) {
+			p.data[p.ptr - 1] = jsrlast == 2 ? findopcode("JMP2") : findopcode("JMP");
+			jsrlast = 0;
+			return 1;
+		}
 	}
 	res = writebyte(findopcode(w));
 	if(scmp(w, "JSR2", 4))
+		jsrlast = 2;
+	else if(scmp(w, "JSR", 3))
 		jsrlast = 1;
 	return res;
 }
