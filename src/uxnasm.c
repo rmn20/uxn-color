@@ -210,8 +210,7 @@ writeopcode(char *w)
 	Uint8 res;
 	if(jsrlast && scmp(w, "JMP2r", 5)) { /* combine JSR2 JMP2r */
 		p.data[p.ptr - 1] = findopcode("JMP2");
-		jsrlast = 0;
-		return 1;
+		return jsrlast--;
 	}
 	res = writebyte(findopcode(w));
 	if(scmp(w, "JSR2", 4))
