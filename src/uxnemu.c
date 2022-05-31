@@ -36,7 +36,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
-#define TIMEOUT_FRAMES 10
+#define TIMEOUT_FRAMES 20
 
 static SDL_Window *gWindow;
 static SDL_Texture *gTexture;
