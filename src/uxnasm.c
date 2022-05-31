@@ -208,13 +208,10 @@ static int
 writeopcode(char *w)
 {
 	Uint8 res;
-	/* tail-call optimization */
-	if(scmp(w, "JMP2r", 5)) {
-		if(jsrlast) {
-			p.data[p.ptr - 1] = jsrlast == 2 ? findopcode("JMP2") : findopcode("JMP");
-			jsrlast = 0;
-			return 1;
-		}
+	if(jsrlast && scmp(w, "JMP2r", 5)) { /* tail-call optimization */
+		p.data[p.ptr - 1] = jsrlast == 2 ? findopcode("JMP2") : findopcode("JMP");
+		jsrlast = 0;
+		return 1;
 	}
 	res = writebyte(findopcode(w));
 	if(scmp(w, "JSR2", 4))
@@ -235,7 +232,7 @@ writeshort(Uint16 s, int lit)
 static int
 writelitbyte(Uint8 b)
 {
-	if(litlast) { /* combine literals */
+	if(litlast) { /* literals optimization */
 		Uint8 hb = p.data[p.ptr - 1];
 		p.ptr -= 2;
 		p.length = p.ptr;
