@@ -1,10 +1,5 @@
 ( GUI Hover )
 
-%RTN { JMP2r }
-%GTS2 { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
-
-( devices )
-
 |00 @System [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
 |20 @Screen [ &vector $2 &width $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1 ]
 |90 @Mouse [ &vector $2 &x $2 &y $2 &state $1 &wheel $1 ]
@@ -15,7 +10,6 @@
 
 @color $1
 @pointer [ &x $2 &y $2 &sprite $2 ]
-@rect [ &x1 $2 &y1 $2 &x2 $2 &y2 $2 ]
 @r1 [ &x1 $2 &y1 $2 &x2 $2 &y2 $2 ]
 @r2 [ &x1 $2 &y1 $2 &x2 $2 &y2 $2 ]
 @r3 [ &x1 $2 &y1 $2 &x2 $2 &y2 $2 ]
@@ -80,19 +74,19 @@ BRK
 @within-rect ( x* y* rect -- flag )
 	
 	STH
-	( y < rect.y1 ) DUP2 STHkr #02 ADD LDZ2 LTH2 ,&skip JCN
+	( y < rect.y1 ) DUP2 STHkr INC INC LDZ2 LTH2 ,&skip JCN
 	( y > rect.y2 ) DUP2 STHkr #06 ADD LDZ2 GTH2 ,&skip JCN
 	SWP2
 	( x < rect.x1 ) DUP2 STHkr LDZ2 LTH2 ,&skip JCN
 	( x > rect.x2 ) DUP2 STHkr #04 ADD LDZ2 GTH2 ,&skip JCN
 	POP2 POP2 POPr
 	#01 
-RTN
+JMP2r
 	&skip
 	POP2 POP2 POPr
 	#00
 
-RTN
+JMP2r
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
@@ -119,7 +113,7 @@ RTN
 	POP2 POP2
 	POPr
 
-RTN
+JMP2r
 
 @pointer_icn [ 80c0 e0f0 f8e0 1000 ]
 @hand_icn    [ 4040 4070 f8f8 f870 ]

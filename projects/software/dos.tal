@@ -25,7 +25,6 @@
 %MOD  { DIVk MUL SUB }
 %MOD2 { DIV2k MUL2 SUB2 }
 
-%AUTO-NONE   { #00 .Screen/auto DEO }
 %AUTO-X      { #01 .Screen/auto DEO }
 %AUTO-Y      { #02 .Screen/auto DEO }
 %AUTO-XY     { #03 .Screen/auto DEO }
@@ -127,7 +126,7 @@ BRK
 		.Screen/y DEI2k #0008 ++ ROT DEO2
 		INC GTHk ,&ver JCN
 	POP2
-	AUTO-NONE
+	#00 .Screen/auto DEO
 
 RTN
 	&blank-icn 8000 0000 0000 0000

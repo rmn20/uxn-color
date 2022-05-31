@@ -545,7 +545,6 @@ JMP2r
 			&no-blank
 		DUP ,&zero STR
 		&padded #30 SFT #00 SWP ;font-hex ADD2
-	JMP2r
 
 JMP2r
 	&zero $1

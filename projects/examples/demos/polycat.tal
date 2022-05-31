@@ -54,7 +54,7 @@ BRK
 	#81 .Screen/sprite DEO
 	( eye/tail )
 	#00 ,draw-eye JSR
-	#00 ,draw-tail JSR
+	#00 ;draw-tail JSR2
 
 JMP2r
 

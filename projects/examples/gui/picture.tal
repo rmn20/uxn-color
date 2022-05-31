@@ -1,15 +1,5 @@
 ( GUI Picture )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
-
-%AUTO-NONE   { #00 .Screen/auto DEO }
-%AUTO-XADDR  { #05 .Screen/auto DEO }
-
-( devices )
-
 |00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
 |20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
 
@@ -38,7 +28,7 @@ BRK
 
 @draw-icn ( addr* width height color -- )
 
-	AUTO-XADDR
+	#05 .Screen/auto DEO
 	STH 
 	( set bounds ) ,&height STR ,&width STR .Screen/addr DEO2
 	( set origin ) .Screen/x DEI2 ,&x STR2
@@ -50,11 +40,11 @@ BRK
 			STHkr .Screen/sprite DEO
 			INC GTHk ,&hor JCN
 		POP2
-		.Screen/y DEI2k #0008 ++ ROT DEO2
+		.Screen/y DEI2k #0008 ADD2 ROT DEO2
 		INC GTHk ,&ver JCN
 	POP2
 	POPr
-	AUTO-NONE
+	#00 .Screen/auto DEO
 
 JMP2r
 
@@ -64,7 +54,7 @@ JMP2r
 
 	STH
 	.Screen/addr DEO2
-	SWP #01 - #40 SFT #06 + .Screen/auto DEO
+	SWP #01 SUB #40 SFT #06 ADD .Screen/auto DEO
 	#00
 	&loop
 		STHkr .Screen/sprite DEO

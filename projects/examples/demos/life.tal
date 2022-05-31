@@ -130,11 +130,11 @@ JMP2r
 	#00 EQU ,&dead JCN
 		DUP #02 LTH ,&dies JCN
 		DUP #03 GTH ,&dies JCN
-		POP ,&save JSR JMP2r
+		POP ;&save JSR2 JMP2r
 		&dies POP POP2 JMP2r
 	&dead
 		DUP #03 EQU ,&birth JCN POP POP2 JMP2r
-		&birth POP ,&save JSR JMP2r
+		&birth POP ;&save JSR2
 
 JMP2r
 	&save ( x y -- ) 
