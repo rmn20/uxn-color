@@ -118,7 +118,7 @@ contexts:
         - match: '\}'
           pop: true
 
-    - match: '\s?\(\s?'
+    - match: '\s\(\s'
       scope: comment
       push:
         - meta_scope: comment.line
