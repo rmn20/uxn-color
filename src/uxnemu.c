@@ -511,7 +511,12 @@ main(int argc, char **argv)
 	if(!loaded && !start(&u, "launcher.rom"))
 		return error("usage", "uxnemu [-s scale] file.rom");
 	run(&u);
-	SDL_WaitThread(stdin_thread, NULL);
+#ifdef _WIN32
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
+#elif !defined(__APPLE__)
+	close(0); /* make stdin thread exit */
+#endif
 	SDL_Quit();
 	return 0;
 }
