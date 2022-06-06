@@ -308,6 +308,7 @@ parse(char *w, FILE *f)
 	case '&': /* sublabel */
 		if(!makelabel(sublabel(subw, p.scope, w + 1)))
 			return error("Invalid sublabel", w);
+		findlabel(p.scope)->refs++;
 		litlast = 0;
 		break;
 	case '#': /* literals hex */
@@ -343,8 +344,10 @@ parse(char *w, FILE *f)
 		while((c = w[++i]))
 			if(!writebyte(c)) return 0;
 		break;
-	case '[': if (slen(w) == 1) break; /* else FALLTHROUGH */
-	case ']': if (slen(w) == 1) break; /* else FALLTHROUGH */
+	case '[':
+		if(slen(w) == 1) break; /* else FALLTHROUGH */
+	case ']':
+		if(slen(w) == 1) break; /* else FALLTHROUGH */
 	default:
 		/* opcode */
 		if(findopcode(w) || scmp(w, "BRK", 4)) {
