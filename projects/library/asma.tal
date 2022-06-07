@@ -520,21 +520,26 @@
 	;asma/lit LDA2 ,&present JCN
 	,asma-flush-held JSR
 	POP #01 ;asma/lit STA2
-	;asma/addr LDA2k INC2 INC2 SWP2 STA2
-	JMP2r
+	#0002 ,asma-advance-addr JMP ( tail call )
 	&present
-	;asma/addr LDA2k #0002 SUB2 SWP2 STA2
+	#fffe ,asma-advance-addr JSR
 	LIT LIT2 ,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	#0000 ;asma/lit STA2
 	JMP2r
 
+@asma-advance-addr ( delta* -- )
+	;asma/addr LDA2k ( delta* ptr* value* )
+	ROT2 ADD2 ( ptr* new-value* )
+	SWP2 STA2
+	JMP2r
+
 @asma-flush-held ( -- )
 	;asma/lit LDA2 ,&lit-present JCN
 	POP ,&part2 JMP
 	&lit-present
-	;asma/addr LDA2k #0002 SUB2 SWP2 STA2
+	#fffe ,asma-advance-addr JSR
 	LIT LIT ,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	#0000 ;asma/lit STA2
@@ -543,7 +548,7 @@
 	;asma/jsr LDA DUP ,&jsr-present JCN
 	POP JMP2r
 	&jsr-present
-	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	#ffff ,asma-advance-addr JSR
 	,asma-write-byte/raw JSR
 	#00 ;asma/jsr STA
 	JMP2r
@@ -710,24 +715,22 @@
 
 @asma-pad-absolute
 	;asma-flush-held JSR2
-	#0000 ,asma-pad-helper JMP
+	#0000 ;asma/addr STA2
+	,asma-pad-helper JMP
 
 @asma-pad-relative
 	;asma-flush-held JSR2
-	;asma/addr LDA2
 	( fall through )
 
-@asma-pad-helper ( offset* -- )
+@asma-pad-helper ( -- )
 	#00 ;asma-parse-hex-string JSR2
 	,&valid JCN
 
 	;asma-msg-hex ;asma/error STA2
-	POP2
 	JMP2r
 
 	&valid
-	ADD2 ;asma/addr STA2
-	JMP2r
+	;asma-advance-addr JMP2 ( tail call )
 
 @asma-raw-char
 	;asma/token LDA2 LDA
@@ -869,14 +872,13 @@
 	&hold-jsr
 	;asma-flush-held JSR2
 	;asma/jsr STA
-	;asma/addr LDA2k INC2 SWP2 STA2
-	JMP2r
+	#0001 ;asma-advance-addr JMP2 ( tail call )
 
 	&optimise-jsr-jmp2r
 	POP
 	;asma/jsr LDAk #00 SWP2 STA
 	#e0 AND [ LIT JMP ] ORA
-	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	#ffff ;asma-advance-addr JSR2
 	,&write-opcode JMP
 
 	&not-opcode
