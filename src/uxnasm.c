@@ -183,10 +183,10 @@ makereference(char *scope, char *label, Uint16 addr)
 	if(label[1] == '&')
 		scpy(sublabel(subw, scope, label + 2), r->name, 0x40);
 	else {
-		int p = spos(label + 1, '/');
-		if(p > 0) {
+		int pos = spos(label + 1, '/');
+		if(pos > 0) {
 			Label *l;
-			if((l = findlabel(scpy(label + 1, parent, p))))
+			if((l = findlabel(scpy(label + 1, parent, pos))))
 				l->refs++;
 		}
 		scpy(label + 1, r->name, 0x40);
@@ -352,9 +352,8 @@ parse(char *w, FILE *f)
 			if(!writebyte(c)) return 0;
 		break;
 	case '[':
-		if(slen(w) == 1) break; /* else FALLTHROUGH */
 	case ']':
-		if(slen(w) == 1) break; /* else FALLTHROUGH */
+		if(slen(w) == 1) break; /* else fallthrough */
 	default:
 		/* opcode */
 		if(findopcode(w) || scmp(w, "BRK", 4)) {
