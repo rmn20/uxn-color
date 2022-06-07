@@ -299,24 +299,24 @@ parse(char *w, FILE *f)
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr = shex(w + 1);
-		litlast = 0;
+		litlast = jsrlast = 0;
 		break;
 	case '$': /* pad-relative */
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr += shex(w + 1);
-		litlast = 0;
+		litlast = jsrlast = 0;
 		break;
 	case '@': /* label */
 		if(!makelabel(w + 1))
 			return error("Invalid label", w);
 		scpy(w + 1, p.scope, 0x40);
-		litlast = 0;
+		litlast = jsrlast = 0;
 		break;
 	case '&': /* sublabel */
 		if(!makelabel(sublabel(subw, p.scope, w + 1)))
 			return error("Invalid sublabel", w);
-		litlast = 0;
+		litlast = jsrlast = 0;
 		break;
 	case '#': /* literals hex */
 		if(!sihx(w + 1) || (slen(w) != 3 && slen(w) != 5))
