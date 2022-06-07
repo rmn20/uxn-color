@@ -222,7 +222,7 @@
 	;asma-read-buffer DUP2 ;asma-read-buffer/end ROT2 SUB2 ( func* line^ filename* buf* size^ )
 	ROT2 ( func* line^ buf* size^ filename* )
 	,file-read-chunks JSR
-	;asma-flush-lit JSR2
+	;asma-flush-held JSR2
 
 	asma-IF-ERROR ,&error JCN
 
@@ -348,7 +348,7 @@
 @asma [
 	&pass $1 &state $1 &line $2 &lines $2 &break $1 &eof $1
 	&comment-level $1
-	&token $2 &orig-token $2 &lit $1 &lit-present $1
+	&token $2 &orig-token $2 &lit $1 &lit-present $1 &jsr $1
 	&addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
 	&error $2 &log-level $1
@@ -518,6 +518,7 @@
 
 @asma-write-lit ( byte -- )
 	;asma/lit LDA2 ,&present JCN
+	,asma-flush-held JSR
 	POP #01 ;asma/lit STA2
 	;asma/addr LDA2k INC2 INC2 SWP2 STA2
 	JMP2r
@@ -529,18 +530,26 @@
 	#0000 ;asma/lit STA2
 	JMP2r
 
-@asma-flush-lit ( -- )
-	;asma/lit LDA2 ,&present JCN
-	POP JMP2r
-	&present
+@asma-flush-held ( -- )
+	;asma/lit LDA2 ,&lit-present JCN
+	POP ,&part2 JMP
+	&lit-present
 	;asma/addr LDA2k #0002 SUB2 SWP2 STA2
 	LIT LIT ,asma-write-byte/raw JSR
 	,asma-write-byte/raw JSR
 	#0000 ;asma/lit STA2
+
+	&part2
+	;asma/jsr LDA DUP ,&jsr-present JCN
+	POP JMP2r
+	&jsr-present
+	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	,asma-write-byte/raw JSR
+	#00 ;asma/jsr STA
 	JMP2r
 
 @asma-write-byte ( byte -- )
-	,asma-flush-lit JSR
+	,asma-flush-held JSR
 	&raw
 	;asma/addr LDA2 ;asma/written-addr LDA2
 	LTH2k ,&rewound JCN
@@ -659,7 +668,7 @@
 	JMP2r
 
 @asma-label-define
-	;asma-flush-lit JSR2
+	;asma-flush-held JSR2
 	;asma-trees/labels ,asma-label-helper JSR
 	,&already-existed JCN
 
@@ -670,7 +679,7 @@
 	JMP2r
 
 @asma-sublabel-define
-	;asma-flush-lit JSR2
+	;asma-flush-held JSR2
 	;asma-trees/scope LDA2 ,asma-label-helper JSR
 	POP POP2
 	JMP2r
@@ -700,11 +709,11 @@
 	#00 JMP2r
 
 @asma-pad-absolute
-	;asma-flush-lit JSR2
+	;asma-flush-held JSR2
 	#0000 ,asma-pad-helper JMP
 
 @asma-pad-relative
-	;asma-flush-lit JSR2
+	;asma-flush-held JSR2
 	;asma/addr LDA2
 	( fall through )
 
@@ -850,7 +859,25 @@
 
 @asma-normal-body
 	;asma-parse-opcode JSR2 ,&not-opcode JCN
+	DUP [ LIT JSR ] EQU ,&hold-jsr JCN
+	DUP [ LIT JSR2 ] EQU ,&hold-jsr JCN
+	DUP [ LIT JMP2r ] NEQ ,&write-opcode JCN
+	;asma/jsr LDA ,&optimise-jsr-jmp2r JCN
+	&write-opcode
 	;asma-write-byte JMP2 ( tail call )
+
+	&hold-jsr
+	;asma-flush-held JSR2
+	;asma/jsr STA
+	;asma/addr LDA2k INC2 SWP2 STA2
+	JMP2r
+
+	&optimise-jsr-jmp2r
+	POP
+	;asma/jsr LDAk #00 SWP2 STA
+	#e0 AND [ LIT JMP ] ORA
+	;asma/addr LDA2k #0001 SUB2 SWP2 STA2
+	,&write-opcode JMP
 
 	&not-opcode
 	#01 ;asma-parse-hex-string JSR2 JMP
