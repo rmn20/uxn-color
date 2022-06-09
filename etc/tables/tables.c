@@ -25,12 +25,13 @@ clamp(int val, int min, int max)
 int
 main()
 {
-	int i;
-	printf("60 points on a circle128(bytex,bytey):\n\n");
-	for(i = 0; i < 60; ++i) {
+	int seg = 64, offset = seg / 4, i;
+	double segf = 64.0;
+	printf("%d points on a circle128:\n\n", seg);
+	for(i = 0; i < seg; ++i) {
 		double cx = 128, cy = 128, r = 128;
-		double pos = (i - 15) % 60;
-		double deg = (pos / 60.0) * 360.0;
+		double pos = (i - offset) % seg;
+		double deg = (pos / segf) * 360.0;
 		double rad = deg * (PI / 180);
 		double x = cx + r * cos(rad);
 		double y = cy + r * sin(rad);
