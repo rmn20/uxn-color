@@ -86,22 +86,25 @@ BRK
 	[ LDA2k ] #05 SFT2 #0008 ADD2 [ .Screen/width DEI2 ] LTH2 ,&skip-max-x JCN
 	[ DUP2 #0004 ADD2 LDA2 ] #ffff MUL2 [ OVR2 #0004 ADD2 STA2 ]
 	&skip-max-x
-	( check for bottom wall collision + bounce y )
-	[ DUP2 #0006 ADD2 LDA2 ] #0f SFT2 #0001 EQU2 ,&skip-max-y JCN
-	[ INC2k INC2 LDA2 ] #05 SFT2 #0008 ADD2 [ .Screen/height DEI2 ] LTH2 ,&skip-max-y JCN
-	[ DUP2 #0006 ADD2 LDA2 ] #ffff MUL2 [ OVR2 #0006 ADD2 STA2 ]
-	&skip-max-y
 	( check for left wall collision + bounce x )
 	[ LDA2k ] #0f SFT2 #0000 EQU2 ,&skip-min-x JCN
 	[ DUP2 #0004 ADD2 LDA2 ] #ffff MUL2 [ OVR2 #0004 ADD2 STA2 ]
 	&skip-min-x
+	( check for bottom wall collision + bounce y )
+	[ DUP2 #0006 ADD2 LDA2 ] #0f SFT2 #0001 EQU2 ,&skip-max-y JCN
+	[ INC2k INC2 LDA2 ] #05 SFT2 #0008 ADD2 [ .Screen/height DEI2 ] LTH2 ,&skip-max-y JCN
+	[ DUP2 #0006 ADD2 LDA2 ] #ffff MUL2 [ OVR2 #0006 ADD2 STA2 ]
+	,&skip-gravity JMP
+	&skip-max-y
 	( check for top wall collision + bounce x )
 	[ INC2k INC2 LDA2 ] #0f SFT2 #0000 EQU2 ,&skip-min-y JCN
 	[ DUP2 #0006 ADD2 LDA2 ] #ffff MUL2 [ OVR2 #0006 ADD2 STA2 ]
+	,&skip-gravity JMP
 	&skip-min-y
 
 	( apply gravity )
 	[ DUP2 #0006 ADD2 LDA2 ] #0004 ADD2 OVR2 #0006 ADD2 STA2
+	&skip-gravity
 
 	( draw the sprite )
 	( top )
