@@ -466,7 +466,7 @@ run(Uxn *u)
 int
 uxn_interrupt(void)
 {
-	return ((Sint64)(exec_deadline - SDL_GetPerformanceCounter())) > 0;
+	return !SDL_QuitRequested();
 }
 
 int
