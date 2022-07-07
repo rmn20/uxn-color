@@ -2,10 +2,8 @@
 
 %+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
 %<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%GTS2 { #8000 ++ SWP2 #8000 ++ << }
+%GTS2 { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
 %AUTO-X    { #01 .Screen/auto DEO }
 %NEXT-LINE { #0000 .Screen/x DEO2 .Screen/y DEI2k INC2 ROT DEO2 }
 
@@ -17,8 +15,8 @@
 %YMIN { #ecc7 } ( -4915 )
 %YMAX { #1333 } ( 4915 )
 %MAXI { #20 } ( 32 )
-%DX { XMAX XMIN -- WIDTH // } ( (XMAX-XMIN)/W )
-%DY { YMAX YMIN -- HEIGHT // } ( (YMAX-YMIN)/H )
+%DX { XMAX XMIN SUB2 WIDTH DIV2 } ( (XMAX-XMIN)/W )
+%DY { YMAX YMIN SUB2 HEIGHT DIV2 } ( (YMAX-YMIN)/H )
 %X  { .x LDZ2  } %Y  { .y LDZ2  }
 %X2 { .x2 LDZ2 } %Y2 { .y2 LDZ2 }
 
@@ -54,21 +52,21 @@ BRK
 		XMAX XMIN
 		&hor
 			DUP2 ,&x STR2
-			#0000 DUP2 DUP2 DUP2 .x STZ2 .y STZ2 .x2 STZ2 .y2 STZ2
+			#0000 DUP2k DUP2 .x STZ2 .y STZ2 .x2 STZ2 .y2 STZ2
 			MAXI #00
 			&loop
-				X Y ;smul2 JSR2 DUP2 ADD2 [ LIT2 &y $2 ] ++ .y STZ2
-				X2 Y2 -- [ LIT2 &x $2 ] ++ .x STZ2
+				X Y ;smul2 JSR2 DUP2 ADD2 [ LIT2 &y $2 ] ADD2 .y STZ2
+				X2 Y2 SUB2 [ LIT2 &x $2 ] ADD2 .x STZ2
 				X DUP2 ;smul2 JSR2 .x2 STZ2
 				Y DUP2 ;smul2 JSR2 .y2 STZ2
-				X2 Y2 ++ #4000 >> ,&end JCN
+				X2 Y2 ADD2 #4000 GTH2 ,&end JCN
 				INC GTHk ,&loop JCN
 				&end
 			NIP .Screen/pixel DEO
-			DX ++ OVR2 OVR2 GTS2 ;&hor JCN2
+			DX ADD2 OVR2 OVR2 GTS2 ;&hor JCN2
 		POP2 POP2
 		NEXT-LINE
-		DY ++ OVR2 OVR2 GTS2 ;&ver JCN2
+		DY ADD2 OVR2 OVR2 GTS2 ;&ver JCN2
 	POP2 POP2
 
 JMP2r

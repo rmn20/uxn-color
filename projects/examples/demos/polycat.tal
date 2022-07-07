@@ -74,8 +74,7 @@ BRK
 	DUP ,&last LDR NEQ ,&changed JCN
 		POP JMP2r &changed
 	( only redraw on change )
-	DUP
-	#00 SWP ;eye ADD2 .Screen/addr DEO2
+	#00 OVR ;eye ADD2 .Screen/addr DEO2
 	.cat/y LDZ2 #0008 ADD2 .Screen/y DEO2
 	.cat/x LDZ2 #0008 SUB2 .Screen/x DEO2
 	#81 .Screen/sprite DEOk DEO
