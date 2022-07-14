@@ -168,7 +168,7 @@ JMP2r
 	LITr 00
 	#0800
 	&loop
-		#00 OVR #10 SFT2 ;&mask ADD2 LDA2 [ LIT2 &origin $2 ]
+		#00 OVR DUP2 ADD2 ;&mask ADD2 LDA2 [ LIT2 &origin $2 ]
 		ROT ADD STH ADD STHr ;get-cell JSR2 STH ADDr
 		INC GTHk ,&loop JCN
 	POP2
@@ -187,11 +187,11 @@ JMP2r
 	#00 .Screen/auto DEO
 	#4000
 	&ver
-		#00 OVR #10 SFT2 .anchor/y LDZ2 ADD2 .Screen/y DEO2
+		#00 OVR DUP2 ADD2 .anchor/y LDZ2 ADD2 .Screen/y DEO2
 		STHk
 		#4000
 		&hor
-			#00 OVR #10 SFT2 .anchor/x LDZ2 ADD2 .Screen/x DEO2
+			#00 OVR DUP2 ADD2 .anchor/x LDZ2 ADD2 .Screen/x DEO2
 			DUP STHkr ;get-cell JSR2 INC .Screen/pixel DEO
 			INC GTHk ,&hor JCN
 		POP2

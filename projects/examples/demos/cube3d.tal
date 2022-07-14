@@ -88,15 +88,15 @@ JMP2r
 	( load ) STH ,&y STR2 ,&x STR2 .line/y STZ2 .line/x STZ2
 	,&x LDR2 .line/x LDZ2 SUB2 ;abs2 JSR2 .line/dx STZ2
 	#0000 ,&y LDR2 .line/y LDZ2 SUB2 ;abs2 JSR2 SUB2 .line/dy STZ2
-	#ffff #00 .line/x LDZ2 ,&x LDR2 ;lts2 JSR2 #10 SFT2 ADD2 ,&sx STR2
-	#ffff #00 .line/y LDZ2 ,&y LDR2 ;lts2 JSR2 #10 SFT2 ADD2 ,&sy STR2
+	#ffff #00 .line/x LDZ2 ,&x LDR2 ;lts2 JSR2 DUP2 ADD2 ADD2 ,&sx STR2
+	#ffff #00 .line/y LDZ2 ,&y LDR2 ;lts2 JSR2 DUP2 ADD2 ADD2 ,&sy STR2
 	.line/dx LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
 	&loop
 		.line/x LDZ2 DUP2 .Screen/x DEO2 [ LIT2 &x $2 ] EQU2
 		.line/y LDZ2 DUP2 .Screen/y DEO2 [ LIT2 &y $2 ] EQU2
 			STHkr .Screen/pixel DEO
 			AND ,&end JCN
-		.line/e1 LDZ2 #10 SFT2 DUP2
+		.line/e1 LDZ2 DUP2 ADD2 DUP2
 		.line/dy LDZ2 ;lts2 JSR2 ,&skipy JCN
 			.line/e1 LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
 			.line/x LDZ2 [ LIT2 &sx $2 ] ADD2 .line/x STZ2

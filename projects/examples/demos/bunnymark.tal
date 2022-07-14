@@ -217,7 +217,7 @@ JMP2r
 	( z = a )
 	,&a LDR DUP ,&z STR
 	( a = z ^ t ^ (z >> 1) ^ (t << 1) )
-	DUP #10 SFT EOR SWP DUP #01 SFT EOR EOR
+	DUP DUP ADD EOR SWP DUP #01 SFT EOR EOR
 	DUP ,&a STR
 
 JMP2r

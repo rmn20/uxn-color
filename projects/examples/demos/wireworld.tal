@@ -201,7 +201,7 @@ JMP2r
 
 @transform ( xy cell -- cell )
 
-	DUP #00 NEQ ,&no-null JCN NIP NIP JMP2r &no-null
+	DUP ,&no-null JCN NIP NIP JMP2r &no-null
 	DUP #03 NEQ ,&no-head JCN POP POP2 #02 JMP2r &no-head
 	DUP #02 NEQ ,&no-tail JCN POP POP2 #01 JMP2r &no-tail
 	DUP #01 NEQ ,&no-cond JCN POP

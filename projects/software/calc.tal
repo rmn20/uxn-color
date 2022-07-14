@@ -131,7 +131,7 @@ BRK
 
 	( y ) .modpad-frame/y LDZ2 SUB2 #24 SFT2 NIP STH
 	( x ) .modpad-frame/x LDZ2 SUB2 #04 SFT2
-	( lookup ) STHr ADD #10 SFT2 ;keypad/ops ADD2 LDA2 JSR2
+	( lookup ) STHr ADD DUP2 ADD2 ;keypad/ops ADD2 LDA2 JSR2
 	;draw-bitpad JSR2
 	#00 .Mouse/state DEO POP2
 
@@ -141,7 +141,7 @@ BRK
 
 	POP2
 	.input-frame/x LDZ2 SUB2 #03 SFT2 NIP
-	DUP #00 NEQ ,&no-push JCN
+	DUP ,&no-push JCN
 		;do-push JSR2 &no-push
 	DUP #01 NEQ ,&no-pop JCN
 		;do-pop JSR2 &no-pop
@@ -183,7 +183,7 @@ JMP2r
 
 @push ( value* -- )
 
-	( store ) .stack/length LDZ #10 SFT .stack/items ADD STZ2
+	( store ) .stack/length LDZ DUP ADD .stack/items ADD STZ2
 	( INCZ ) .stack/length LDZk INC SWP STZ
 	( reset ) #0000 .input/value STZ2
 	#00 ;draw-input JSR2
@@ -193,8 +193,8 @@ JMP2r
 
 @pop ( -- value* )
 
-	.stack/length LDZ #01 SUB #10 SFT .stack/items ADD LDZ2
-	( clear ) #0000 [ .stack/length LDZ #01 SUB #10 SFT .stack/items ADD ] STZ2
+	.stack/length LDZ #01 SUB DUP ADD .stack/items ADD LDZ2
+	( clear ) #0000 [ .stack/length LDZ #01 SUB DUP ADD .stack/items ADD ] STZ2
 	( DECZ ) .stack/length LDZk #01 SUB SWP STZ
 	#01 ;draw-input JSR2
 	;draw-stack JSR2
@@ -396,7 +396,7 @@ JMP2r
 		.input-frame/x LDZ2 #0018 ADD2 .Screen/x DEO2
 		#00 OVR #30 SFT2 .input-frame/y LDZ2 ADD2 #004c SUB2 .Screen/y DEO2
 		( color ) DUP #08 .stack/length LDZ SUB #01 SUB GTH STH
-		( value ) DUP #10 SFT .stack/items ADD [ #10 .stack/length LDZ #10 SFT SUB SUB ] LDZ2
+		( value ) DUP DUP ADD .stack/items ADD [ #10 .stack/length LDZ DUP ADD SUB SUB ] LDZ2
 			STHr ;draw-number JSR2
 		INC GTHk ,&loop JCN
 	POP2

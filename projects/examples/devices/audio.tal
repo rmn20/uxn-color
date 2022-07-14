@@ -118,7 +118,7 @@ JMP2r
 	;selector-icn .Screen/addr DEO2
 	STHkr .Screen/sprite DEO
 
-	.Screen/y DEI2 #0008 ADD2 .Screen/y DEO2
+	.Screen/y DEI2k #0008 ADD2 ROT DEO2
 	.selection LDZ GET-NOTE STHr ,draw-byte JSR
 
 JMP2r
