@@ -207,7 +207,7 @@ JMP2r
 	.Screen/y .lines/addr STZ
 
 	&draw-line ( v1* v2* -- )
-	OVR2 OVR2 LTH2 #01 JCN SWP2
+	LTH2k #01 JCN SWP2
 	STH2
 
 	&loop
@@ -231,7 +231,7 @@ JMP2r
 	JMP2r
 
 @modf ( dividend* divisor* SUB2 remainder* quotient* )
-	OVR2 OVR2 DIV2 STH2k MUL2 SUB2 STH2r JMP2r
+	DIV2k STH2k MUL2 SUB2 STH2r JMP2r
 
 @mul2hi ( a* b* -- product-top-16-bits* )
 	(

@@ -30,14 +30,14 @@ BRK
  	.a LDZ2 #ffff EQU2 ,&input JCN
 	.b LDZ2 #ffff EQU2 ,&output JCN
 	( SUBLEQ )
-	.b LDZ2 STH2k ,&get JSR .a LDZ2 ,&get JSR SUB2 STH2r #10 SFT2 ;program ADD2 STA2
+	.b LDZ2 STH2k ,&get JSR .a LDZ2 ,&get JSR SUB2 STH2r DUP2 ADD2 ;program ADD2 STA2
 	( SET )
 	.b LDZ2 ,&get JSR #0001 SUB2 #8000 LTH2 ,&end JCN POP2 .c LDZ2 &end
 
 JMP2r
 	&input ( -- ) JMP2r
 	&output ( -- ) .a LDZ2 ,&get JSR NIP #18 DEO JMP2r
-	&get ( a* -- b* ) #10 SFT2 ;program ADD2 LDA2 JMP2r
+	&get ( a* -- b* ) DUP2 ADD2 ;program ADD2 LDA2 JMP2r
 
 @program ( hello world )
 	000f 0011 ffff 0011 ffff ffff 0010 0001

@@ -172,12 +172,12 @@ JMP2r
 	#3c00
 	&loop
 		( dots )
-		#00 OVR DUP2 ADD2 ;table ADD2 LDA2
+		#00 OVRk ADD2 ;table ADD2 LDA2
 			#0018 ;circle JSR2
 			.Screen/x DEO2 .Screen/y DEO2 #01 .Screen/pixel DEO
 		( markers )
 		DUP #05 ;mod JSR2 ,&no-marker JCN
-			#00 OVR DUP2 ADD2 ;table ADD2 LDA2
+			#00 OVRk ADD2 ;table ADD2 LDA2
 			STH2k #0018 ;circle JSR2 SWP2
 			STH2r #001c ;circle JSR2 SWP2
 				#01 ;draw-line JSR2

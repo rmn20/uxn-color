@@ -4,7 +4,7 @@
 
 |0100 ( -> ) @reset
 
-	#0000 #0001
+	#0000 INC2k
 	&loop
 		DUP2 ,is-prime JSR #00 EQU ,&skip JCN
 			( print ) DUP2 ,print/short JSR

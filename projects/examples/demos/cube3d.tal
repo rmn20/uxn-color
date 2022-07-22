@@ -43,22 +43,22 @@ BRK
 		STHk
 		#00 .timer LDZ [ #00 STHkr INC #07 AND #60 SFT ADD2 ] #00ff AND2 ;table ADD2 LDA #01 SFT
 		#00 .timer LDZ [ #00 STHkr #60 SFT ADD2 ] #00ff AND2 ;table ADD2 LDA #02 SFT [ #00 STHkr #62 SFT2 ADD2 ]
-		.cube/v0 STHr #10 SFT ADD STZ2
+		.cube/v0 STHr DUP ADD ADD STZ2
 		INC GTHk ,&loop JCN
 	POP2
 	( vertices )
 	#0800
 	&ver-loop
-		DUP #10 SFT .cube ADD LDZ2 ;draw-vertex JSR2
+		DUP DUP ADD .cube ADD LDZ2 ;draw-vertex JSR2
 		INC GTHk ,&ver-loop JCN
 	POP2
 	( lines )
 	#0400
 	&line-loop
 		STHk
-		.cube/v0 STHkr #10 SFT ADD .cube/v0 STHkr INC #03 AND #10 SFT ADD ,trace JSR
-		.cube/v0 STHkr #10 SFT ADD .cube/v4 STHkr #10 SFT ADD ,trace JSR
-		.cube/v4 STHkr #10 SFT ADD .cube/v4 STHr INC #03 AND #10 SFT ADD ,trace JSR
+		.cube/v0 STHkr DUP ADD ADD .cube/v0 STHkr INC #03 AND DUP ADD ADD ,trace JSR
+		.cube/v0 STHkr DUP ADD ADD .cube/v4 STHkr DUP ADD ADD ,trace JSR
+		.cube/v4 STHkr DUP ADD ADD .cube/v4 STHr INC #03 AND DUP ADD ADD ,trace JSR
 		INC GTHk ,&line-loop JCN
 	POP2
 

@@ -217,8 +217,8 @@ JMP2r
 			( bl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
 			( bc ) INC2 LDAk #03 NEQ JMP INCr
 			( br ) INC2 LDA #03 NEQ JMP INCr
-		STHkr #02 EQU STHr #01 EQU #0000 GTH2
-		#10 SFT INC JMP2r
+		STHkr #02 EQU STHr #01 EQU ORA
+		DUP ADD INC JMP2r
 		&no-cond
 	( unknown )
 	NIP NIP

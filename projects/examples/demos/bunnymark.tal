@@ -183,7 +183,7 @@ JMP2r
 
 	;sprite/length LDA2
 	( don't let length go below 0 )
-	DUP2 #0000 EQU2 ,&bail JCN
+	ORAk #00 EQU ,&bail JCN
 	( clear the old sprite location )
 	DUP2 #0001 SUB2 #30 SFT2 ;sprite/array ADD2
 	( top )
@@ -217,7 +217,7 @@ JMP2r
 	( z = a )
 	,&a LDR DUP ,&z STR
 	( a = z ^ t ^ (z >> 1) ^ (t << 1) )
-	DUP DUP ADD EOR SWP DUP #01 SFT EOR EOR
+	DUPk ADD EOR SWP DUP #01 SFT EOR EOR
 	DUP ,&a STR
 
 JMP2r
