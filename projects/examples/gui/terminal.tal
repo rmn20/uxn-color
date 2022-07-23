@@ -34,7 +34,7 @@ BRK
 @on-button ( -> )
 
 	.Controller/key DEI
-	DUP #00 NEQ ,&no-null JCN
+	DUP ,&no-null JCN
 		POP BRK
 		&no-null
 	DUP #0d NEQ ,&no-enter JCN

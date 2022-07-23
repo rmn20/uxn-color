@@ -321,7 +321,7 @@ JMP2r
 		EQUkr STHr #00 EQU ,&no-reached JCN
 			POP2r NIP2 ;dir/data ADD2 JMP2r
 			&no-reached
-		DUP2 ;dir/data ADD2 LDA #00 NEQ ,&no-lb JCN
+		DUP2 ;dir/data ADD2 LDA ,&no-lb JCN
 			INCr
 			&no-lb
 		INC2 GTH2k ,&loop JCN
