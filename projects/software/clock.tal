@@ -47,7 +47,7 @@
 		#006c ADD2 .time/y STZ2
 	;draw-watchface JSR2
 	( time buffer )
-	LIT ':
+	LIT ":
 		DUP .buf/s1 STZ
 		.buf/s2 STZ
 
@@ -121,8 +121,8 @@ JMP2r
 		DUP ;is-lc JSR2 ,&lc JCN
 		DUP ;is-uc JSR2 ,&uc JCN
 		DUP ;is-num JSR2 ,&num JCN
-		DUP LIT '/ EQU ,&slash JCN
-		DUP LIT ': EQU ,&colon JCN
+		DUP LIT "/ EQU ,&slash JCN
+		DUP LIT ": EQU ,&colon JCN
 		POP ;font/blank
 		&end
 		.Screen/addr DEO2

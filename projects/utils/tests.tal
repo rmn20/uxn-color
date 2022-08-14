@@ -415,8 +415,8 @@
 	OPCODE
 
 	( DEI/DEO )
-	LIT '1 EMIT
-	LIT '1 EMIT
+	LIT "1 EMIT
+	LIT "1 EMIT
 	TYPE
 
 	( Branching )

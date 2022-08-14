@@ -96,7 +96,7 @@ JMP2r
 	;program/accumulator
 	&w
 		[ LIT2 &a $2 ] OVR2 ;sseg JSR2 #01 NEQ ,&no-found JCN
-			,&b LDR2 LDA LIT '~ EQU ,&output JCN
+			,&b LDR2 LDA LIT "~ EQU ,&output JCN
 			( shift ) DUP2 [ ,&b LDR2 ;slen JSR2 ,&a LDR2 ;slen JSR2 SUB2 ] ;ssft JSR2
 			( write ) [ LIT2 &b $2 ] SWP2 OVR2 ;slen JSR2 ;mcpy JSR2 
 			POP2 #01 JMP2r
@@ -109,7 +109,7 @@ JMP2r
 	&output
 		,&a LDR2 ;slen JSR2 #0000 SWP2 SUB2 ;ssft JSR2
 		POP2 ,&b LDR2 INC2
-		LDAk LIT '` NEQ ,&no-lb JCN
+		LDAk LIT "` NEQ ,&no-lb JCN
 			#0a18 DEO #01 JMP2r
 			&no-lb
 		,print-str JSR #01

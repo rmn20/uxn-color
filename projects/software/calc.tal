@@ -69,15 +69,15 @@ BRK
 	[ #1b ] NEQk NIP ,&no-esc JCN ;do-pop JSR2 POP BRK &no-esc
 	[ #08 ] NEQk NIP ,&no-backspace JCN ;do-erase JSR2 POP BRK &no-backspace
 	( arithmetic )
-	[ LIT '+ ] NEQk NIP ,&no-add JCN ;do-add JSR2 POP BRK &no-add
-	[ LIT '- ] NEQk NIP ,&no-sub JCN ;do-sub JSR2 POP BRK &no-sub
-	[ LIT '* ] NEQk NIP ,&no-mul JCN ;do-mul JSR2 POP BRK &no-mul
-	[ LIT '/ ] NEQk NIP ,&no-div JCN ;do-div JSR2 POP BRK &no-div
+	[ LIT "+ ] NEQk NIP ,&no-add JCN ;do-add JSR2 POP BRK &no-add
+	[ LIT "- ] NEQk NIP ,&no-sub JCN ;do-sub JSR2 POP BRK &no-sub
+	[ LIT "* ] NEQk NIP ,&no-mul JCN ;do-mul JSR2 POP BRK &no-mul
+	[ LIT "/ ] NEQk NIP ,&no-div JCN ;do-div JSR2 POP BRK &no-div
 	( bitwise )
-	[ LIT '& ] NEQk NIP ,&no-and JCN ;do-and JSR2 POP BRK &no-and
-	[ LIT '| ] NEQk NIP ,&no-ora JCN ;do-ora JSR2 POP BRK &no-ora
-	[ LIT '^ ] NEQk NIP ,&no-eor JCN ;do-eor JSR2 POP BRK &no-eor
-	[ LIT '~ ] NEQk NIP ,&no-not JCN ;do-not JSR2 POP BRK &no-not
+	[ LIT "& ] NEQk NIP ,&no-and JCN ;do-and JSR2 POP BRK &no-and
+	[ LIT "| ] NEQk NIP ,&no-ora JCN ;do-ora JSR2 POP BRK &no-ora
+	[ LIT "^ ] NEQk NIP ,&no-eor JCN ;do-eor JSR2 POP BRK &no-eor
+	[ LIT "~ ] NEQk NIP ,&no-not JCN ;do-not JSR2 POP BRK &no-not
 	( value )
 	;key-value JSR2 ;push-input JSR2
 

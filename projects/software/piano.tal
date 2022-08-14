@@ -88,14 +88,14 @@ BRK
 	#40 .Screen/sprite DEO
 
 	.Controller/key DEI
-	[ LIT 'a ] NEQk NIP ,&no-c JCN #30 .octave LDZ #0c MUL ADD ;play JSR2 &no-c
-	[ LIT 's ] NEQk NIP ,&no-d JCN #32 .octave LDZ #0c MUL ADD ;play JSR2 &no-d
-	[ LIT 'd ] NEQk NIP ,&no-e JCN #34 .octave LDZ #0c MUL ADD ;play JSR2 &no-e
-	[ LIT 'f ] NEQk NIP ,&no-f JCN #35 .octave LDZ #0c MUL ADD ;play JSR2 &no-f
-	[ LIT 'g ] NEQk NIP ,&no-g JCN #37 .octave LDZ #0c MUL ADD ;play JSR2 &no-g
-	[ LIT 'h ] NEQk NIP ,&no-a JCN #39 .octave LDZ #0c MUL ADD ;play JSR2 &no-a
-	[ LIT 'j ] NEQk NIP ,&no-b JCN #3b .octave LDZ #0c MUL ADD ;play JSR2 &no-b
-	[ LIT 'k ] NEQk NIP ,&no-c2 JCN #3c .octave LDZ #0c MUL ADD ;play JSR2 &no-c2
+	[ LIT "a ] NEQk NIP ,&no-c JCN #30 .octave LDZ #0c MUL ADD ;play JSR2 &no-c
+	[ LIT "s ] NEQk NIP ,&no-d JCN #32 .octave LDZ #0c MUL ADD ;play JSR2 &no-d
+	[ LIT "d ] NEQk NIP ,&no-e JCN #34 .octave LDZ #0c MUL ADD ;play JSR2 &no-e
+	[ LIT "f ] NEQk NIP ,&no-f JCN #35 .octave LDZ #0c MUL ADD ;play JSR2 &no-f
+	[ LIT "g ] NEQk NIP ,&no-g JCN #37 .octave LDZ #0c MUL ADD ;play JSR2 &no-g
+	[ LIT "h ] NEQk NIP ,&no-a JCN #39 .octave LDZ #0c MUL ADD ;play JSR2 &no-a
+	[ LIT "j ] NEQk NIP ,&no-b JCN #3b .octave LDZ #0c MUL ADD ;play JSR2 &no-b
+	[ LIT "k ] NEQk NIP ,&no-c2 JCN #3c .octave LDZ #0c MUL ADD ;play JSR2 &no-c2
 	[ #1b ] NEQk NIP ,&no-esc JCN #010f DEO &no-esc
 	POP
 

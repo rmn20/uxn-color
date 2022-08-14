@@ -191,7 +191,7 @@ JMP2r
 	#0010 .Screen/x DEO2
 	#0080 .Screen/y DEO2
 	.browser/sel LDZ #02 ;draw-byte JSR2
-	LIT '/ #02 ;draw-char JSR2
+	LIT "/ #02 ;draw-char JSR2
 	.browser/lines LDZ #01 SUB #02 ;draw-byte JSR2
 	#00 .Screen/auto DEO
 

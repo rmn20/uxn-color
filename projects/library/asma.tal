@@ -137,8 +137,8 @@
 	DUP2 ,asma-print-labels JSR
 	( here )
 	DUP2 #0004 ADD2
-	LDAk LIT 'A LTH ,&loop JCN
-	LDAk LIT 'Z GTH ,&loop JCN
+	LDAk LIT "A LTH ,&loop JCN
+	LDAk LIT "Z GTH ,&loop JCN
 	POP2
 	,&skip-device-label JMP
 	&loop
@@ -169,8 +169,8 @@
 	,asma-print-string JMP
 
 @asma-print-short ( short* -- )
-	LIT '0 .Console/error DEO
-	LIT 'x .Console/error DEO
+	LIT "0 .Console/error DEO
+	LIT "x .Console/error DEO
 	OVR #04 SFT ,&hex JSR
 	SWP #0f AND ,&hex JSR
 	DUP #04 SFT ,&hex JSR
@@ -496,15 +496,15 @@
 	JMP2r
 
 	&not-end
-	DUP LIT '2 NEQ ,&not-two JCN
+	DUP LIT "2 NEQ ,&not-two JCN
 	POP LIT &short-flag $1 ORA ,&loop JMP
 
 	&not-two
-	DUP LIT 'r NEQ ,&not-return JCN
+	DUP LIT "r NEQ ,&not-return JCN
 	POP LIT &return-flag $1 ORA ,&loop JMP
 
 	&not-return
-	LIT 'k NEQ ,&not-keep JCN
+	LIT "k NEQ ,&not-keep JCN
 	&set-keep LIT &keep-flag $1 ORA ,&loop JMP
 
 	&not-keep ( 00 byte / end* )

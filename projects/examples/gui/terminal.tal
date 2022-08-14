@@ -75,7 +75,7 @@ BRK
 	LIT 22 #02 ;draw-char JSR2
 	;buffer #03 ;draw-str JSR2
 	LIT 22 #02 ;draw-char JSR2
-	LIT '. #02 ;draw-char JSR2
+	LIT ". #02 ;draw-char JSR2
 
 JMP2r
 
@@ -85,7 +85,7 @@ JMP2r
 	#0010 .Screen/x DEO2
 	.Screen/height DEI2 #0020 SUB2 .Screen/y DEO2
 
-	( marker ) LIT '> #03 ;draw-char JSR2
+	( marker ) LIT "> #03 ;draw-char JSR2
 
 	;buffer STHr ;draw-str JSR2
 
