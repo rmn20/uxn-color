@@ -44,30 +44,6 @@ BRK
 
 BRK
 
-@clear-ball ( -- )
-
-	.ball/x LDZ2 .Screen/x DEO2
-	.ball/y LDZ2 .Screen/y DEO2
-	#76 .Screen/auto DEO
-	#0800
-	&loop-bg
-		#40 .Screen/sprite DEO
-		INC GTHk ,&loop-bg JCN
-	POP2
-
-JMP2r
-
-@move-ball ( -- )
-
-	,clear-ball JSR
-	.ball/vx LDZ2k STH2k ROT STZ2
-	.ball/x LDZ2k STH2r ADD2 ,check-flip-vx JSR ROT STZ2
-	.ball/vy LDZ2k INC2 STH2k ROT STZ2
-	.ball/y LDZ2k STH2r ADD2 ,check-flip-vy JSR ROT STZ2
-	,draw-ball JSR
-
-JMP2r
-
 @check-flip-vx ( x -- x )
 
 	( left ) DUP2 #0010 LTH2 ,&flip JCN 
@@ -84,6 +60,23 @@ JMP2r
 	&else
 
 JMP2r
+
+@move-ball ( -- )
+
+	( clear )
+	.ball/x LDZ2 .Screen/x DEO2
+	.ball/y LDZ2 .Screen/y DEO2
+	#76 .Screen/auto DEO
+	#0800
+	&loop-bg
+		#40 .Screen/sprite DEO
+		INC GTHk ,&loop-bg JCN
+	POP2
+
+	.ball/vx LDZ2k STH2k ROT STZ2
+	.ball/x LDZ2k STH2r ADD2 ,check-flip-vx JSR ROT STZ2
+	.ball/vy LDZ2k INC2 STH2k ROT STZ2
+	.ball/y LDZ2k STH2r ADD2 ,check-flip-vy JSR ROT STZ2
 
 @draw-ball ( -- )
 

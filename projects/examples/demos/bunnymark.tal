@@ -110,9 +110,9 @@ BRK
 	( top )
 	[ LDA2k ] #05 SFT2 .Screen/x DEO2
 	[ INC2 INC2 LDA2 ] #05 SFT2 .Screen/y DEO2
-	#85 ,draw-sprite JSR
+	#85 ,draw-sprite ( .. )
 
-JMP2r
+JMP
 
 @draw-sprite ( color -- )
 
