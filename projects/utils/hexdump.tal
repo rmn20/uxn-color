@@ -33,7 +33,7 @@ BRK
 		;&buf LDA2 ,print JSR #2018 DEO
 		INC2r
 		( linebreak )
-		STH2kr #0007 AND2 ORA ,&no-lb JCN
+		STH2kr #000f AND2 ORA ,&no-lb JCN
 			#0a18 DEO &no-lb
 		,&stream JMP &eof
 	POP2r
