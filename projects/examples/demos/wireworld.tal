@@ -201,7 +201,7 @@ JMP2r
 
 @transform ( xy cell -- cell )
 
-	DUP #00 NEQ ,&no-null JCN NIP NIP JMP2r &no-null
+	DUP ,&no-null JCN NIP NIP JMP2r &no-null
 	DUP #03 NEQ ,&no-head JCN POP POP2 #02 JMP2r &no-head
 	DUP #02 NEQ ,&no-tail JCN POP POP2 #01 JMP2r &no-tail
 	DUP #01 NEQ ,&no-cond JCN POP
@@ -217,8 +217,8 @@ JMP2r
 			( bl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
 			( bc ) INC2 LDAk #03 NEQ JMP INCr
 			( br ) INC2 LDA #03 NEQ JMP INCr
-		STHkr #02 EQU STHr #01 EQU #0000 GTH2
-		#10 SFT INC JMP2r
+		STHkr #02 EQU STHr #01 EQU ORA
+		DUP ADD INC JMP2r
 		&no-cond
 	( unknown )
 	NIP NIP

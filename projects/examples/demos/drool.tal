@@ -22,7 +22,7 @@
 	#00 .DateTime/minute DEI #60 SFT2 EOR2
 	#00 .DateTime/hour   DEI #c0 SFT2 EOR2 ;prng/x STA2
 	#00 .DateTime/hour   DEI #04 SFT2
-	#00 .DateTime/day    DEI #10 SFT2 EOR2
+	#00 .DateTime/day    DEI DUP2 ADD2 EOR2
 	#00 .DateTime/month  DEI #60 SFT2 EOR2
 	    .DateTime/year  DEI2 #a0 SFT2 EOR2 ;prng/y STA2
 	;prng/x LDA2 ;prng/y LDA2 EOR2
@@ -160,7 +160,7 @@
 	( rabbit is in-between two frames )
 	#08 OVR SUB ,&from-weight STR
 	,&to-weight STR ( color n / frame )
-	#00 SWP #10 SFT2 ;rabbits ADD2 #00c8 #00 STHr MUL2 ADD2 ( color from-addr* )
+	#00 SWP DUP2 ADD2 ;rabbits ADD2 #00c8 #00 STHr MUL2 ADD2 ( color from-addr* )
 	LDA2k STH2 #00c8 ADD2 LDA2
 	&draw ( color to-x to-y / from-x from-y )
 	STHr ,&mix JSR LIT2 &yoffset $2 ADD2 .Screen/y DEO2
@@ -181,7 +181,7 @@
 	&static ( color n counter / frame )
 	INCr
 	POP
-	#00 SWP #10 SFT2 ;rabbits ADD2 #00c8 #00 STHr MUL2 ADD2
+	#00 SWP DUP2 ADD2 ;rabbits ADD2 #00c8 #00 STHr MUL2 ADD2
 	LDA2 STH2k
 	,&draw JMP
 

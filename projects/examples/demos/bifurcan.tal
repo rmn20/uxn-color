@@ -90,9 +90,6 @@ JMP2r
 	[ .center/x LDZ2 #0008 ADD2 ] 
 	[ .center/y LDZ2 #0018 ADD2 ] 
 	.DateTime/second DEI #0a ;mod JSR2 
-	;draw-number JSR2
-
-JMP2r
 
 @draw-number ( x* y* n -- )
 	
@@ -146,7 +143,7 @@ JMP2r
 
 JMP2r
 
-@mod DUP2 DIV MUL SUB JMP2r
+@mod DIVk MUL SUB JMP2r
 
 @cursor 
 	80c0 e0f0 f8e0 1000

@@ -44,8 +44,6 @@ typedef struct {
 } Program;
 
 Program p;
-static int litlast = 0;
-static int jsrlast = 0;
 
 /* clang-format off */
 
@@ -207,8 +205,6 @@ writebyte(Uint8 b)
 		return error("Memory overwrite", "");
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
-	litlast = 0;
-	jsrlast = 0;
 	return 1;
 }
 
@@ -216,16 +212,7 @@ static int
 writeopcode(char *w)
 {
 	Uint8 res;
-	if(jsrlast && scmp(w, "JMP2r", 5)) { /* tail-call optimization */
-		p.data[p.ptr - 1] = jsrlast == 2 ? findopcode("JMP2") : findopcode("JMP");
-		jsrlast = 0;
-		return 1;
-	}
 	res = writebyte(findopcode(w));
-	if(scmp(w, "JSR2", 4))
-		jsrlast = 2;
-	else if(scmp(w, "JSR", 3))
-		jsrlast = 1;
 	return res;
 }
 
@@ -240,15 +227,8 @@ writeshort(Uint16 s, int lit)
 static int
 writelitbyte(Uint8 b)
 {
-	if(litlast) { /* literals optimization */
-		Uint8 hb = p.data[p.ptr - 1];
-		p.ptr -= 2;
-		p.length = p.ptr;
-		return writeshort((hb << 8) + b, 1);
-	}
 	if(!writebyte(findopcode("LIT"))) return 0;
 	if(!writebyte(b)) return 0;
-	litlast = 1;
 	return 1;
 }
 
@@ -299,24 +279,20 @@ parse(char *w, FILE *f)
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr = shex(w + 1);
-		litlast = jsrlast = 0;
 		break;
 	case '$': /* pad-relative */
 		if(!sihx(w + 1))
 			return error("Invalid padding", w);
 		p.ptr += shex(w + 1);
-		litlast = jsrlast = 0;
 		break;
 	case '@': /* label */
 		if(!makelabel(w + 1))
 			return error("Invalid label", w);
 		scpy(w + 1, p.scope, 0x40);
-		litlast = jsrlast = 0;
 		break;
 	case '&': /* sublabel */
 		if(!makelabel(sublabel(subw, p.scope, w + 1)))
 			return error("Invalid sublabel", w);
-		litlast = jsrlast = 0;
 		break;
 	case '#': /* literals hex */
 		if(!sihx(w + 1) || (slen(w) != 3 && slen(w) != 5))
@@ -328,11 +304,11 @@ parse(char *w, FILE *f)
 		}
 		break;
 	case '.': /* literal byte zero-page */
-		makereference(p.scope, w, p.ptr - litlast);
+		makereference(p.scope, w, p.ptr);
 		if(!writelitbyte(0xff)) return 0;
 		break;
 	case ',': /* literal byte relative */
-		makereference(p.scope, w, p.ptr - litlast);
+		makereference(p.scope, w, p.ptr);
 		if(!writelitbyte(0xff)) return 0;
 		break;
 	case ';': /* literal short absolute */
@@ -342,9 +318,6 @@ parse(char *w, FILE *f)
 	case ':': /* raw short absolute */
 		makereference(p.scope, w, p.ptr);
 		if(!writeshort(0xffff, 0)) return 0;
-		break;
-	case '\'': /* raw char */
-		if(!writebyte((Uint8)w[1])) return 0;
 		break;
 	case '"': /* raw string */
 		i = 0;

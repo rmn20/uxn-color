@@ -1,13 +1,7 @@
 ( dev/audio )
 
-%2// { #01 SFT2 }
-%4** { #20 SFT2 }
-%8** { #30 SFT2 }
-%20MOD { #1f AND }
-%RTN { JMP2r }
-
 %GET-NOTE { #00 SWP ;melody ADD2 LDA }
-%GET-HEXCHAR  { #00 SWP 8** ;font-hex ADD2 .Screen/addr DEO2 }
+%GET-HEXCHAR  { #00 SWP #30 SFT2 ;font-hex ADD2 .Screen/addr DEO2 }
 
 ( devices )
 
@@ -44,8 +38,8 @@
 	#dd .Audio0/volume DEO ( TODO: turn ON )
 
 	( center )
-	.Screen/width DEI2 2// #0080 SUB2 .offset/x STZ2
-	.Screen/height DEI2 2// #0040 SUB2 .offset/y STZ2
+	.Screen/width DEI2 #01 SFT2 #0080 SUB2 .offset/x STZ2
+	.Screen/height DEI2 #01 SFT2 #0040 SUB2 .offset/y STZ2
 
 	;draw JSR2
 	#02 ;draw-selector JSR2
@@ -71,12 +65,12 @@ BRK
 		&no-down
 	[ #04 ] NEQk NIP ,&no-left JCN 
 		#00 ;draw-selector JSR2
-		.selection LDZ #01 SUB 20MOD .selection STZ
+		.selection LDZ #01 SUB #1f AND .selection STZ
 		#02 ;draw-selector JSR2
 		&no-left
 	[ #08 ] NEQk NIP ,&no-right JCN 
 		#00 ;draw-selector JSR2
-		.selection LDZ INC 20MOD .selection STZ
+		.selection LDZ INC #1f AND .selection STZ
 		#02 ;draw-selector JSR2
 		&no-right
 	POP
@@ -89,9 +83,9 @@ BRK
 	( skip ) .timer LDZ #10 EQU #01 JCN [ BRK ]
 	.progress LDZ 
 	( play note )    DUP GET-NOTE .Audio0/pitch DEO
-	( erase last )   DUP #01 SUB 20MOD #01 ,draw-note JSR
+	( erase last )   DUP #01 SUB #1f AND #01 ,draw-note JSR
 	( draw current ) #01 ,draw-note JSR
-	( incr ) .progress LDZ INC 20MOD .progress STZ
+	( incr ) .progress LDZ INC #1f AND .progress STZ
 	#00 .timer STZ
 
 BRK
@@ -104,30 +98,30 @@ BRK
 		INC GTHk ,&loop JCN
 	POP2
 
-RTN
+JMP2r
 
 @draw-note ( id color -- )
 
 	STH STH
-	( set x ) [ #00 STHkr ] 8** .offset/x LDZ2 ADD2 .Screen/x DEO2
-	( set y ) [ #00 #00 STHkr ;melody ADD2 LDA ] 4** #0100 SWP2 SUB2 .offset/y LDZ2 ADD2 #0080 ADD2 .Screen/y DEO2
+	( set x ) [ #00 STHkr ] #30 SFT2 .offset/x LDZ2 ADD2 .Screen/x DEO2
+	( set y ) [ #00 #00 STHkr ;melody ADD2 LDA ] #20 SFT2 #0100 SWP2 SUB2 .offset/y LDZ2 ADD2 #0080 ADD2 .Screen/y DEO2
 	( set addr ) ;marker-icn [ #00 .progress LDZ STHr EQU #08 MUL ADD2 ] .Screen/addr DEO2
 	( draw ) STHr .Screen/sprite DEO
 
-RTN
+JMP2r
 
 @draw-selector ( color -- )
 	
 	STH
-	[ #00 .selection LDZ ] 8** .offset/x LDZ2 ADD2 .Screen/x DEO2
+	[ #00 .selection LDZ ] #30 SFT2 .offset/x LDZ2 ADD2 .Screen/x DEO2
 	#0070 .offset/y LDZ2 ADD2 .Screen/y DEO2
 	;selector-icn .Screen/addr DEO2
 	STHkr .Screen/sprite DEO
 
-	.Screen/y DEI2 #0008 ADD2 .Screen/y DEO2
+	.Screen/y DEI2k #0008 ADD2 ROT DEO2
 	.selection LDZ GET-NOTE STHr ,draw-byte JSR
 
-RTN
+JMP2r
 
 @draw-byte ( byte color -- )
 	
@@ -139,7 +133,7 @@ RTN
 		#0f AND GET-HEXCHAR 
 		( draw ) STHr .Screen/sprite DEO
 
-RTN
+JMP2r
 
 @melody 
 	54 52 54 4f 4b 4f 48 ff

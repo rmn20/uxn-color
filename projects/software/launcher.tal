@@ -191,7 +191,7 @@ JMP2r
 	#0010 .Screen/x DEO2
 	#0080 .Screen/y DEO2
 	.browser/sel LDZ #02 ;draw-byte JSR2
-	LIT '/ #02 ;draw-char JSR2
+	LIT "/ #02 ;draw-char JSR2
 	.browser/lines LDZ #01 SUB #02 ;draw-byte JSR2
 	#00 .Screen/auto DEO
 
@@ -200,7 +200,7 @@ JMP2r
 @follow-selection ( -- )
 
 	.browser/y2 LDZ2 .browser/y LDZ2 SUB2 #04 SFT2 NIP .browser/sel LDZ .browser/scroll LDZ SUB
-	DUP2 GTH ,&no-down JCN
+	GTHk ,&no-down JCN
 		.browser/scroll LDZ INC ,scroll-to JSR
 		&no-down
 	DUP2 SWP LTH ,&no-up JCN
@@ -215,7 +215,7 @@ JMP2r
 	STH
 	( more lines than visible )
 	.browser/lines LDZ .browser/y2 LDZ2 .browser/y LDZ2 SUB2 #04 SFT2 NIP
-	DUP2 GTH ,&can-scroll JCN
+	GTHk ,&can-scroll JCN
 		POPr POP2 JMP2r
 		&can-scroll
 	( less than max scroll )
@@ -321,7 +321,7 @@ JMP2r
 		EQUkr STHr #00 EQU ,&no-reached JCN
 			POP2r NIP2 ;dir/data ADD2 JMP2r
 			&no-reached
-		DUP2 ;dir/data ADD2 LDA #00 NEQ ,&no-lb JCN
+		DUP2 ;dir/data ADD2 LDA ,&no-lb JCN
 			INCr
 			&no-lb
 		INC2 GTH2k ,&loop JCN

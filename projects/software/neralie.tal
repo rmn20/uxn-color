@@ -1,39 +1,13 @@
-(
-	app/neralie : clock with arvelie date
+( app/neralie : clock with arvelie date )
 
-	TODO
-		- use splash screen when FPS calculation is unstable
-)
+%PAD { #0018 }
 
-%+  { ADD } %-   { SUB }              %/   { DIV }  
-%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
-%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
-
-%2*  { #10 SFT } %2/  { #01 SFT }
-%4*  { #20 SFT } %4/  { #02 SFT }
-%8*  { #30 SFT } %8/  { #03 SFT }
-%10* { #40 SFT } %10/ { #04 SFT }
-%20* { #50 SFT } %20/ { #05 SFT }
-
-%2**  { #10 SFT2 } %2//  { #01 SFT2 }
-%4**  { #20 SFT2 } %4//  { #02 SFT2 }
-%8**  { #30 SFT2 } %8//  { #03 SFT2 }
-%10** { #40 SFT2 } %10// { #04 SFT2 }
-%20** { #50 SFT2 } %20// { #05 SFT2 }
-
-%MOD  { DUP2 DIV MUL SUB }
+%MOD  { DIVk MUL SUB }
 %MOD2 { DIV2k MUL2 SUB2 }
-%TOS { #00 SWP }
 
 %h { .DateTime/hour   DEI }
 %m { .DateTime/minute DEI }
 %s { .DateTime/second DEI }
-
-%1-- { #0001 -- }
-
-%PAD { #0018 }
-%RTN { JMP2r }
 
 ( devices )
 
@@ -76,15 +50,15 @@
 	PAD
 	DUP2 .frame/x1 STZ2
 	DUP2 .frame/y1 STZ2
-	DUP2 .Screen/width DEI2 SWP2 -- #0001 -- .frame/x2 STZ2
-	     .Screen/height DEI2 SWP2 -- .frame/y2 STZ2
+	DUP2 .Screen/width DEI2 SWP2 SUB2 #0001 SUB2 .frame/x2 STZ2
+	     .Screen/height DEI2 SWP2 SUB2 .frame/y2 STZ2
 
 	#01 .neralie/color STZ
 
 	.frame/x1 LDZ2 .frame/x2 LDZ2
 	OVR2 OVR2 .frame/y1 LDZ2 ;h JSR2
 	          .frame/y2 LDZ2 ;h JSR2
-	.frame/y1 LDZ2 #0001 -- .frame/y2 LDZ2 INC2
+	.frame/y1 LDZ2 #0001 SUB2 .frame/y2 LDZ2 INC2
 	OVR2 OVR2 .frame/x1 LDZ2 ;v JSR2
 	          .frame/x2 LDZ2 ;v JSR2
 
@@ -108,7 +82,7 @@ BRK
 	#0120 #00 h MUL2
 	#00c0 #00 m MUL2 ADD2
 	#00f8 #00 s MUL2 ADD2
-	#0271 #00 .fps/next LDZ MUL2 #00 .fps/current LDZ DIV2 8** ADD2
+	#0271 #00 .fps/next LDZ MUL2 #00 .fps/current LDZ DIV2 #30 SFT2 ADD2
 	#01b0 ;modf JSR2 SWP2 #0017 MUL2 #03e8 DIV2 .neralie/n6 STZ POP
 
 	( add up units and tens of pulses, store in n5 and n4 )
@@ -122,29 +96,29 @@ BRK
 	#01a0 #00 h MUL2 ADD2
 	#0006 #00 m MUL2 ADD2 .neralie/n0123 STZ2
 
-RTN
+JMP2r
 
 @draw-date ( -- )
 
 	( auto x ) #01 .Screen/auto DEO
 
-	.Screen/width DEI2 2// #0034 -- .Screen/x DEO2
-	.Screen/height DEI2 #0010 -- .Screen/y DEO2
+	.Screen/width DEI2 #01 SFT2 #0034 SUB2 .Screen/x DEO2
+	.Screen/height DEI2 #0010 SUB2 .Screen/y DEO2
 
 	( arvelie )
-	.DateTime/year DEI2 #07d6 -- NIP 
-		DUP #0a DIV TOS 8** ;font-numbers ++ .Screen/addr DEO2
+	.DateTime/year DEI2 #07d6 SUB2 NIP
+		DUP #0a DIV #00 SWP #30 SFT2 ;font-numbers ADD2 .Screen/addr DEO2
 			#01 .Screen/sprite DEO
-		#0a MOD TOS 8** ;font-numbers ++ .Screen/addr DEO2
+		#0a MOD #00 SWP #30 SFT2 ;font-numbers ADD2 .Screen/addr DEO2
 			#01 .Screen/sprite DEO
 	.DateTime/doty DEI2
-		DUP2 #000e DIV2 8** ;font-letters ++ .Screen/addr DEO2
+		DUP2 #000e DIV2 #30 SFT2 ;font-letters ADD2 .Screen/addr DEO2
 			#01 .Screen/sprite DEO
 		#000e MOD2
 		DUP2 #000a DIV2 ,digit JSR
 		#000a MOD2 ,digit JSR
 
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+	.Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
 
 	( neralie )
 	.neralie/n0123 LDZ2 
@@ -158,14 +132,14 @@ RTN
 
 	( auto none ) #00 .Screen/auto DEO
 
-RTN
+JMP2r
 
 @digit ( index* -- )
 
-	8** ;font-numbers ++ .Screen/addr DEO2
+	#30 SFT2 ;font-numbers ADD2 .Screen/addr DEO2
 	.neralie/color LDZ .Screen/sprite DEO
 	
-RTN
+JMP2r
 
 @draw-clock ( -- )
 
@@ -197,7 +171,7 @@ RTN
 
 	&next ( digit-addr number* -- next-digit-addr next-number* prev-digit* )
 	#03e8 ;modf JSR2 STH2 #000a MUL2
-	ROT DUP STH INC ROT ROT
+	ROT STHk INC ROT ROT
 	#00 STHr LDZ ADD2
 	STH2r
 	JMP2r
@@ -233,7 +207,7 @@ RTN
 	.Screen/y .lines/addr STZ
 
 	&draw-line ( v1* v2* -- )
-	OVR2 OVR2 LTH2 #01 JCN SWP2
+	LTH2k #01 JCN SWP2
 	STH2
 
 	&loop
@@ -256,8 +230,8 @@ RTN
 	#00 .fps/next STZ
 	JMP2r
 
-@modf ( dividend* divisor* -- remainder* quotient* )
-	OVR2 OVR2 DIV2 DUP2 STH2 MUL2 SUB2 STH2r JMP2r
+@modf ( dividend* divisor* SUB2 remainder* quotient* )
+	DIV2k STH2k MUL2 SUB2 STH2r JMP2r
 
 @mul2hi ( a* b* -- product-top-16-bits* )
 	(

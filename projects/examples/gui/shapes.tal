@@ -1,13 +1,8 @@
 ( GUI Shapes )
 
-%2** { #10 SFT2 }
-%4** { #20 SFT2 }
-%2// { #01 SFT2 }
-%4// { #02 SFT2 }
 %ABS2 { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
 %LTS2  { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
 %GTS2  { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
-
 %WIDTH { #0100 } %HEIGHT { #00a0 }
 
 ( devices )
@@ -35,24 +30,24 @@
 	#f03c .System/g DEO2 
 	#f03f .System/b DEO2
 
-	( background ) ;checker_icn #03 ;cover-pattern JSR2
+	( background ) ;checker-icn #03 ;cover-pattern JSR2
 
-	.Screen/width DEI2 2// WIDTH 2// SUB2 #0008 ADD2
-	.Screen/height DEI2 2// HEIGHT 2// SUB2 #0008 ADD2
+	.Screen/width DEI2 #01 SFT2 WIDTH #01 SFT2 SUB2 #0008 ADD2
+	.Screen/height DEI2 #01 SFT2 HEIGHT #01 SFT2 SUB2 #0008 ADD2
 	WIDTH HEIGHT
 	STH2 STH2 OVR2 STH2r ADD2 OVR2 STH2r ADD2 #02 ;fill-rect JSR2
 
-	.Screen/width DEI2 2// WIDTH 2// SUB2
-	.Screen/height DEI2 2// HEIGHT 2// SUB2
+	.Screen/width DEI2 #01 SFT2 WIDTH #01 SFT2 SUB2
+	.Screen/height DEI2 #01 SFT2 HEIGHT #01 SFT2 SUB2
 	WIDTH HEIGHT
 	STH2 STH2 OVR2 STH2r ADD2 OVR2 STH2r ADD2 #01 ;fill-rect JSR2
 
-	.Screen/width DEI2 2// WIDTH 2// SUB2  #0008 ADD2
-	.Screen/height DEI2 2// HEIGHT 2// SUB2  #0008 ADD2
+	.Screen/width DEI2 #01 SFT2 WIDTH #01 SFT2 SUB2  #0008 ADD2
+	.Screen/height DEI2 #01 SFT2 HEIGHT #01 SFT2 SUB2  #0008 ADD2
 	WIDTH #0010 SUB2 HEIGHT #0010 SUB2
 	STH2 STH2 OVR2 STH2r ADD2 OVR2 STH2r ADD2 #03 ;line-rect JSR2
 
-	.Screen/width DEI2 2// .Screen/height DEI2 2// WIDTH 4// #02 ;draw-circle JSR2
+	.Screen/width DEI2 #01 SFT2 .Screen/height DEI2 #01 SFT2 WIDTH #02 SFT2 #02 ;draw-circle JSR2
 
 	#0010 #0030 #0068 #02 ;line-hor JSR2
 	#0020 #0058 #0078 #02 ;line-ver JSR2
@@ -64,13 +59,13 @@ BRK
 	( load ) .color STZ #0001 SUB2 .line/y0 STZ2 #0001 SUB2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
 	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
 	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
-	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ADD2 .line/sx STZ2
-	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ADD2 .line/sy STZ2
+	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 #10 SFT2 ADD2 .line/sx STZ2
+	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 #10 SFT2 ADD2 .line/sy STZ2
 	.line/dx LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
 	&loop
 		.line/x LDZ2 .Screen/x DEO2 .line/y LDZ2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
-		.line/x LDZ2 .line/x0 LDZ2 EQU2 .line/y LDZ2 .line/y0 LDZ2 EQU2 #0101 EQU2 ,&end JCN
-		.line/e1 LDZ2 2** .line/e2 STZ2
+		.line/x LDZ2 .line/x0 LDZ2 EQU2 .line/y LDZ2 .line/y0 LDZ2 EQU2 AND ,&end JCN
+		.line/e1 LDZ2 #10 SFT2 .line/e2 STZ2
 		.line/e2 LDZ2 .line/dy LDZ2 LTS2 ,&skipy JCN
 			.line/e1 LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
 			.line/x LDZ2 .line/sx LDZ2 ADD2 .line/x STZ2
@@ -136,16 +131,16 @@ JMP2r
 
 	( load ) .color STZ .circle/r STZ2 .circle/yc STZ2 .circle/xc STZ2
 	#0000 .circle/x STZ2 .circle/r LDZ2 .circle/y STZ2
-	.circle/r LDZ2 2** .circle/d STZ2
+	.circle/r LDZ2 #10 SFT2 .circle/d STZ2
 	( draw ) ;&seg JSR2
 	&loop
 		( incr ) .circle/x LDZ2 INC2 .circle/x STZ2
 		.circle/d LDZ2 #0001 LTS2 ,&else JCN
 			( decr ) .circle/y LDZ2 #0001 SUB2 .circle/y STZ2
-			.circle/x LDZ2 .circle/y LDZ2 SUB2 4** .circle/d LDZ2 ADD2 .circle/d STZ2
+			.circle/x LDZ2 .circle/y LDZ2 SUB2 #20 SFT2 .circle/d LDZ2 ADD2 .circle/d STZ2
 			;&end JMP2
 		&else
-			.circle/x LDZ2 4** .circle/d LDZ2 ADD2 .circle/d STZ2
+			.circle/x LDZ2 #20 SFT2 .circle/d LDZ2 ADD2 .circle/d STZ2
 		&end
 		( draw ) ;&seg JSR2
 		.circle/y LDZ2 .circle/x LDZ2 #0001 SUB2 GTS2 ,&loop JCN
@@ -204,4 +199,5 @@ JMP2r
 
 JMP2r
 
-@checker_icn [ f0f0 f0f0 0f0f 0f0f ]
+@checker-icn
+	f0f0 f0f0 0f0f 0f0f

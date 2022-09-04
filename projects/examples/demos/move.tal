@@ -30,7 +30,7 @@ BRK
 @on-frame ( -> )
 
 	.Controller/button DEI 
-	DUP #00 NEQ ,&continue JCN
+	DUP ,&continue JCN
 		POP BRK
 		&continue
 	( clear )

@@ -137,8 +137,8 @@
 	DUP2 ,asma-print-labels JSR
 	( here )
 	DUP2 #0004 ADD2
-	LDAk LIT 'A LTH ,&loop JCN
-	LDAk LIT 'Z GTH ,&loop JCN
+	LDAk LIT "A LTH ,&loop JCN
+	LDAk LIT "Z GTH ,&loop JCN
 	POP2
 	,&skip-device-label JMP
 	&loop
@@ -169,8 +169,8 @@
 	,asma-print-string JMP
 
 @asma-print-short ( short* -- )
-	LIT '0 .Console/error DEO
-	LIT 'x .Console/error DEO
+	LIT "0 .Console/error DEO
+	LIT "x .Console/error DEO
 	OVR #04 SFT ,&hex JSR
 	SWP #0f AND ,&hex JSR
 	DUP #04 SFT ,&hex JSR
@@ -210,9 +210,9 @@
 	JMP2r
 
 	&preamble
-	"%BRK 20 '{ 20 "00 20 '} 20
-	"%[ 20 '{ 20 '} 20
-	"%] 20 '{ 20 '} 20
+	"%BRK 20 "{ 20 "00 20 "} 20
+	"%[ 20 "{ 20 "} 20
+	"%] 20 "{ 20 "} 20
 	"@on-reset 20
 	&preamble-end
 
@@ -496,15 +496,15 @@
 	JMP2r
 
 	&not-end
-	DUP LIT '2 NEQ ,&not-two JCN
+	DUP LIT "2 NEQ ,&not-two JCN
 	POP LIT &short-flag $1 ORA ,&loop JMP
 
 	&not-two
-	DUP LIT 'r NEQ ,&not-return JCN
+	DUP LIT "r NEQ ,&not-return JCN
 	POP LIT &return-flag $1 ORA ,&loop JMP
 
 	&not-return
-	LIT 'k NEQ ,&not-keep JCN
+	LIT "k NEQ ,&not-keep JCN
 	&set-keep LIT &keep-flag $1 ORA ,&loop JMP
 
 	&not-keep ( 00 byte / end* )
@@ -947,33 +947,33 @@
 	            than       than         string         data )
 
 @asma-first-char-comment
-	&28          $2         $2          '( 00          :asma-comment-more
-	&_entry     :&28        $2          ') 00          :asma-comment-less
+	&28          $2         $2          "( 00          :asma-comment-more
+	&_entry     :&28        $2          ") 00          :asma-comment-less
 
 @asma-first-char-macro
-	&28          $2         $2          '( 00          :asma-comment-start
-	&29         :&28        $2          ') 00          :asma-comment-end
-	&_entry     :&29       :&7d         '{ 00          :asma-ignore
-	&7d          $2         $2          '} 00          :asma-macro-end
+	&28          $2         $2          "( 00          :asma-comment-start
+	&29         :&28        $2          ") 00          :asma-comment-end
+	&_entry     :&29       :&7d         "{ 00          :asma-ignore
+	&7d          $2         $2          "} 00          :asma-macro-end
 
 @asma-first-char-normal
-	&22          $2         $2          '" 00          :asma-raw-word
-	&23         :&22        $2          '# 00          :asma-literal-hex
-	&24         :&23       :&25         '$ 00          :asma-pad-relative
-	&25          $2         $2          '% 00          :asma-macro-define
+	&22          $2         $2          "" 00          :asma-raw-word
+	&23         :&22        $2          "# 00          :asma-literal-hex
+	&24         :&23       :&25         "$ 00          :asma-pad-relative
+	&25          $2         $2          "% 00          :asma-macro-define
 	&26         :&24       :&29         26 00 ( & )    :asma-sublabel-define
-	&27          $2         $2          '' 00          :asma-raw-char
-	&28         :&27        $2          '( 00          :asma-comment-start
-	&29         :&28       :&2c         ') 00          :asma-comment-end
-	&2c          $2         $2          ', 00          :asma-literal-rel-addr
-	&_entry     :&26       :&7b         '. 00          :asma-literal-zero-addr
-	&3a          $2         $2          ': 00          :asma-abs-addr
-	&3b         :&3a       :&40         '; 00          :asma-literal-abs-addr
-	&40          $2         $2          '@ 00          :asma-label-define
-	&7b         :&3b       :&7d         '{ 00          :asma-ignore
-	&7c          $2         $2          '| 00          :asma-pad-absolute
-	&7d         :&7c       :&7e         '} 00          :asma-ignore
-	&7e          $2         $2          '~ 00          :asma-include
+	&27          $2         $2          "' 00          :asma-raw-char
+	&28         :&27        $2          "( 00          :asma-comment-start
+	&29         :&28       :&2c         ") 00          :asma-comment-end
+	&2c          $2         $2          ", 00          :asma-literal-rel-addr
+	&_entry     :&26       :&7b         ". 00          :asma-literal-zero-addr
+	&3a          $2         $2          ": 00          :asma-abs-addr
+	&3b         :&3a       :&40         "; 00          :asma-literal-abs-addr
+	&40          $2         $2          "@ 00          :asma-label-define
+	&7b         :&3b       :&7d         "{ 00          :asma-ignore
+	&7c          $2         $2          "| 00          :asma-pad-absolute
+	&7d         :&7c       :&7e         "} 00          :asma-ignore
+	&7e          $2         $2          "~ 00          :asma-include
 
 @asma-opcodes
 	&_entry     :&GTH      :&ROT &_disasm "LIT 00

@@ -13,27 +13,31 @@
 	#a0dc .System/r DEO2
 	#a0dc .System/g DEO2
 	#a0dc .System/b DEO2
+
 	( find screen center )
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
 	.Screen/height DEI2 #01 SFT2 .center/y STZ2
-	( ver )
+
+	( dashed line )
 	#02 .Screen/auto DEO
 	#0000 .Screen/y DEO2
 	.center/x LDZ2 .Screen/x DEO2
 	.Screen/height DEI2 #0000
 	&ver
-		#43 .Screen/pixel DEO
-		.Screen/y DEI2k INC2 ROT DEO2
+		DUP #01 AND .Screen/pixel DEO
 		INC2 GTH2k ,&ver JCN
 	POP2 POP2
+
 	( left )
 	.center/x LDZ2 .Screen/x DEO2
 	.center/y LDZ2 #0018 SUB2 .Screen/y DEO2
 	;left-txt ,draw-uf2 JSR
+
 	( center )
 	.center/x LDZ2 .Screen/x DEO2
 	.center/y LDZ2 .Screen/y DEO2
 	;center-txt ,draw-uf2-center JSR
+
 	( right )
 	.center/x LDZ2 .Screen/x DEO2
 	.center/y LDZ2 #0018 ADD2 .Screen/y DEO2
@@ -41,23 +45,7 @@
 
 BRK
 
-@draw-uf2-center ( text* color -- )
-
-	DUP2 ,get-width JSR #01 SFT2 STH2 
-	.Screen/x DEI2k STH2r SUB2 ROT DEO2
-	,draw-uf2 JSR
-
-JMP2r
-
-@draw-uf2-right ( text* color -- )
-
-	DUP2 ,get-width JSR STH2 
-	.Screen/x DEI2k STH2r SUB2 ROT DEO2
-	,draw-uf2 JSR
-
-JMP2r
-
-@get-width ( text* -- width* )
+@get-uf2-width ( text* -- width* )
 
 	LIT2r 0000
 	&while
@@ -68,14 +56,25 @@ JMP2r
 
 JMP2r
 
+@draw-uf2-center ( text* -- )
+
+	DUP2 ,get-uf2-width JSR #01 SFT2 STH2
+	.Screen/x DEI2k STH2r SUB2 ROT DEO2
+	,draw-uf2 JMP
+
+@draw-uf2-right ( text* -- )
+
+	DUP2 ,get-uf2-width JSR STH2
+	.Screen/x DEI2k STH2r SUB2 ROT DEO2
+
 @draw-uf2 ( text* -- )
 
 	#15 .Screen/auto DEO
 	&while
 		LDAk #20 SUB #00 SWP
 			DUP2 #50 SFT2 ;font/glyphs ADD2 .Screen/addr DEO2
-			;font ADD2 LDA #00 SWP .Screen/x DEI2 ADD2
-		#01 .Screen/sprite DEOk DEO
+			;font ADD2 LDA STHk #00 SWP .Screen/x DEI2 ADD2
+		#01 .Screen/sprite DEOk STHr #08 LTH ,&thin JCN DEOk &thin POP2
 		.Screen/x DEO2
 		INC2 LDAk ,&while JCN
 	POP2

@@ -35,13 +35,13 @@ BRK
 		STH2k #0000 EQU2 ,&flip-x JCN
 		STH2kr [ LIT2 &hit-hor $2 ] EQU2 ,&flip-x JCN
 	&no-x
-	STH2r [ #00 .dvd/dx LDZ ] #10 SFT2 ADD2 #ffff ADD2 .dvd/x STZ2
+	STH2r [ #00 .dvd/dx LDZ ] DUP2 ADD2 ADD2 #ffff ADD2 .dvd/x STZ2
 	( y )
 	.dvd/y LDZ2
 		STH2k #0000 EQU2 ,&flip-y JCN
 		STH2kr [ LIT2 &hit-ver $2 ] EQU2 ,&flip-y JCN
 	&no-y
-	STH2r [ #00 .dvd/dy LDZ ] #10 SFT2 ADD2 #ffff ADD2 .dvd/y STZ2
+	STH2r [ #00 .dvd/dy LDZ ] DUP2 ADD2 ADD2 #ffff ADD2 .dvd/y STZ2
 	#01 ,draw-dvd JSR
 
 BRK

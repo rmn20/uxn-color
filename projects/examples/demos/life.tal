@@ -31,11 +31,11 @@
 	;on-mouse .Mouse/vector DEO2
 	;on-control .Controller/vector DEO2
 	( glider )
-	#07 #03 ;set-cell JSR2
-	#07 #04 ;set-cell JSR2
-	#05 #04 ;set-cell JSR2
-	#07 #05 ;set-cell JSR2
-	#06 #05 ;set-cell JSR2
+	#0703 ;set-cell JSR2
+	#0704 ;set-cell JSR2
+	#0504 ;set-cell JSR2
+	#0705 ;set-cell JSR2
+	#0605 ;set-cell JSR2
 	( center )
 	.Screen/width DEI2 #01 SFT2 #0040 SUB2
 		DUP2 .anchor/x STZ2
@@ -118,9 +118,9 @@ BRK
 	( move buffer )
 	;bank2 ;bank1 #1000 ;mcpy JSR2
 	( draw )
-	;draw-grid JSR2
+	;draw-grid ( .. )
 
-JMP2r
+JMP2
 
 @run-cell ( x y -- )
 
@@ -130,13 +130,13 @@ JMP2r
 	#00 EQU ,&dead JCN
 		DUP #02 LTH ,&dies JCN
 		DUP #03 GTH ,&dies JCN
-		POP ;&save JSR2 JMP2r
+		POP ;&save JMP2
 		&dies POP POP2 JMP2r
 	&dead
 		DUP #03 EQU ,&birth JCN POP POP2 JMP2r
-		&birth POP ;&save JSR2
+		&birth POP ;&save ( .. )
 
-JMP2r
+JMP2
 	&save ( x y -- ) 
 		STH2 #01 STH2r ,get-index JSR [ #1000 ADD2 ] STA
 		.world/count LDZ2 INC2 .world/count STZ2
@@ -168,7 +168,7 @@ JMP2r
 	LITr 00
 	#0800
 	&loop
-		#00 OVR #10 SFT2 ;&mask ADD2 LDA2 [ LIT2 &origin $2 ]
+		#00 OVRk ADD2 ;&mask ADD2 LDA2 [ LIT2 &origin $2 ]
 		ROT ADD STH ADD STHr ;get-cell JSR2 STH ADDr
 		INC GTHk ,&loop JCN
 	POP2
@@ -187,11 +187,11 @@ JMP2r
 	#00 .Screen/auto DEO
 	#4000
 	&ver
-		#00 OVR #10 SFT2 .anchor/y LDZ2 ADD2 .Screen/y DEO2
+		#00 OVRk ADD2 .anchor/y LDZ2 ADD2 .Screen/y DEO2
 		STHk
 		#4000
 		&hor
-			#00 OVR #10 SFT2 .anchor/x LDZ2 ADD2 .Screen/x DEO2
+			#00 OVRk ADD2 .anchor/x LDZ2 ADD2 .Screen/x DEO2
 			DUP STHkr ;get-cell JSR2 INC .Screen/pixel DEO
 			INC GTHk ,&hor JCN
 		POP2

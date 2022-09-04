@@ -1,6 +1,6 @@
 ( dev/audio )
 
-%MOD { DUP2 DIV MUL SUB }
+%MOD { DIVk MUL SUB }
 
 ( devices )
 

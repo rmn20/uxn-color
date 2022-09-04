@@ -81,7 +81,7 @@ BRK
 	#03 STHkr #03 SFT #01 AND DUP ADD SUB .Screen/sprite DEO
 
 	( buttons )
-	.center/y LDZ2 #0000 ADD2 .Screen/y DEO2
+	.center/y LDZ2 .Screen/y DEO2
 	.center/x LDZ2 #0018 ADD2 .Screen/x DEO2
 	;controller-icn/button .Screen/addr DEO2
 	#03 STHkr #01 SFT #01 AND SUB .Screen/sprite DEO
@@ -89,7 +89,7 @@ BRK
 		;font-hex #0058 ADD2 .Screen/addr DEO2
 		#03 .Screen/sprite DEO
 
-	.center/y LDZ2 #0000 ADD2 .Screen/y DEO2
+	.center/y LDZ2 .Screen/y DEO2
 	.center/x LDZ2 #0024 ADD2 .Screen/x DEO2
 	;controller-icn/button .Screen/addr DEO2
 	#03 STHr #01 AND SUB .Screen/sprite DEO

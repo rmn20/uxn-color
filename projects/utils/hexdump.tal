@@ -28,15 +28,14 @@ BRK
 	LIT2r 0000
 	&stream
 		#0000 ,&buf STR2
-		;&buf
-			DUP2 .File/read DEO2
-			LDA2 ,print JSR #2018 DEO
+		;&buf .File/read DEO2
+		.File/success DEI2 #0000 EQU2 ,&eof JCN
+		;&buf LDA2 ,print JSR #2018 DEO
 		INC2r
 		( linebreak )
-		STH2kr #0007 AND2 ORA ,&no-lb JCN
-			#0a18 DEO
-			&no-lb
-		.File/success DEI2 ORA ,&stream JCN
+		STH2kr #000f AND2 ORA ,&no-lb JCN
+			#0a18 DEO &no-lb
+		,&stream JMP &eof
 	POP2r
 	#010f DEO
 
