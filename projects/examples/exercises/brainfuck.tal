@@ -8,22 +8,23 @@
 	[	Jump past the matching ] if the cell at the pointer is 0
 	]	Jump back to the matching [ if the cell at the pointer is nonzero )
 
-|0100 ( -> ) @reset
+|0100 ( -> )
 
 	;memory
 	;program
 	&while
-		LDAk LIT '> NEQ ,&movr JCN [ SWP2 INC2 SWP2 ] &movr
-		LDAk LIT '< NEQ ,&movl JCN [ SWP2 #0001 SUB2 SWP2 ] &movl
-		LDAk LIT '+ NEQ ,&incr JCN [ OVR2 STH2k LDA INC STH2r STA ] &incr
-		LDAk LIT '- NEQ ,&decr JCN [ OVR2 STH2k LDA #01 SUB STH2r STA ] &decr
-		LDAk LIT '. NEQ ,&emit JCN [ OVR2 LDA #18 DEO ] &emit
-		LDAk LIT '[ NEQ ,&next JCN [ ,goto-next JSR ] &next
-		LDAk LIT '] NEQ ,&prev JCN [ ,goto-back JSR ] &prev
+		LDAk LIT "> NEQ ,&movr JCN [ SWP2 INC2 SWP2 ] &movr
+		LDAk LIT "< NEQ ,&movl JCN [ SWP2 #0001 SUB2 SWP2 ] &movl
+		LDAk LIT "+ NEQ ,&incr JCN [ OVR2 STH2k LDA INC STH2r STA ] &incr
+		LDAk LIT "- NEQ ,&decr JCN [ OVR2 STH2k LDA #01 SUB STH2r STA ] &decr
+		LDAk LIT ". NEQ ,&emit JCN [ OVR2 LDA #18 DEO ] &emit
+		LDAk LIT "[ NEQ ,&next JCN [ ,goto-next JSR ] &next
+		LDAk LIT "] NEQ ,&prev JCN [ ,goto-back JSR ] &prev
 		INC2 LDAk ,&while JCN
 	POP2
-	( halt ) #010f DEO
-	
+	( halt )
+	#010f DEO
+
 BRK
 
 @goto-next ( -- )
@@ -32,8 +33,8 @@ BRK
 	( depth ) LITr 00
 	INC2
 	&loop
-		LDAk LIT '[ NEQ JMP INCr
-		LDAk LIT '] NEQ ,&no-end JCN
+		LDAk LIT "[ NEQ JMP INCr
+		LDAk LIT "] NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
 			LITr 01 SUBr
 			&no-end
@@ -49,8 +50,8 @@ JMP2r
 	( depth ) LITr 00
 	#0001 SUB2
 	&loop
-		LDAk LIT '] NEQ JMP INCr
-		LDAk LIT '[ NEQ ,&no-end JCN
+		LDAk LIT "] NEQ JMP INCr
+		LDAk LIT "[ NEQ ,&no-end JCN
 			STHkr #00 EQU ,&end JCN
 			LITr 01 SUBr
 			&no-end
