@@ -108,12 +108,11 @@ screen_redraw(UxnScreen *p, Uint32 *pixels)
 		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
 	if(p->mono) {
 		for(i = 0; i < size; i++)
-			pixels[i] = palette_mono[(p->fg.pixels[i] << 2 | p->bg.pixels[i]) & 0x1];
+			pixels[i] = palette_mono[(p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]) & 0x1];
 	} else {
 		for(i = 0; i < size; i++)
 			pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
 	}
-
 	p->fg.changed = p->bg.changed = 0;
 }
 
