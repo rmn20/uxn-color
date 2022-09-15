@@ -363,6 +363,10 @@ do_shortcut(Uxn *u, SDL_Event *event)
 		capture_screen();
 	else if(event->key.keysym.sym == SDLK_F4)
 		restart(u);
+	else if(event->key.keysym.sym == SDLK_F5) {
+		screen_mono(&uxn_screen, uxn_screen.pixels);
+		redraw();
+	}
 }
 
 static int
