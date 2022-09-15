@@ -8,7 +8,7 @@
 	[	Jump past the matching ] if the cell at the pointer is 0
 	]	Jump back to the matching [ if the cell at the pointer is nonzero )
 
-|0100 ( -> ) @reset
+|0100 ( -> )
 
 	;memory
 	;program
@@ -22,8 +22,9 @@
 		LDAk LIT "] NEQ ,&prev JCN [ ,goto-back JSR ] &prev
 		INC2 LDAk ,&while JCN
 	POP2
-	( halt ) #010f DEO
-	
+	( halt )
+	#010f DEO
+
 BRK
 
 @goto-next ( -- )
