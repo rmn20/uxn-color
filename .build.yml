@@ -4,6 +4,7 @@ packages:
     - build-essential
     - libsdl2-dev
     - rsync
+    - wget
     - zip
 oauth: pages.sr.ht/PAGES:RW
 environment:
@@ -45,13 +46,24 @@ tasks:
         done
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
-        ssh win "export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run"
-        rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
+        if ssh win true; then
+            ssh win "export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run"
+            rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
+        else
+            wget -nv -NP out "https://${SITE}/"uxn{,-essentials}-win64.{tar.gz,zip} || true
+            touch out/needs-solar-build
+        fi
     - build-macos: |
-        ssh mac "export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); ./build.sh --no-run"
-        rsync -rp mac:uxn/bin/ build/uxn-mac64/uxn/
+        if ssh mac true; then
+            ssh mac "export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); ./build.sh --no-run"
+            rsync -rp mac:uxn/bin/ build/uxn-mac64/uxn/
+        else
+            wget -nv -NP out "https://${SITE}/"uxn{,-essentials}-mac64.{tar.gz,zip} || true
+            touch out/needs-solar-build
+        fi
     - archive: |
         for PROJECT in uxn-lin64 uxn-win64 uxn-mac64 essentials; do
+            [ -d "build/${PROJECT}/uxn" ] || continue
             tar -czf "out/${PROJECT}.tar.gz" -C "build/${PROJECT}" uxn
             ( cd "build/${PROJECT}" && zip -qr "../../out/${PROJECT}.zip" uxn )
             if [ "${PROJECT}" != essentials ]; then
@@ -61,8 +73,8 @@ tasks:
             fi
         done
     - upload: |
-        if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         ls -l out
+        if [ "$(cd uxn && git rev-parse HEAD)" != "$(cd uxn && git rev-parse origin/main)" ]; then exit; fi
         tar -czf out.tar.gz -C out .
         acurl() {
             set +x
