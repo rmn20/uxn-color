@@ -735,10 +735,6 @@
 	&valid
 	;asma-advance-addr JMP2 ( tail call )
 
-@asma-raw-char
-	;asma/token LDA2 LDA
-	;asma-write-byte JMP2 ( tail call )
-
 @asma-raw-word
 	;asma/token LDA2
 
@@ -962,8 +958,7 @@
 	&24         :&23       :&25         "$ 00          :asma-pad-relative
 	&25          $2         $2          "% 00          :asma-macro-define
 	&26         :&24       :&29         26 00 ( & )    :asma-sublabel-define
-	&27          $2         $2          "' 00          :asma-raw-char
-	&28         :&27        $2          "( 00          :asma-comment-start
+	&28          $2         $2          "( 00          :asma-comment-start
 	&29         :&28       :&2c         ") 00          :asma-comment-end
 	&2c          $2         $2          ", 00          :asma-literal-rel-addr
 	&_entry     :&26       :&7b         ". 00          :asma-literal-zero-addr

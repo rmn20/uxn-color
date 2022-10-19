@@ -10,6 +10,7 @@ expect_failure() {
 	if ! grep -qF "${1}" asma-test/asma.log; then
 		echo "error: asma didn't report error ${1} in faulty code"
 		cat asma-test/asma.log
+		exit 1
 	fi
 }
 
@@ -93,6 +94,9 @@ expect_failure 'Label not found: ,blah' <<'EOD'
 EOD
 expect_failure 'Label not found: .blah' <<'EOD'
 |1000 .blah
+EOD
+expect_failure "Unrecognised token: 'a" <<'EOD'
+|1000 'a
 EOD
 echo 'All OK'
 
