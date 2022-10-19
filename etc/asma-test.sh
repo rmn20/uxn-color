@@ -15,7 +15,11 @@ expect_failure() {
 }
 
 echo 'Assembling asma with uxnasm'
-bin/uxnasm projects/software/asma.tal asma-test/asma.rom > asma-test/uxnasm.log
+if ! bin/uxnasm projects/software/asma.tal asma-test/asma.rom > asma-test/uxnasm.log; then
+	echo 'Failed to assemble asma!'
+	cat asma-test/uxnasm.log
+	exit 1
+fi
 for F in $(find projects -path projects/library -prune -false -or -path projects/assets -prune -false -or -type f -name '*.tal' | sort); do
 	echo "Comparing assembly of ${F}"
 
