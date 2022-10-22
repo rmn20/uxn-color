@@ -25,8 +25,8 @@ clamp(int val, int min, int max)
 int
 main()
 {
-	int seg = 64, offset = seg / 4, i;
-	double segf = 64.0;
+	int seg = 1024, offset = seg / 4, i;
+	double segf = 1024.0;
 	printf("%d points on a circle128:\n\n", seg);
 	for(i = 0; i < seg; ++i) {
 		double cx = 128, cy = 128, r = 128;
