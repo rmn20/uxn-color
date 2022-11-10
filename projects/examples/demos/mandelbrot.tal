@@ -1,8 +1,5 @@
 ( mandelbrot )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-
 %GTS2 { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
 %AUTO-X    { #01 .Screen/auto DEO }
 %NEXT-LINE { #0000 .Screen/x DEO2 .Screen/y DEI2k INC2 ROT DEO2 }

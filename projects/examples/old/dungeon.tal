@@ -1,10 +1,5 @@
 ( art by @ritualdust )
 
-%+  { ADD }               %/  { DIV }
-%<  { LTH }  %>  { GTH }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %!! { NEQ2 }
-
 %8** { #30 SFT2 }
 %10** { #40 SFT2 }
 
@@ -64,28 +59,28 @@ BRK
 @on-button ( -> )
 
 	.Controller/button DEI
-	DUP #00 ! ,&no-null JCN
+	DUP #00 NEQ ,&no-null JCN
 		POP BRK
 		&no-null
-	DUP #10 ! ,&no-up JCN
+	DUP #10 NEQ ,&no-up JCN
 		#00 .player/d STZ
 		#00 ;draw-mouse JSR2
 		.player/y LDZk DEC SWP STZ
 		MOUSE ;draw-mouse JSR2
 		&no-up
-	DUP #20 ! ,&no-down JCN
+	DUP #20 NEQ ,&no-down JCN
 		#01 .player/d STZ
 		#00 ;draw-mouse JSR2
 		.player/y LDZk INC SWP STZ
 		MOUSE ;draw-mouse JSR2
 		&no-down
-	DUP #40 ! ,&no-left JCN
+	DUP #40 NEQ ,&no-left JCN
 		#02 .player/d STZ
 		#00 ;draw-mouse JSR2
 		.player/x LDZk DEC SWP STZ
 		MOUSE ;draw-mouse JSR2
 		&no-left
-	DUP #80 ! ,&no-right JCN
+	DUP #80 NEQ ,&no-right JCN
 		#03 .player/d STZ
 		#00 ;draw-mouse JSR2
 		.player/x LDZk INC SWP STZ
@@ -103,10 +98,10 @@ BRK
 
 @draw-mouse ( color -- )
 
-	;spritesheet #29 .player/d LDZ + TOS DUP2 DEBUG2 10** ++ .Screen/addr DEO2
-	.player/x LDZ TOS 8** .room/x LDZ2 ++ .Screen/x DEO2
-	.player/y LDZ TOS 8** .room/y LDZ2 ++ .Screen/y DEO2
-	#40 + .Screen/sprite DEO
+	;spritesheet #29 .player/d LDZ ADD TOS DUP2 DEBUG2 10** ADD2 .Screen/addr DEO2
+	.player/x LDZ TOS 8** .room/x LDZ2 ADD2 .Screen/x DEO2
+	.player/y LDZ TOS 8** .room/y LDZ2 ADD2 .Screen/y DEO2
+	#40 ADD .Screen/sprite DEO
 
 RTN
 
@@ -115,13 +110,13 @@ RTN
 	STH2
 	#1000
 	&ver
-		DUP TOS 8** .room/y LDZ2 ++ .Screen/y DEO2
+		DUP TOS 8** .room/y LDZ2 ADD2 .Screen/y DEO2
 		#1000
 		&hor
-			DUP TOS 8** .room/x LDZ2 ++ .Screen/x DEO2
-			( get id ) STH2 DUP STH2r ROT OVR SWP #40 SFT + TOS
-				( tile ) DUP2 STH2kr ++ LDA TOS 10** ;spritesheet ++ .Screen/addr DEO2
-				( color ) STH2kr #0100 ++ ++ LDA .Screen/sprite DEO
+			DUP TOS 8** .room/x LDZ2 ADD2 .Screen/x DEO2
+			( get id ) STH2 DUP STH2r ROT OVR SWP #40 SFT ADD TOS
+				( tile ) DUP2 STH2kr ADD2 LDA TOS 10** ;spritesheet ADD2 .Screen/addr DEO2
+				( color ) STH2kr #0100 ADD2 ADD2 LDA .Screen/sprite DEO
 			INC GTHk ,&hor JCN
 		POP2
 		INC GTHk ,&ver JCN

@@ -1,9 +1,5 @@
 ( uxnasm projects/examples/demos/snake.tal bin/snake.rom && uxnemu bin/snake.rom )
 
-%+  { ADD }               %/  { DIV }
-%<  { LTH }  %>  { GTH }  %!  { NEQ }
-%++ { ADD2 }              %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %!! { NEQ2 }
 %2/  { #01 SFT } %2* { #10 SFT }
 %8//  { #03 SFT2 } %8**  { #30 SFT2 }
 %MOD { DIVk MUL SUB }
@@ -69,7 +65,7 @@ BRK
 
 	( clear ) #00 ;draw-snake JSR2
 	( update ) ;move JSR2
-	( draw ) #02 .snake/dead LDZ + ;draw-snake JSR2
+	( draw ) #02 .snake/dead LDZ ADD ;draw-snake JSR2
 		#83 ;draw-apple JSR2
 	( score ) .snake/length LDZ #41 ;draw-score JSR2
 	( reset ) #00 .arena/timer STZ
@@ -79,7 +75,7 @@ BRK
 @on-button ( -> )
 
 	.Controller/button DEI 
-	DUP #08 ! ,&no-escape JCN
+	DUP #08 NEQ ,&no-escape JCN
 		;reset JSR2
 		&no-escape
 	#04 SFT DUP #00 EQU ,&skip JCN
@@ -111,8 +107,8 @@ RTN
 	.snake/x LDZ2 STH2
 	.snake/length LDZ #00
 	&loop
-		( pop ) DUP 2* .snake/tail + LDZ2 STH2 SWP2r
-		( push ) DUP 2* .snake/tail + STH2r ROT STZ2
+		( pop ) DUP 2* .snake/tail ADD LDZ2 STH2 SWP2r
+		( push ) DUP 2* .snake/tail ADD STH2r ROT STZ2
 		INC GTHk ,&loop JCN
 	POP2
 	POP2r
@@ -120,22 +116,22 @@ RTN
 	.snake/dead LDZ #00 EQU JMP RTN
 
 	.snake/direction LDZ
-	DUP #01 ! ,&no-up JCN
+	DUP #01 NEQ ,&no-up JCN
 		.snake/y LDZ #01 SUB
 			.arena/h LDZ MAX
 			.snake/y STZ
 		&no-up
-	DUP #02 ! ,&no-down JCN
+	DUP #02 NEQ ,&no-down JCN
 		.snake/y LDZ INC
 			.arena/h LDZ MOD
 			.snake/y STZ
 		&no-down
-	DUP #04 ! ,&no-left JCN
+	DUP #04 NEQ ,&no-left JCN
 		.snake/x LDZ #01 SUB
 			.arena/w LDZ MAX
 			.snake/x STZ
 		&no-left
-	DUP #08 ! ,&no-right JCN
+	DUP #08 NEQ ,&no-right JCN
 		.snake/x LDZ INC 
 			.arena/w LDZ MOD
 			.snake/x STZ
@@ -152,7 +148,7 @@ RTN
 
 	.snake/length LDZ #01
 	&loop-body
-		( pop ) DUP 2* .snake/tail + LDZ2 
+		( pop ) DUP 2* .snake/tail ADD LDZ2
 		.snake/x LDZ2 NEQ2 ,&no-collision-body JCN
 			#01 .snake/dead STZ
 			#03 ;draw-snake JSR2
@@ -164,9 +160,9 @@ RTN
 
 @add-apple ( -- )
 
-	.DateTime/hour DEI2 .DateTime/minute DEI2 MUL2 #1234 MUL2 +
+	.DateTime/hour DEI2 .DateTime/minute DEI2 MUL2 #1234 MUL2 ADD
 		.arena/w LDZ MOD .apple/x STZ
-	.DateTime/hour DEI2 .DateTime/minute DEI2 MUL2 #abcd MUL2 +
+	.DateTime/hour DEI2 .DateTime/minute DEI2 MUL2 #abcd MUL2 ADD
 		.arena/h LDZ MOD .apple/y STZ
 
 RTN
@@ -178,8 +174,8 @@ RTN
 	;snake-icns .Screen/addr DEO2
 	.snake/length LDZ #00
 	&loop
-		DUP 2* .snake/tail + LDZ TOS 8** .Screen/x DEO2
-		DUP 2* .snake/tail + INC LDZ TOS 8** .Screen/y DEO2
+		DUP 2* .snake/tail ADD LDZ TOS 8** .Screen/x DEO2
+		DUP 2* .snake/tail ADD INC LDZ TOS 8** .Screen/y DEO2
 		STHkr .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
@@ -205,11 +201,11 @@ RTN
 	STH
 	#0010 .Screen/x DEO2
 	#0010 .Screen/y DEO2
-	DUP #04 SFT TOS 8** ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+	DUP #04 SFT TOS 8** ;font-hex ADD2 .Screen/addr DEO2
+	.Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
 		( draw ) STHkr .Screen/sprite DEO
-	#0f AND TOS 8** ;font-hex ++ .Screen/addr DEO2
-	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+	#0f AND TOS 8** ;font-hex ADD2 .Screen/addr DEO2
+	.Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
 		( draw ) STHr .Screen/sprite DEO
 
 RTN
