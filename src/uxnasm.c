@@ -316,8 +316,13 @@ parse(char *w, FILE *f)
 		if(!writeshort(0xffff, 1)) return 0;
 		break;
 	case ':': /* raw short absolute */
+	case '=':
 		makereference(p.scope, w, p.ptr);
 		if(!writeshort(0xffff, 0)) return 0;
+		break;
+	case '-': /* raw byte absolute */
+		makereference(p.scope, w, p.ptr);
+		if(!writebyte(0xff)) return 0;
 		break;
 	case '"': /* raw string */
 		i = 0;
@@ -375,6 +380,7 @@ resolve(void)
 			l->refs++;
 			break;
 		case ';':
+		case '=':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
 			p.data[r->addr + 1] = l->addr >> 0x8;
@@ -384,8 +390,14 @@ resolve(void)
 		case ':':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
-			p.data[r->addr + 0] = l->addr >> 0x8;
+			p.data[r->addr] = l->addr >> 0x8;
 			p.data[r->addr + 1] = l->addr & 0xff;
+			l->refs++;
+			break;
+		case '-':
+			if(!(l = findlabel(r->name)))
+				return error("Unknown absolute reference", r->name);
+			p.data[r->addr] = l->addr & 0xff;
 			l->refs++;
 			break;
 		default:
