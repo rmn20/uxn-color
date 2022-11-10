@@ -67,6 +67,10 @@ expect_failure 'Address not in zero page: .hello' <<'EOD'
 |1000 @hello
 	.hello
 EOD
+expect_failure 'Address not in zero page: -hello' <<'EOD'
+|1000 @hello
+	-hello
+EOD
 expect_failure 'Address outside range: ,hello' <<'EOD'
 |1000 @hello
 |2000 ,hello
@@ -92,6 +96,15 @@ expect_failure 'Recursion level too deep: ~asma-test/in.tal' <<'EOD'
 EOD
 expect_failure 'Label not found: ;blah' <<'EOD'
 |1000 ;blah
+EOD
+expect_failure 'Label not found: :blah' <<'EOD'
+|1000 :blah
+EOD
+expect_failure 'Label not found: =blah' <<'EOD'
+|1000 =blah
+EOD
+expect_failure 'Label not found: -blah' <<'EOD'
+|1000 -blah
 EOD
 expect_failure 'Label not found: ,blah' <<'EOD'
 |1000 ,blah
