@@ -723,8 +723,12 @@
 	;asma-write-short JMP2 ( tail call )
 
 @asma-literal-zero-addr
+	LIT LIT ;asma-write-byte JSR2
+	( fall through )
+
+@asma-zero-addr
 	,asma-addr-helper JSR
-	;asma-write-lit JSR2
+	;asma-write-byte JSR2
 
 	,&not-zero-page JCN
 	JMP2r
@@ -907,7 +911,8 @@
 	&26         :&24       :&29         26 00 ( & )    :asma-sublabel-define
 	&28          $2         $2          "( 00          :asma-comment-start
 	&29         :&28       :&2c         ") 00          :asma-comment-end
-	&2c          $2         $2          ", 00          :asma-literal-rel-addr
+	&2c          $2        :&2d         ", 00          :asma-literal-rel-addr
+	&2d          $2         $2          "- 00          :asma-zero-addr
 	&_entry     :&26       :&7b         ". 00          :asma-literal-zero-addr
 	&3a          $2         $2          ": 00          :asma-abs-addr
 	&3b         :&3a       :&3d         "; 00          :asma-literal-abs-addr
