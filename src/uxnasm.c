@@ -380,7 +380,6 @@ resolve(void)
 			l->refs++;
 			break;
 		case ';':
-		case '=':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
 			p.data[r->addr + 1] = l->addr >> 0x8;
@@ -388,6 +387,7 @@ resolve(void)
 			l->refs++;
 			break;
 		case ':':
+		case '=':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
 			p.data[r->addr] = l->addr >> 0x8;
