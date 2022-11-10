@@ -2,10 +2,10 @@
 
 ( uxnasm rule110.tal rule110.rom && uxnemu rule110.rom )
 
-%+  { ADD }  %-  { SUB }  %*  { MUL }  %/  { DIV }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+%+  { ADD }               %*  { MUL }  %/  { DIV }
+%<  { LTH }  %>  { GTH }               %!  { NEQ }
+%++ { ADD2 }              %** { MUL2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 }              %!! { NEQ2 }
 
 %2*  { #10 SFT } %2/  { #01 SFT } %2**  { #10 SFT2 } %2//  { #01 SFT2 }
 %4*  { #20 SFT } %4/  { #02 SFT } %4**  { #20 SFT2 } %4//  { #02 SFT2 }
@@ -76,11 +76,11 @@ RTN
 	#1000
 	&loop
 		DUP #00 SWP 8** .Screen/x DEO2
-		( shift ) INCk #10 SWP -
+		( shift ) INCk #10 SWP SUB
 		( get address ) STHkr 2* LDZ2
 		( bit ) ROT SFT2 #0001 AND2 
 		( get sprite ) 8** ;cell-icns ++ .Screen/addr DEO2
-		#01 STHkr #00 = + .Screen/sprite DEO
+		#01 STHkr #00 EQU + .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
 	POPr
@@ -123,14 +123,14 @@ RTN
 	.Mouse/y DEI2 DUP2 ,&y STR2 .Screen/y DEO2 
 
 	( colorize on state )
-	#43 [ .Mouse/state DEI #00 ! ] - .Screen/sprite DEO
+	#43 [ .Mouse/state DEI #00 ! ] SUB .Screen/sprite DEO
 
 	( on click )
 	.Mouse/state DEI #00 ! JMP BRK
 
 	( toggle bit )
 	.input LDZ2k
-		#0001 .Mouse/x DEI2 8// #000f SWP2 -- NIP #40 SFT SFT2 EOR2 
+		#0001 .Mouse/x DEI2 8// #000f SWP2 SUB2 NIP #40 SFT SFT2 EOR2 
 		ROT STZ2
 	;render JSR2
 	( release ) #00 .Mouse/state DEO

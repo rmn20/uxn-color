@@ -1,9 +1,9 @@
 ( art by @ritualdust )
 
-%+  { ADD } %-   { SUB }              %/   { DIV }  
-%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
-%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
+%+  { ADD }               %/  { DIV }
+%<  { LTH }  %>  { GTH }  %!  { NEQ }
+%++ { ADD2 } %-- { SUB2 } %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %!! { NEQ2 }
 
 %8** { #30 SFT2 }
 %10** { #40 SFT2 }
@@ -13,7 +13,7 @@
 
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%DEC { #01 - }
+%DEC { #01 SUB }
 
 %MOUSE { #82 }
 
@@ -45,8 +45,8 @@
 	#036f .System/g DEO2 
 	#003f .System/b DEO2
 
-	.Screen/width DEI2 #01 SFT2 #0040 -- .room/x STZ2
-	.Screen/height DEI2 #01 SFT2 #0040 -- .room/y STZ2
+	.Screen/width DEI2 #01 SFT2 #0040 SUB2 .room/x STZ2
+	.Screen/height DEI2 #01 SFT2 #0040 SUB2 .room/y STZ2
 
 	( vectors )
 	;on-frame .Screen/vector DEO2

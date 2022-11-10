@@ -1,9 +1,9 @@
 ( uxnasm projects/examples/demos/snake.tal bin/snake.rom && uxnemu bin/snake.rom )
 
-%+  { ADD } %-   { SUB }              %/   { DIV }  
-%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
-%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
+%+  { ADD }               %/  { DIV }
+%<  { LTH }  %>  { GTH }  %!  { NEQ }
+%++ { ADD2 }              %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %!! { NEQ2 }
 %2/  { #01 SFT } %2* { #10 SFT }
 %8//  { #03 SFT2 } %8**  { #30 SFT2 }
 %MOD { DIVk MUL SUB }
@@ -65,7 +65,7 @@ BRK
 @on-frame ( -> )
 
 	.arena/timer LDZ INC DUP .arena/timer STZ
-		DIFFICULTY = BRK?
+		DIFFICULTY EQU BRK?
 
 	( clear ) #00 ;draw-snake JSR2
 	( update ) ;move JSR2
@@ -82,7 +82,7 @@ BRK
 	DUP #08 ! ,&no-escape JCN
 		;reset JSR2
 		&no-escape
-	#04 SFT DUP #00 = ,&skip JCN
+	#04 SFT DUP #00 EQU ,&skip JCN
 		DUP .snake/direction STZ
 		&skip
 	POP
@@ -94,8 +94,8 @@ BRK
 	#00 ;draw-snake JSR2
 	#00 ;draw-apple JSR2
 
-	.arena/w LDZ 2/ #01 - .snake/x STZ
-	.arena/h LDZ 2/ #01 - .snake/y STZ
+	.arena/w LDZ 2/ #01 SUB .snake/x STZ
+	.arena/h LDZ 2/ #01 SUB .snake/y STZ
 	#00 .snake/dead STZ
 	#00 .snake/length STZ
 	#00 .snake/direction STZ
@@ -117,11 +117,11 @@ RTN
 	POP2
 	POP2r
 
-	.snake/dead LDZ #00 = JMP RTN
+	.snake/dead LDZ #00 EQU JMP RTN
 
 	.snake/direction LDZ
 	DUP #01 ! ,&no-up JCN
-		.snake/y LDZ #01 - 
+		.snake/y LDZ #01 SUB
 			.arena/h LDZ MAX
 			.snake/y STZ
 		&no-up
@@ -131,7 +131,7 @@ RTN
 			.snake/y STZ
 		&no-down
 	DUP #04 ! ,&no-left JCN
-		.snake/x LDZ #01 - 
+		.snake/x LDZ #01 SUB
 			.arena/w LDZ MAX
 			.snake/x STZ
 		&no-left
