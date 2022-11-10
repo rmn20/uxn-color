@@ -27,7 +27,7 @@
 	    .DateTime/year  DEI2 #a0 SFT2 EOR2 ;prng/y STA2
 	;prng/x LDA2 ;prng/y LDA2 EOR2
 
-	;rabbits STH2 #0f05 &loop-x
+	LIT2r =rabbits #0f05 &loop-x
 		#0f05 &loop-y
 			ROTk SWP STH2kr STA2 POP
 			INC2r INC2r
