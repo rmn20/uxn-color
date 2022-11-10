@@ -1,10 +1,7 @@
 --
 -- Asma tree helper script
 --
--- This script updates the trees at the end of projects/library/asma.tal when
--- Uxn's opcode set changes or new runes (first character of tokens) are
--- created, so that new changes in the C assembler can be incorporated rapidly
--- into asma.
+-- This script balances the trees at the end of projects/library/asma.tal.
 --
 -- To run, you need Lua or LuaJIT, and just run etc/asma.lua from the top
 -- directory of Uxn's git repository:
@@ -18,145 +15,60 @@
 -- file changes.
 --
 
-spairs = (t) ->
-	keys = [ k for k in pairs t ]
-	table.sort keys
-	i = 0
-	->
-		i = i + 1
-		keys[i], t[keys[i]]
+output = assert io.open '.asma.tal', 'w'
 
-trees = {
-	['asma-opcodes']: {}
-}
+process_subtree = (items) ->
+    middle = math.floor #items / 2 + 1.25
+    node = items[middle]
+    if not node
+        return
+    node.left = process_subtree [ item for i, item in ipairs items when i < middle ]
+    node.right = process_subtree [ item for i, item in ipairs items when i > middle ]
+    node
 
-opcodes_in_order = {}
+process_tree = (items) ->
+    sorted_items = [ item for item in *items ]
+    table.sort sorted_items, (a, b) -> a.order < b.order
+    (process_subtree sorted_items).label = '&_entry'
+    for item in *items
+        output\write '\t%-11s %-10s %-12s %s%s\n'\format item.label, item.left and item.left.ref or ' $2', (item.right and item.right.ref or ' $2') .. item.extra, item.key, item.rest
 
-do -- opcodes
-	wanted = false
-	for l in assert io.lines 'src/uxnasm.c'
-		if l == 'static char ops[][4] = {'
-			wanted = true
-		elseif wanted
-			if l == '};'
-				break
-			for w in l\gmatch '[^%s",][^%s",][^%s",]'
-				if w != '---'
-					trees['asma-opcodes'][w] = {
-						'"%s 00'\format w
-						''
-					}
-				table.insert opcodes_in_order, w
-	assert #opcodes_in_order == 32, 'didn\'t find 32 opcodes in assembler code!'
+parse_tree = (it) ->
+    items = {}
+    for l in it
+        if l == ''
+            process_tree items
+            output\write '\n'
+            return
+        item = { extra: '' }
+        item.key, item.rest = l\match '^%s*%S+%s+%S+%s+%S+%s+(%S+)(.*)'
+        if item.key\match '^%&'
+            item.extra = ' %s'\format item.key
+            item.key, item.rest = item.rest\match '^%s+(%S+)(.*)'
+        if item.key\match '^%"'
+            item.order = item.key\sub 2
+        elseif item.key\match '^%x%x'
+            item.order = string.char tonumber item.key, 16
+        else
+            error 'unknown key: %q'\format item.key
+        if item.order\match '^%a'
+            item.label = '&%s'\format item.order
+        elseif item.order\match '^.$'
+            item.label = '&%x'\format item.order\byte!
+        else
+            error 'unknown label: %q'\format item.order
+        item.ref = ':%s'\format item.label
+        table.insert items, item
 
-do -- first characters
-	representation = setmetatable {
-		'&': '26 00 ( & )'
-	},
-		__index: (c) => "'%s 00"\format c
-	process = (label, t) ->
-		trees[label] = {}
-		for k, v in pairs t
-			trees[label]['%02x'\format k\byte!] = {
-				representation[k]
-				':%s'\format v
-			}
-	process 'asma-first-char-normal',
-		'%': 'asma-macro-define'
-		'|': 'asma-pad-absolute'
-		'$': 'asma-pad-relative'
-		'@': 'asma-label-define'
-		'&': 'asma-sublabel-define'
-		'#': 'asma-literal-hex'
-		'.': 'asma-literal-zero-addr'
-		',': 'asma-literal-rel-addr'
-		';': 'asma-literal-abs-addr'
-		':': 'asma-abs-addr'
-		"'": 'asma-raw-char'
-		'"': 'asma-raw-word'
-		'{': 'asma-ignore'
-		'}': 'asma-ignore'
-		'[': 'asma-ignore'
-		']': 'asma-ignore'
-		'(': 'asma-comment-start'
-		')': 'asma-comment-end'
-		'~': 'asma-include'
-	process 'asma-first-char-macro',
-		'(': 'asma-comment-start'
-		')': 'asma-comment-end'
-		'{': 'asma-ignore'
-		'}': 'asma-macro-end'
-	process 'asma-first-char-comment',
-		'(': 'asma-comment-more'
-		')': 'asma-comment-less'
-
-traverse_node = (t, min, max, lefts, rights) ->
-	i = math.ceil (min + max) / 2
-	if min < i
-		lefts[t[i]]  = ':&%s'\format traverse_node t, min, i - 1, lefts, rights
-	if i < max
-		rights[t[i]] = ':&%s'\format traverse_node t, i + 1, max, lefts, rights
-	return t[i]
-
-traverse_tree = (t) ->
-	lefts, rights = {}, {}
-	keys = [ k for k in pairs t ]
-	table.sort keys
-	lefts, rights, traverse_node keys, 1, #keys, lefts, rights
-
-ptr = (s) ->
-	if s
-		return ':&%s'\format s
-	return ' $2'
-
-ordered_opcodes = (t) ->
-	i = 0
-	->
-		i = i + 1
-		v = opcodes_in_order[i]
-		if t[v]
-			return v, t[v]
-		elseif v
-			return false, { '"--- 00', '' }
-
-printout = true
-
-fmt = (...) ->
-	('\t%-11s %-10s %-12s %-14s %s '\format(...)\gsub ' +$', '\n')
-
-with assert io.open 'projects/library/asma.tal.tmp', 'w'
-	for l in assert io.lines 'projects/library/asma.tal'
-		if l\match '--- cut here ---'
-			break
-		\write l
-		\write '\n'
-	\write '( --- 8< ------- 8< --- cut here --- 8< ------- 8< --- )\n'
-	\write '(          automatically generated code below          )\n'
-	\write '(          see etc/asma.moon for instructions          )\n'
-	\write '\n('
-	\write fmt 'label', 'less', 'greater', 'key', 'binary'
-	\write fmt '', 'than', 'than', 'string', 'data )'
-	\write '\n'
-	for name, tree in spairs trees
-		\write '@%s\n'\format name
-		lefts, rights, entry = traverse_tree tree
-		sort_fn = if name == 'asma-opcodes'
-			if rights[opcodes_in_order[1]]
-				rights[opcodes_in_order[1]] ..= ' &_disasm'
-			else
-				rights[opcodes_in_order[1]] = ' $2 &_disasm'
-			ordered_opcodes
-		else
-			spairs
-		for k, v in sort_fn tree
-			label = if k == entry
-				'&_entry'
-			elseif k
-				'&%s'\format k
-			else
-				''
-			\write fmt label, lefts[k] or ' $2', rights[k] or ' $2', unpack v
-		\write '\n'
-	\close!
-os.execute 'mv projects/library/asma.tal.tmp projects/library/asma.tal'
+it = assert io.lines 'projects/library/asma.tal'
+waiting_for_cut = true
+for l in it
+    output\write l
+    output\write '\n'
+    if l\find '--- cut here ---', 1, true
+        waiting_for_cut = false
+    if not waiting_for_cut and '@' == l\sub 1, 1
+        parse_tree it
+output\close!
+os.execute 'mv .asma.tal projects/library/asma.tal'
 

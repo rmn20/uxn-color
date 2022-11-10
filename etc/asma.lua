@@ -1,196 +1,103 @@
-local spairs
-spairs = function(t)
-  local keys
+local output = assert(io.open('.asma.tal', 'w'))
+local process_subtree
+process_subtree = function(items)
+  local middle = math.floor(#items / 2 + 1.25)
+  local node = items[middle]
+  if not node then
+    return 
+  end
+  node.left = process_subtree((function()
+    local _accum_0 = { }
+    local _len_0 = 1
+    for i, item in ipairs(items) do
+      if i < middle then
+        _accum_0[_len_0] = item
+        _len_0 = _len_0 + 1
+      end
+    end
+    return _accum_0
+  end)())
+  node.right = process_subtree((function()
+    local _accum_0 = { }
+    local _len_0 = 1
+    for i, item in ipairs(items) do
+      if i > middle then
+        _accum_0[_len_0] = item
+        _len_0 = _len_0 + 1
+      end
+    end
+    return _accum_0
+  end)())
+  return node
+end
+local process_tree
+process_tree = function(items)
+  local sorted_items
   do
     local _accum_0 = { }
     local _len_0 = 1
-    for k in pairs(t) do
-      _accum_0[_len_0] = k
+    for _index_0 = 1, #items do
+      local item = items[_index_0]
+      _accum_0[_len_0] = item
       _len_0 = _len_0 + 1
     end
-    keys = _accum_0
+    sorted_items = _accum_0
   end
-  table.sort(keys)
-  local i = 0
-  return function()
-    i = i + 1
-    return keys[i], t[keys[i]]
+  table.sort(sorted_items, function(a, b)
+    return a.order < b.order
+  end);
+  (process_subtree(sorted_items)).label = '&_entry'
+  for _index_0 = 1, #items do
+    local item = items[_index_0]
+    output:write(('\t%-11s %-10s %-12s %s%s\n'):format(item.label, item.left and item.left.ref or ' $2', (item.right and item.right.ref or ' $2') .. item.extra, item.key, item.rest))
   end
 end
-local trees = {
-  ['asma-opcodes'] = { }
-}
-local opcodes_in_order = { }
-do
-  local wanted = false
-  for l in assert(io.lines('src/uxnasm.c')) do
-    if l == 'static char ops[][4] = {' then
-      wanted = true
-    elseif wanted then
-      if l == '};' then
-        break
-      end
-      for w in l:gmatch('[^%s",][^%s",][^%s",]') do
-        if w ~= '---' then
-          trees['asma-opcodes'][w] = {
-            ('"%s 00'):format(w),
-            ''
-          }
-        end
-        table.insert(opcodes_in_order, w)
-      end
+local parse_tree
+parse_tree = function(it)
+  local items = { }
+  for l in it do
+    if l == '' then
+      process_tree(items)
+      output:write('\n')
+      return 
     end
-  end
-  assert(#opcodes_in_order == 32, 'didn\'t find 32 opcodes in assembler code!')
-end
-do
-  local representation = setmetatable({
-    ['&'] = '26 00 ( & )'
-  }, {
-    __index = function(self, c)
-      return ("'%s 00"):format(c)
+    local item = {
+      extra = ''
+    }
+    item.key, item.rest = l:match('^%s*%S+%s+%S+%s+%S+%s+(%S+)(.*)')
+    if item.key:match('^%&') then
+      item.extra = (' %s'):format(item.key)
+      item.key, item.rest = item.rest:match('^%s+(%S+)(.*)')
     end
-  })
-  local process
-  process = function(label, t)
-    trees[label] = { }
-    for k, v in pairs(t) do
-      trees[label][('%02x'):format(k:byte())] = {
-        representation[k],
-        (':%s'):format(v)
-      }
-    end
-  end
-  process('asma-first-char-normal', {
-    ['%'] = 'asma-macro-define',
-    ['|'] = 'asma-pad-absolute',
-    ['$'] = 'asma-pad-relative',
-    ['@'] = 'asma-label-define',
-    ['&'] = 'asma-sublabel-define',
-    ['#'] = 'asma-literal-hex',
-    ['.'] = 'asma-literal-zero-addr',
-    [','] = 'asma-literal-rel-addr',
-    [';'] = 'asma-literal-abs-addr',
-    [':'] = 'asma-abs-addr',
-    ["'"] = 'asma-raw-char',
-    ['"'] = 'asma-raw-word',
-    ['{'] = 'asma-ignore',
-    ['}'] = 'asma-ignore',
-    ['['] = 'asma-ignore',
-    [']'] = 'asma-ignore',
-    ['('] = 'asma-comment-start',
-    [')'] = 'asma-comment-end',
-    ['~'] = 'asma-include'
-  })
-  process('asma-first-char-macro', {
-    ['('] = 'asma-comment-start',
-    [')'] = 'asma-comment-end',
-    ['{'] = 'asma-ignore',
-    ['}'] = 'asma-macro-end'
-  })
-  process('asma-first-char-comment', {
-    ['('] = 'asma-comment-more',
-    [')'] = 'asma-comment-less'
-  })
-end
-local traverse_node
-traverse_node = function(t, min, max, lefts, rights)
-  local i = math.ceil((min + max) / 2)
-  if min < i then
-    lefts[t[i]] = (':&%s'):format(traverse_node(t, min, i - 1, lefts, rights))
-  end
-  if i < max then
-    rights[t[i]] = (':&%s'):format(traverse_node(t, i + 1, max, lefts, rights))
-  end
-  return t[i]
-end
-local traverse_tree
-traverse_tree = function(t)
-  local lefts, rights = { }, { }
-  local keys
-  do
-    local _accum_0 = { }
-    local _len_0 = 1
-    for k in pairs(t) do
-      _accum_0[_len_0] = k
-      _len_0 = _len_0 + 1
-    end
-    keys = _accum_0
-  end
-  table.sort(keys)
-  return lefts, rights, traverse_node(keys, 1, #keys, lefts, rights)
-end
-local ptr
-ptr = function(s)
-  if s then
-    return (':&%s'):format(s)
-  end
-  return ' $2'
-end
-local ordered_opcodes
-ordered_opcodes = function(t)
-  local i = 0
-  return function()
-    i = i + 1
-    local v = opcodes_in_order[i]
-    if t[v] then
-      return v, t[v]
-    elseif v then
-      return false, {
-        '"--- 00',
-        ''
-      }
-    end
-  end
-end
-local printout = true
-local fmt
-fmt = function(...)
-  return (('\t%-11s %-10s %-12s %-14s %s '):format(...):gsub(' +$', '\n'))
-end
-do
-  local _with_0 = assert(io.open('projects/library/asma.tal.tmp', 'w'))
-  for l in assert(io.lines('projects/library/asma.tal')) do
-    if l:match('--- cut here ---') then
-      break
-    end
-    _with_0:write(l)
-    _with_0:write('\n')
-  end
-  _with_0:write('( --- 8< ------- 8< --- cut here --- 8< ------- 8< --- )\n')
-  _with_0:write('(          automatically generated code below          )\n')
-  _with_0:write('(          see etc/asma.moon for instructions          )\n')
-  _with_0:write('\n(')
-  _with_0:write(fmt('label', 'less', 'greater', 'key', 'binary'))
-  _with_0:write(fmt('', 'than', 'than', 'string', 'data )'))
-  _with_0:write('\n')
-  for name, tree in spairs(trees) do
-    _with_0:write(('@%s\n'):format(name))
-    local lefts, rights, entry = traverse_tree(tree)
-    local sort_fn
-    if name == 'asma-opcodes' then
-      if rights[opcodes_in_order[1]] then
-        rights[opcodes_in_order[1]] = rights[opcodes_in_order[1]] .. ' &_disasm'
-      else
-        rights[opcodes_in_order[1]] = ' $2 &_disasm'
-      end
-      sort_fn = ordered_opcodes
+    if item.key:match('^%"') then
+      item.order = item.key:sub(2)
+    elseif item.key:match('^%x%x') then
+      item.order = string.char(tonumber(item.key, 16))
     else
-      sort_fn = spairs
+      error(('unknown key: %q'):format(item.key))
     end
-    for k, v in sort_fn(tree) do
-      local label
-      if k == entry then
-        label = '&_entry'
-      elseif k then
-        label = ('&%s'):format(k)
-      else
-        label = ''
-      end
-      _with_0:write(fmt(label, lefts[k] or ' $2', rights[k] or ' $2', unpack(v)))
+    if item.order:match('^%a') then
+      item.label = ('&%s'):format(item.order)
+    elseif item.order:match('^.$') then
+      item.label = ('&%x'):format(item.order:byte())
+    else
+      error(('unknown label: %q'):format(item.order))
     end
-    _with_0:write('\n')
+    item.ref = (':%s'):format(item.label)
+    table.insert(items, item)
   end
-  _with_0:close()
 end
-return os.execute('mv projects/library/asma.tal.tmp projects/library/asma.tal')
+local it = assert(io.lines('projects/library/asma.tal'))
+local waiting_for_cut = true
+for l in it do
+  output:write(l)
+  output:write('\n')
+  if l:find('--- cut here ---', 1, true) then
+    waiting_for_cut = false
+  end
+  if not waiting_for_cut and '@' == l:sub(1, 1) then
+    parse_tree(it)
+  end
+end
+output:close()
+return os.execute('mv .asma.tal projects/library/asma.tal')
