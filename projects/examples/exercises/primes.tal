@@ -18,20 +18,17 @@ BRK
 
 @is-prime ( number* -- flag )
 
-	DUP2 #0001 EQU2 ,&fail JCN
-	STH2k
-	( range ) #01 SFT2 #0002
+	DUP2 ,&t STR2
+	( range ) #01 SFT2 #0002 LTH2k ,&fail JCN
 	&loop
-		STH2kr OVR2 ( mod2 ) [ DIV2k MUL2 SUB2 ] ORA ,&continue JCN
-			POP2 POP2
-			POP2r #00 JMP2r
-			&continue
+		[ LIT2 &t $2 ] OVR2
+			( mod2 ) DIV2k MUL2 SUB2
+			ORA #00 EQU ,&fail JCN
 		INC2 GTH2k ,&loop JCN
-	POP2 POP2
-	POP2r #01
+	POP2 POP2 #01
 
 JMP2r
-	&fail POP2 #00 JMP2r
+	&fail POP2 POP2 #00 JMP2r
 
 @print ( short* -- )
 
