@@ -85,7 +85,7 @@
 
 	&number
 	LIT2r 000a MUL2r
-	LDAk #30 SUB #00 STH STH ADD2r
+	LDAk #30 SUB LITr 00 STH ADD2r
 	INC2
 	LDAk #3039 IN-RANGE ,&number JCN
 
