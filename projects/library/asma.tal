@@ -742,9 +742,13 @@
 	JMP2r
 
 @asma-literal-rel-addr
+	LIT LIT ;asma-write-byte JSR2
+	( fall through )
+
+@asma-rel-addr
 	,asma-addr-helper JSR
 	;asma/addr LDA2 SUB2
-	#0003 SUB2
+	#0002 SUB2
 
 	DUP2 #0080 LTH2 STH
 	DUP2 #ff7f GTH2 STHr ORA ,&in-bounds JCN
@@ -754,7 +758,7 @@
 	JMP2r
 
 	&in-bounds
-	;asma-write-lit JSR2
+	;asma-write-byte JSR2
 	POP
 	JMP2r
 
@@ -913,13 +917,14 @@
 	&29         :&28        $2          ") 00          :asma-comment-end
 	&2c         :&29       :&2d         ", 00          :asma-literal-rel-addr
 	&2d          $2         $2          "- 00          :asma-zero-addr
-	&_entry     :&26       :&7b         ". 00          :asma-literal-zero-addr
+	&_entry     :&26       :&5f         ". 00          :asma-literal-zero-addr
 	&3a          $2         $2          ": 00          :asma-abs-addr
 	&3b         :&3a        $2          "; 00          :asma-literal-abs-addr
 	&3d         :&3b       :&40         "= 00          :asma-abs-addr
 	&40          $2         $2          "@ 00          :asma-label-define
-	&7b         :&3d       :&7d         "{ 00          :asma-ignore
-	&7c          $2         $2          "| 00          :asma-pad-absolute
+	&5f         :&3d       :&7d         "_ 00          :asma-rel-addr
+	&7b          $2         $2          "{ 00          :asma-ignore
+	&7c         :&7b        $2          "| 00          :asma-pad-absolute
 	&7d         :&7c       :&7e         "} 00          :asma-ignore
 	&7e          $2         $2          "~ 00          :asma-include
 
