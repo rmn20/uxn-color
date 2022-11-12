@@ -32,7 +32,7 @@
 	#0f08 .System/g DEO2
 	#0f08 .System/b DEO2
 	( resize )
-	#00f0 .Screen/width DEO2
+	#00d0 .Screen/width DEO2
 	#0120 .Screen/height DEO2
 	( vectors )
 	;on-frame .Screen/vector DEO2
