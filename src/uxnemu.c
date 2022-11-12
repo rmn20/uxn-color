@@ -53,6 +53,8 @@ static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
+char *rom_path;
+
 static int
 error(char *msg, const char *err)
 {
@@ -306,7 +308,8 @@ static void
 restart(Uxn *u)
 {
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
-	start(u, "launcher.rom");
+	if(!start(u, "launcher.rom"))
+		start(u, rom_path);
 }
 
 static Uint8
@@ -497,6 +500,7 @@ main(int argc, char **argv)
 		} else if(!loaded++) {
 			if(!start(&u, argv[i]))
 				return error("Boot", "Failed to boot.");
+			rom_path = argv[i];
 		} else {
 			char *p = argv[i];
 			while(*p) console_input(&u, *p++);
