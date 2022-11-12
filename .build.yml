@@ -46,7 +46,7 @@ tasks:
         done
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
-        if ssh win true; then
+        if ssh -o ConnectTimeout=10 win true; then
             ssh win "export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run"
             rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
         else
@@ -54,7 +54,7 @@ tasks:
             touch out/needs-solar-build
         fi
     - build-macos: |
-        if ssh mac true; then
+        if ssh -o ConnectTimeout=10 mac true; then
             ssh mac "export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); ./build.sh --no-run"
             rsync -rp mac:uxn/bin/ build/uxn-mac64/uxn/
         else
@@ -84,6 +84,6 @@ tasks:
         acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz
         acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz -Fprotocol=GEMINI
     - build-9front: |
-        if ssh 9front true; then
+        if ssh -o ConnectTimeout=10 9front true; then
             ssh 9front "$(cd uxn && git rev-parse HEAD)"
         fi
