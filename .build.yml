@@ -84,4 +84,6 @@ tasks:
         acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz
         acurl -fsS "https://pages.sr.ht/publish/${SITE}" -Fcontent=@out.tar.gz -Fprotocol=GEMINI
     - build-9front: |
-        ssh 9front "$(cd uxn && git rev-parse HEAD)"
+        if ssh 9front true; then
+            ssh 9front "$(cd uxn && git rev-parse HEAD)"
+        fi
