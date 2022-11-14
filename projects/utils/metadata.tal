@@ -11,12 +11,10 @@
 
 |0100 ( -> )
 
-	( theme )
 	#f0af .System/r DEO2
 	#f0af .System/g DEO2
 	#f0af .System/b DEO2
 
-	( 800x520 | 64:41 )
 	#0130 .Screen/width DEO2
 	#0050 .Screen/height DEO2
 
@@ -47,7 +45,8 @@ BRK
 	#0006 .Disk/length DEO2
 	;&header .Disk/read DEO2
 
-	;&deo LDA2 #f037 NEQ2 ;&missing JCN2
+	;&deo LDA2 #f037 NEQ2
+		;&missing JCN2
 
 	;&start LDA2 #0100 SUB2 ;seek JSR2
 	#0004 .Disk/length DEO2
@@ -56,9 +55,11 @@ BRK
 		LDA2 ;&start LDA2 SUB2 .Disk/length DEO2
 	;data
 		DUP2 .Disk/read DEO2
+
 	( draw )
 	#0058 STH2k .Screen/x DEO2
 	#0018 .Screen/y DEO2
+
 	( body )
 	;draw-str JSR2
 	#20 ;draw-chr JSR2
@@ -68,6 +69,7 @@ BRK
 	STH2r .Screen/x DEO2
 	;draw-str JSR2 ;draw-lb JSR2
 	POP2
+
 	( icon )
 	;&icon LDA2 #0100 SUB2 ;seek JSR2
 	#0200 .Disk/length DEO2
@@ -144,14 +146,6 @@ JMP2r
 	
 JMP2r
 	&b $1
-
-@print ( short* -- )
-
-	SWP ,&byte JSR
-	&byte ( byte -- ) DUP #04 SFT ,&char JSR
-	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
-
-JMP2r
 
 @scap ( str* -- end* ) LDAk #00 NEQ JMP JMP2r &w INC2 LDAk ,&w JCN JMP2r
 @sput ( chr str* -- ) ,scap JSR STA JMP2r
