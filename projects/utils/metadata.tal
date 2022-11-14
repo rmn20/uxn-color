@@ -17,7 +17,7 @@
 	#f0af .System/b DEO2
 
 	( 800x520 | 64:41 )
-	#0120 .Screen/width DEO2
+	#0130 .Screen/width DEO2
 	#0050 .Screen/height DEO2
 
 	;await-src .Console/vector DEO2
