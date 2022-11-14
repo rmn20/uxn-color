@@ -44,8 +44,11 @@ BRK
 
 	 .Disk/name DEO2
 	( read )
-	#0003 .Disk/length DEO2
+	#0006 .Disk/length DEO2
 	;&header .Disk/read DEO2
+
+	;&deo LDA2 #f037 NEQ2 ;&missing JCN2
+
 	;&start LDA2 #0100 SUB2 ;seek JSR2
 	#0004 .Disk/length DEO2
 	;&end
@@ -66,21 +69,39 @@ BRK
 	;draw-str JSR2 ;draw-lb JSR2
 	POP2
 	( icon )
-	#0008
-		DUP2 .Screen/x DEO2
-		.Screen/y DEO2
 	;&icon LDA2 #0100 SUB2 ;seek JSR2
 	#0200 .Disk/length DEO2
 	;data
 		DUP2 .Disk/read DEO2
-		.Screen/addr DEO2
-	#76 .Screen/auto DEO
+		#76 ;draw-icon JSR2
+
+JMP2r
+	&header $1 &start $3 &deo $2 &end $2 &icon $2
+
+&missing ( -- )
+
+	;blank-icn #72 ;draw-icon JSR2
+	#0058 STH2k .Screen/x DEO2
+	#0018 .Screen/y DEO2
+	;src ;draw-str JSR2 POP2
+	;draw-lb JSR2
+	STH2r .Screen/x DEO2
+	;dict/empty ;draw-str JSR2 POP2
+
+JMP2r
+
+@draw-icon ( addr* auto -- )
+
+	#0008
+		DUP2 .Screen/x DEO2
+		.Screen/y DEO2
+	.Screen/auto DEO
+	.Screen/addr DEO2
 	#01 .Screen/sprite 
 		DEOk DEOk DEOk DEOk
 		DEOk DEOk DEOk DEO
 
 JMP2r
-	&header $1 &start $2 &end $2 &icon $2
 
 @draw-lb ( -- )
 
@@ -124,6 +145,14 @@ JMP2r
 JMP2r
 	&b $1
 
+@print ( short* -- )
+
+	SWP ,&byte JSR
+	&byte ( byte -- ) DUP #04 SFT ,&char JSR
+	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
+
+JMP2r
+
 @scap ( str* -- end* ) LDAk #00 NEQ JMP JMP2r &w INC2 LDAk ,&w JCN JMP2r
 @sput ( chr str* -- ) ,scap JSR STA JMP2r
 @skey ( key buf -- proc ) OVR #21 LTH ,&eval JCN #00 SWP ;sput JSR2 #00 JMP2r &eval POP2 #01 JMP2r
@@ -131,6 +160,10 @@ JMP2r
 
 @dict
 	&input "Input(.tal): 20 $1
+	&empty "Metadata 20 "Missing $1
+
+@blank-icn
+	aa55 aa55 aa55 aa55
 
 @font ( atari8 )
 0000 0000 0000 0000 6060 6060 6000 6000
