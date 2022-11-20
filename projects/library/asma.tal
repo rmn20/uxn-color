@@ -12,12 +12,6 @@
 )
 
 (
-	Common macros for use later on.
-)
-
-%asma-IF-ERROR { ;asma/error LDA2 ORA }
-
-(
 	Asma's public interface.
 	These routines are what are expected to be called from programs that bundle
 	Asma into bigger projects.
@@ -32,7 +26,7 @@
 	;asma-init-first-pass JSR2
 	;asma-flush-ignore ;asma/flush-fn STA2
 	;asma/src-filename LDA2 ;asma-assemble-file-pass JSR2
-	asma-IF-ERROR ,&error JCN
+	;asma/error LDA2 ORA ,&error JCN
 
 	;asma-init-next-pass JSR2
 	;asma-flush-to-file ;asma/flush-fn STA2
@@ -40,7 +34,7 @@
 	;asma-flush-to-console ;asma/flush-fn STA2
 	&filename-present
 	;asma/src-filename LDA2 ;asma-assemble-file-pass JSR2
-	asma-IF-ERROR ,&error JCN
+	;asma/error LDA2 ORA ,&error JCN
 
 	( flush output buffer )
 	;asma-output/ptr LDA2 ;asma-write-buffer SUB2 ;asma/flush-fn LDA2 JSR2
@@ -226,7 +220,7 @@
 	ROT2 ( func* line^ buf* size^ filename* )
 	,file-read-chunks JSR
 
-	asma-IF-ERROR ,&error JCN
+	;asma/error LDA2 ORA ,&error JCN
 
 	&error
 	POP2 POP2 POP2 POP2 POP2
@@ -318,7 +312,7 @@
 	LDAk #0a NEQ ( end-chunk* ws-char* not-newline / line^ start-of-token* )
 	#00 OVR2 STA
 	STH2r ,asma-assemble-token JSR ( end-chunk* ws-char* not-newline / line^ )
-	asma-IF-ERROR ,&error JCN
+	;asma/error LDA2 ORA ,&error JCN
 	,&not-newline JCN
 	,asma/lines LDR2 INC2 ,asma/lines STR2
 	&not-newline ( end-chunk* ws-char* / line^ )
@@ -362,9 +356,9 @@
 	asma/state contains several meaningful bits:
 	0x02 we are in a comment,
 	0x04 we are in a macro body,
-	0x10 we are in a macro body that we are ignoring
+	0x08 we are in a macro body that we are ignoring
 	   (because the macro was already defined in a previous pass).
-	Since 0x10 never appears without 0x04, the lowest bit set in asma/state is
+	Since 0x08 never appears without 0x04, the lowest bit set in asma/state is
 	always 0x00, 0x02, or 0x04, which is very handy for use with jump tables.
 	The lowest bit set can be found easily by #00 (n) SUBk AND.
 )
@@ -596,14 +590,11 @@
 	-body routines) tokens that fail to match any first letter in their tree.
 )
 
-%asma-STATE-SET { ;asma/state LDA ORA ;asma/state STA }
-%asma-STATE-CLEAR { #ff EOR ;asma/state LDA AND ;asma/state STA }
-
 @asma-comment-more
 	;asma/token LDA2 ;strlen JSR2 ORA ,asma-ignore JCN
 @asma-comment-start
 	;asma/comment-level LDAk INC ROT ROT STA
-	#02 asma-STATE-SET
+	;asma/state LDA #02 ORA ;asma/state STA
 @asma-ignore
 	JMP2r
 
@@ -611,7 +602,7 @@
 	;asma/token LDA2 ;strlen JSR2 ORA ,asma-ignore JCN
 	;asma/comment-level LDAk #01 SUB DUP SWP2 STA ,asma-ignore JCN
 @asma-comment-end
-	#02 asma-STATE-CLEAR
+	;asma/state LDA #0c AND ;asma/state STA
 	JMP2r
 
 @asma-macro-define
@@ -628,22 +619,22 @@
 	#0000 ;append-heap-short JSR2 ( less-than pointer )
 	#0000 ;append-heap-short JSR2 ( greater-than pointer )
 	;asma/token LDA2 ;append-heap-string JSR2 ( key )
-	#04 asma-STATE-SET
+	;asma/state LDA #04 ORA ;asma/state STA
 	JMP2r
 
 	&ignore-macro
-	#14 asma-STATE-SET
+	;asma/state LDA #0c ORA ;asma/state STA
 	JMP2r
 
 @asma-macro-body
-	;asma/state LDA #10 AND ,&skip JCN
+	;asma/state LDA #08 AND ,&skip JCN
 	;asma/token LDA2 ;append-heap-string JSR2
 	&skip
 	JMP2r
 
 @asma-macro-end
 	#00 ;append-heap-byte JSR2
-	#14 asma-STATE-CLEAR
+	;asma/state LDA #02 AND ;asma/state STA
 	JMP2r
 
 @asma-label-define
@@ -852,7 +843,7 @@
 
 	&keep-going
 	DUP2k ;strlen JSR2 INC2 ADD2
-	SWP2 ;asma-assemble-token JSR2 asma-IF-ERROR ,&macro-error JCN
+	SWP2 ;asma-assemble-token JSR2 ;asma/error LDA2 ORA ,&macro-error JCN
 	,&macro-loop JMP
 
 	&macro-error

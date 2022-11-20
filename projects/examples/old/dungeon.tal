@@ -1,15 +1,5 @@
 ( art by @ritualdust )
 
-%8** { #30 SFT2 }
-%10** { #40 SFT2 }
-
-%DEBUG  { ;print-hex JSR2 #0a .Console/write DEO }
-%DEBUG2 { SWP ;print-hex JSR2 ;print-hex JSR2 #0a .Console/write DEO }
-
-%RTN { JMP2r }
-%TOS { #00 SWP }
-%DEC { #01 SUB }
-
 %MOUSE { #82 }
 
 ( devices )
@@ -65,7 +55,7 @@ BRK
 	DUP #10 NEQ ,&no-up JCN
 		#00 .player/d STZ
 		#00 ;draw-mouse JSR2
-		.player/y LDZk DEC SWP STZ
+		.player/y LDZk #01 SUB SWP STZ
 		MOUSE ;draw-mouse JSR2
 		&no-up
 	DUP #20 NEQ ,&no-down JCN
@@ -77,7 +67,7 @@ BRK
 	DUP #40 NEQ ,&no-left JCN
 		#02 .player/d STZ
 		#00 ;draw-mouse JSR2
-		.player/x LDZk DEC SWP STZ
+		.player/x LDZk #01 SUB SWP STZ
 		MOUSE ;draw-mouse JSR2
 		&no-left
 	DUP #80 NEQ ,&no-right JCN
@@ -98,24 +88,24 @@ BRK
 
 @draw-mouse ( color -- )
 
-	;spritesheet #29 .player/d LDZ ADD TOS DUP2 DEBUG2 10** ADD2 .Screen/addr DEO2
-	.player/x LDZ TOS 8** .room/x LDZ2 ADD2 .Screen/x DEO2
-	.player/y LDZ TOS 8** .room/y LDZ2 ADD2 .Screen/y DEO2
+	;spritesheet #29 .player/d LDZ ADD #0004 SFT2 ADD2 .Screen/addr DEO2
+	.player/x LDZ #0005 SFT2 .room/x LDZ2 ADD2 .Screen/x DEO2
+	.player/y LDZ #0005 SFT2 .room/y LDZ2 ADD2 .Screen/y DEO2
 	#40 ADD .Screen/sprite DEO
 
-RTN
+JMP2r
 
 @draw-dungeon ( stage* -- )
 
 	STH2
 	#1000
 	&ver
-		DUP TOS 8** .room/y LDZ2 ADD2 .Screen/y DEO2
+		DUP #0005 SFT2 .room/y LDZ2 ADD2 .Screen/y DEO2
 		#1000
 		&hor
-			DUP TOS 8** .room/x LDZ2 ADD2 .Screen/x DEO2
-			( get id ) STH2 DUP STH2r ROT OVR SWP #40 SFT ADD TOS
-				( tile ) DUP2 STH2kr ADD2 LDA TOS 10** ;spritesheet ADD2 .Screen/addr DEO2
+			DUP #0005 SFT2 .room/x LDZ2 ADD2 .Screen/x DEO2
+			( get id ) STH2 DUP STH2r ROT OVR SWP #40 SFT ADD #00 SWP
+				( tile ) DUP2 STH2kr ADD2 LDA #0004 SFT2 ;spritesheet ADD2 .Screen/addr DEO2
 				( color ) STH2kr #0100 ADD2 ADD2 LDA .Screen/sprite DEO
 			INC GTHk ,&hor JCN
 		POP2
@@ -123,17 +113,17 @@ RTN
 	POP2
 	POP2r
 
-RTN
+JMP2r
 
 @print-hex ( value -- )
 	
 	STHk #04 SFT ,&parse JSR .Console/write DEO
 	STHr #0f AND ,&parse JSR .Console/write DEO
-	RTN
+	JMP2r
 	&parse ( value -- char )
-		DUP #09 GTH ,&above JCN #30 ADD RTN &above #09 SUB #60 ADD RTN
+		DUP #09 GTH ,&above JCN #30 ADD JMP2r &above #09 SUB #60 ADD JMP2r
 
-RTN
+JMP2r
 
 @mouse-icn
 	ffff ffff ffff ffff 0000 0000 0000 0000

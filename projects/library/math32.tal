@@ -54,10 +54,6 @@
 (   - mul32 memory, 12 bytes )
 (   - _divmod32 memory, 16 bytes )
 
-%COMPLEMENT32 { SWP2 #ffff EOR2 SWP2 #ffff EOR2 }
-%DUP4 { OVR2 OVR2 }
-%POP4 { POP2 POP2 }
-
 ( bitcount: number of bits needed to represent number )
 ( equivalent to floor[log2[x]] + 1 )
 
@@ -164,7 +160,7 @@
 
 ( ~x )
 @complement32 ( x** -> ~x** )
-    COMPLEMENT32 JMP2r
+    SWP2 #ffff EOR2 SWP2 #ffff EOR2 JMP2r
 
 ( temporary registers )
 ( shared by most operations, except mul32 and div32 )
@@ -289,7 +285,7 @@
 
 ( -x )
 @negate32 ( x** -> -x** )
-    COMPLEMENT32
+    ;complement32 JSR2
     INC2 ( ~xhi -xlo )
     DUP2 #0000 NEQ2 ( ~xhi -xlo non-zero? )
     ,&done JCN ( xlo non-zero => don't inc hi )
@@ -414,10 +410,10 @@
 ( greatest common divisor - euclidean algorithm )
 @gcd32 ( x** y** -> z** )
     &loop ( x y )
-    DUP4 ( x y y )
+    OVR2 OVR2 ( x y y )
     ;is-zero32 JSR2 ( x y y=0? )
     ,&done JCN ( x y )
-    DUP4 ( x y y )
+    OVR2 OVR2 ( x y y )
     STH2 STH2 ( x y [y] )
     ;mod32 JSR2 ( r=x%y [y] )
     STH2r ( rhi rlo yhi [ylo] )
@@ -428,5 +424,5 @@
     ROT2 ( yhi ylo rhi rlo )
     ,&loop JMP
     &done
-    POP4 ( x )
+    POP2 POP2 ( x )
     JMP2r

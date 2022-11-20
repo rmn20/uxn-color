@@ -1,7 +1,5 @@
 ( dev/audio )
 
-%MOD { DIVk MUL SUB }
-
 ( devices )
 
 |00 @System     [ &vector $2 &pad      $6 &r      $2 &g     $2 &b      $2 ]
@@ -57,7 +55,7 @@ BRK
 	( skip ) .timer LDZ #10 EQU #01 JCN [ BRK ]
 
 	( get note )
-	.counter LDZ #18 MOD #30 ADD 
+	.counter LDZ #18 DIVk MUL SUB #30 ADD 
 		.Audio0/pitch .counter LDZ #03 AND #40 SFT ADD DEO
 
 	.counter LDZ INC .counter STZ
