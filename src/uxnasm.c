@@ -448,6 +448,21 @@ review(char *filename)
 		p.mlen);
 }
 
+static void
+writesym(char *filename)
+{
+	char symdst[0x40];
+	FILE *fp = fopen(scat(scpy(filename, symdst, slen(filename) + 1), ".sym"), "w");
+	int i;
+	if(fp != NULL) {
+		for(i = 0; i < p.llen; i++) {
+			fwrite(&p.labels[i].addr, 2, 1, fp);
+			fwrite(p.labels[i].name, slen(p.labels[i].name) + 1, 1, fp);
+		}
+	}
+	fclose(fp);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -464,5 +479,6 @@ main(int argc, char *argv[])
 		return !error("Assembly", "Output rom is empty.");
 	fwrite(p.data + TRIM, p.length - TRIM, 1, dst);
 	review(argv[2]);
+	writesym(argv[2]);
 	return 0;
 }

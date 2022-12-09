@@ -15,7 +15,7 @@
 	#f0af .System/g DEO2
 	#f0af .System/b DEO2
 
-	#0130 .Screen/width DEO2
+	#0150 .Screen/width DEO2
 	#0050 .Screen/height DEO2
 
 	;await-src .Console/vector DEO2
