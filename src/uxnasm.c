@@ -452,7 +452,7 @@ static void
 writesym(char *filename)
 {
 	char symdst[0x60];
-	FILE *fp
+	FILE *fp;
 	if(slen(filename) > 0x60 - 5)
 		return;
 	fp = fopen(scat(scpy(filename, symdst, slen(filename) + 1), ".sym"), "w");
