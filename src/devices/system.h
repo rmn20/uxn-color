@@ -9,13 +9,5 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-typedef struct SystemDevice {
-	Device device;
-	struct UxnScreen *screen;
-} SystemDevice;
-
 void system_inspect(Uxn *u);
-
-Uint8 system_dei(Device *d, Uint8 port);
-void system_deo(Device *d, Uint8 port);
-void system_deo_special(Device *d, Uint8 port);
+void system_deo(Uxn *u, Uint8 *d, Uint8 port);

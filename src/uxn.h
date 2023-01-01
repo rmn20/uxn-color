@@ -20,23 +20,16 @@ typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
 
-/* clang-format off */
-
-#define DEVPEEK16(o, x) { (o) = (d->dat[(x)] << 8) + d->dat[(x) + 1]; }
-#define DEVPOKE16(x, y) { d->dat[(x)] = (y) >> 8; d->dat[(x) + 1] = (y); }
+#define DEVPEEK16(o, x) \
+	{ \
+		(o) = (d->dat[(x)] << 8) + d->dat[(x) + 1]; \
+	}
+#define DEVPOKE16(x, y) \
+	{ \
+		d->dat[(x)] = (y) >> 8; \
+		d->dat[(x) + 1] = (y); \
+	}
 #define GETVECTOR(d) ((d)->dat[0] << 8 | (d)->dat[1])
-
-/* new macros */
-
-#define GETVEC(d) ((d)[0] << 8 | (d)[1])
-#define POKDEV(x, y) { d[(x)] = (y) >> 8; d[(x) + 1] = (y); }
-#define PEKDEV(o, x) { (o) = (d[(x)] << 8) + d[(x) + 1]; }
-
-/* clang-format on */
-
-typedef struct {
-	Uint8 ptr, dat[255];
-} Stack;
 
 typedef struct Device {
 	struct Uxn *u;
@@ -45,9 +38,21 @@ typedef struct Device {
 	void (*deo)(struct Device *d, Uint8);
 } Device;
 
+/* clang-format off */
+
+#define GETVEC(d) ((d)[0] << 8 | (d)[1])
+#define POKDEV(x, y) { d[(x)] = (y) >> 8; d[(x) + 1] = (y); }
+#define PEKDEV(o, x) { (o) = (d[(x)] << 8) + d[(x) + 1]; }
+
+/* clang-format on */
+
+typedef struct {
+	Uint8 dat[254], err, ptr;
+} Stack;
+
 typedef struct Uxn {
 	Uint8 *ram, *dev;
-	Stack wst, rst;
+	Stack *wst, *rst;
 	Device devold[16];
 	Uint8 (*dei)(struct Uxn *u, Uint8 addr);
 	void (*deo)(struct Uxn *u, Uint8 addr, Uint8 value);
@@ -58,7 +63,9 @@ typedef void Deo(Uxn *u, Uint8 addr, Uint8 value);
 
 int uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo);
 int uxn_eval(Uxn *u, Uint16 pc);
-int uxn_interrupt(void);
-int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);
+int uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
+
+/* TODO: remove */
+
 Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));
 #endif /* UXN_UXN_H */

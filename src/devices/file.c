@@ -1,15 +1,22 @@
+#define _XOPEN_SOURCE 500
 #include <stdio.h>
 #include <dirent.h>
+#include <errno.h>
+#include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 #include "../uxn.h"
 #include "file.h"
 
 /*
-Copyright (c) 2021 Devine Lu Linvega
-Copyright (c) 2021 Andrew Alderwick
+Copyright (c) 2021 Devine Lu Linvega, Andrew Alderwick
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +35,7 @@ typedef struct {
 		FILE_READ,
 		FILE_WRITE,
 		DIR_READ } state;
+	int outside_sandbox;
 } UxnFile;
 
 static UxnFile uxn_file[POLYFILEY];
@@ -45,6 +53,7 @@ reset(UxnFile *c)
 	}
 	c->de = NULL;
 	c->state = IDLE;
+	c->outside_sandbox = 0;
 }
 
 static Uint16
@@ -66,13 +75,24 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 static Uint16
 file_read_dir(UxnFile *c, char *dest, Uint16 len)
 {
-	static char pathname[4356];
+	static char pathname[4352];
 	char *p = dest;
 	if(c->de == NULL) c->de = readdir(c->dir);
 	for(; c->de != NULL; c->de = readdir(c->dir)) {
 		Uint16 n;
 		if(c->de->d_name[0] == '.' && c->de->d_name[1] == '\0')
 			continue;
+		if(strcmp(c->de->d_name, "..") == 0) {
+			/* hide "sandbox/.." */
+			char cwd[PATH_MAX] = {'\0'}, t[PATH_MAX] = {'\0'};
+			/* Note there's [currently] no way of chdir()ing from uxn, so $PWD
+			 * is always the sandbox top level. */
+			getcwd(cwd, sizeof(cwd));
+			/* We already checked that c->current_filename exists so don't need a wrapper. */
+			realpath(c->current_filename, t);
+			if(strcmp(cwd, t) == 0)
+				continue;
+		}
 		if(strlen(c->current_filename) + 1 + strlen(c->de->d_name) < sizeof(pathname))
 			sprintf(pathname, "%s/%s", c->current_filename, c->de->d_name);
 		else
@@ -85,16 +105,62 @@ file_read_dir(UxnFile *c, char *dest, Uint16 len)
 	return p - dest;
 }
 
+static char *
+retry_realpath(const char *file_name)
+{
+	char r[PATH_MAX] = {'\0'}, p[PATH_MAX] = {'\0'}, *x;
+	if(file_name == NULL) {
+		errno = EINVAL;
+		return NULL;
+	} else if(strlen(file_name) >= PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return NULL;
+	}
+	if(file_name[0] != '/') {
+		/* TODO: use a macro instead of '/' for absolute path first character so that other systems can work */
+		/* if a relative path, prepend cwd */
+		getcwd(p, sizeof(p));
+		strcat(p, "/"); /* TODO: use a macro instead of '/' for the path delimiter */
+	}
+	strcat(p, file_name);
+	while(realpath(p, r) == NULL) {
+		if(errno != ENOENT)
+			return NULL;
+		x = strrchr(p, '/'); /* TODO: path delimiter macro */
+		if(x)
+			*x = '\0';
+		else
+			return NULL;
+	}
+	return strdup(r);
+}
+
+static void
+file_check_sandbox(UxnFile *c)
+{
+	char *x, *rp, cwd[PATH_MAX] = {'\0'};
+	x = getcwd(cwd, sizeof(cwd));
+	rp = retry_realpath(c->current_filename);
+	if(rp == NULL || (x && strncmp(cwd, rp, strlen(cwd)) != 0)) {
+		c->outside_sandbox = 1;
+		fprintf(stderr, "file warning: blocked attempt to access %s outside of sandbox\n", c->current_filename);
+	}
+	free(rp);
+}
+
 static Uint16
-file_init(UxnFile *c, char *filename, size_t max_len)
+file_init(UxnFile *c, char *filename, size_t max_len, int override_sandbox)
 {
 	char *p = c->current_filename;
 	size_t len = sizeof(c->current_filename);
 	reset(c);
 	if(len > max_len) len = max_len;
 	while(len) {
-		if((*p++ = *filename++) == '\0')
+		if((*p++ = *filename++) == '\0') {
+			if(!override_sandbox) /* override sandbox for loading roms */
+				file_check_sandbox(c);
 			return 0;
+		}
 		len--;
 	}
 	c->current_filename[0] = '\0';
@@ -104,6 +170,7 @@ file_init(UxnFile *c, char *filename, size_t max_len)
 static Uint16
 file_read(UxnFile *c, void *dest, Uint16 len)
 {
+	if(c->outside_sandbox) return 0;
 	if(c->state != FILE_READ && c->state != DIR_READ) {
 		reset(c);
 		if((c->dir = opendir(c->current_filename)) != NULL)
@@ -122,6 +189,7 @@ static Uint16
 file_write(UxnFile *c, void *src, Uint16 len, Uint8 flags)
 {
 	Uint16 ret = 0;
+	if(c->outside_sandbox) return 0;
 	if(c->state != FILE_WRITE) {
 		reset(c);
 		if((c->f = fopen(c->current_filename, (flags & 0x01) ? "ab" : "wb")) != NULL)
@@ -138,6 +206,7 @@ static Uint16
 file_stat(UxnFile *c, void *dest, Uint16 len)
 {
 	char *basename = strrchr(c->current_filename, '/');
+	if(c->outside_sandbox) return 0;
 	if(basename != NULL)
 		basename++;
 	else
@@ -148,72 +217,66 @@ file_stat(UxnFile *c, void *dest, Uint16 len)
 static Uint16
 file_delete(UxnFile *c)
 {
-	return unlink(c->current_filename);
-}
-
-static UxnFile *
-file_instance(Device *d)
-{
-	return &uxn_file[d - &d->u->devold[DEV_FILE0]];
+	return c->outside_sandbox ? 0 : unlink(c->current_filename);
 }
 
 /* IO */
 
 void
-file_deo(Device *d, Uint8 port)
+file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 {
-	UxnFile *c = file_instance(d);
+	UxnFile *c = &uxn_file[id];
 	Uint16 addr, len, res;
 	switch(port) {
 	case 0x5:
-		DEVPEEK16(addr, 0x4);
-		DEVPEEK16(len, 0xa);
+		PEKDEV(addr, 0x4);
+		PEKDEV(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_stat(c, &d->u->ram[addr], len);
-		DEVPOKE16(0x2, res);
+		res = file_stat(c, &ram[addr], len);
+		POKDEV(0x2, res);
 		break;
 	case 0x6:
 		res = file_delete(c);
-		DEVPOKE16(0x2, res);
+		POKDEV(0x2, res);
 		break;
 	case 0x9:
-		DEVPEEK16(addr, 0x8);
-		res = file_init(c, (char *)&d->u->ram[addr], 0x10000 - addr);
-		DEVPOKE16(0x2, res);
+		PEKDEV(addr, 0x8);
+		res = file_init(c, (char *)&ram[addr], 0x10000 - addr, 0);
+		POKDEV(0x2, res);
 		break;
 	case 0xd:
-		DEVPEEK16(addr, 0xc);
-		DEVPEEK16(len, 0xa);
+		PEKDEV(addr, 0xc);
+		PEKDEV(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_read(c, &d->u->ram[addr], len);
-		DEVPOKE16(0x2, res);
+		res = file_read(c, &ram[addr], len);
+		POKDEV(0x2, res);
 		break;
 	case 0xf:
-		DEVPEEK16(addr, 0xe);
-		DEVPEEK16(len, 0xa);
+		PEKDEV(addr, 0xe);
+		PEKDEV(len, 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
-		res = file_write(c, &d->u->ram[addr], len, d->dat[0x7]);
-		DEVPOKE16(0x2, res);
+		res = file_write(c, &ram[addr], len, d[0x7]);
+		POKDEV(0x2, res);
 		break;
 	}
 }
 
 Uint8
-file_dei(Device *d, Uint8 port)
+file_dei(Uint8 id, Uint8 *d, Uint8 port)
 {
-	UxnFile *c = file_instance(d);
+	UxnFile *c = &uxn_file[id];
 	Uint16 res;
 	switch(port) {
 	case 0xc:
 	case 0xd:
-		res = file_read(c, &d->dat[port], 1);
-		DEVPOKE16(0x2, res);
+		res = file_read(c, &d[port], 1);
+		POKDEV(0x2, res);
 		break;
 	}
-	return d->dat[port];
+	return d[port];
 }
 
 /* Boot */
@@ -222,7 +285,7 @@ int
 load_rom(Uxn *u, char *filename)
 {
 	int ret;
-	file_init(uxn_file, filename, strlen(filename) + 1);
+	file_init(uxn_file, filename, strlen(filename) + 1, 1);
 	ret = file_read(uxn_file, &u->ram[PAGE_PROGRAM], 0x10000 - PAGE_PROGRAM);
 	reset(uxn_file);
 	return ret;

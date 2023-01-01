@@ -132,14 +132,14 @@ screen_mono(UxnScreen *p, Uint32 *pixels)
 /* IO */
 
 Uint8
-screen_dei(Device *d, Uint8 port)
+screen_dei(Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x2: return uxn_screen.width >> 8;
 	case 0x3: return uxn_screen.width;
 	case 0x4: return uxn_screen.height >> 8;
 	case 0x5: return uxn_screen.height;
-	default: return d->dat[port];
+	default: return d[port];
 	}
 }
 

@@ -15,13 +15,9 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 static const char *errors[] = {
-	"Working-stack underflow",
-	"Return-stack underflow",
-	"Working-stack overflow",
-	"Return-stack overflow",
-	"Working-stack division by zero",
-	"Return-stack division by zero",
-	"Execution timeout"};
+	"underflow",
+	"overflow",
+	"division by zero"};
 
 static void
 system_print(Stack *s, char *name)
@@ -38,37 +34,37 @@ system_print(Stack *s, char *name)
 void
 system_inspect(Uxn *u)
 {
-	system_print(&u->wst, "wst");
-	system_print(&u->rst, "rst");
+	system_print(u->wst, "wst");
+	system_print(u->rst, "rst");
 }
 
 int
-uxn_halt(Uxn *u, Uint8 error, Uint16 addr)
+uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 {
-	system_inspect(u);
-	fprintf(stderr, "Halted: %s#%04x, at 0x%04x\n", errors[error], u->ram[addr], addr);
+	Uint8 *d = &u->dev[0x00];
+	if(instr & 0x40)
+		u->rst->err = err;
+	else
+		u->wst->err = err;
+	if(GETVEC(d))
+		uxn_eval(u, GETVEC(d));
+	else {
+		system_inspect(u);
+		fprintf(stderr, "%s %s, by %02x at 0x%04x.\n", (instr & 0x40) ? "Return-stack" : "Working-stack", errors[err - 1], instr, addr);
+	}
 	return 0;
 }
 
 /* IO */
 
-Uint8
-system_dei(Device *d, Uint8 port)
-{
-	switch(port) {
-	case 0x2: return d->u->wst.ptr;
-	case 0x3: return d->u->rst.ptr;
-	default: return d->dat[port];
-	}
-}
-
 void
-system_deo(Device *d, Uint8 port)
+system_deo(Uxn *u, Uint8 *d, Uint8 port)
 {
 	switch(port) {
-	case 0x2: d->u->wst.ptr = d->dat[port]; break;
-	case 0x3: d->u->rst.ptr = d->dat[port]; break;
-	case 0xe: system_inspect(d->u); break;
-	default: system_deo_special(d, port);
+	case 0x2: u->wst = (Stack *)(u->ram + (d[port] ? (d[port] * 0x100) : 0x10000)); break;
+	case 0x3: u->rst = (Stack *)(u->ram + (d[port] ? (d[port] * 0x100) : 0x10100)); break;
+	case 0xe:
+		if(u->wst->ptr || u->rst->ptr) system_inspect(u);
+		break;
 	}
 }

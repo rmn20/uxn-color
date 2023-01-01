@@ -17,102 +17,60 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+#define SUPPORT 0x1c03 /* devices mask */
+
 static int
-error(char *msg, const char *err)
+emu_error(char *msg, const char *err)
 {
 	fprintf(stderr, "Error %s: %s\n", msg, err);
 	return 0;
 }
 
-static Uint8
-emu_dei(Uxn *u, Uint8 addr)
+static int
+console_input(Uxn *u, char c)
 {
-	return 0;
+	Uint8 *d = &u->dev[0x10];
+	d[0x02] = c;
+	return uxn_eval(u, GETVEC(d));
 }
 
 static void
-emu_deo(Uxn *u, Uint8 addr, Uint8 v)
+console_deo(Uint8 *d, Uint8 port)
 {
-}
-
-void
-system_deo_special(Device *d, Uint8 port)
-{
-	(void)d;
-	(void)port;
-}
-
-static void
-console_deo(Device *d, Uint8 port)
-{
-	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
-												  : 0;
+	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr :
+                                                    0;
 	if(fd) {
-		fputc(d->dat[port], fd);
+		fputc(d[port], fd);
 		fflush(fd);
 	}
 }
 
 static Uint8
-nil_dei(Device *d, Uint8 port)
+emu_dei(Uxn *u, Uint8 addr)
 {
-	return d->dat[port];
-}
-
-static void
-nil_deo(Device *d, Uint8 port)
-{
-	(void)d;
-	(void)port;
-}
-
-static int
-console_input(Uxn *u, char c)
-{
-	Device *d = &u->devold[1];
-	d->dat[0x2] = c;
-	return uxn_eval(u, GETVECTOR(d));
-}
-
-static void
-run(Uxn *u)
-{
-	Device *d = &u->devold[0];
-	while(!d->dat[0xf]) {
-		int c = fgetc(stdin);
-		if(c != EOF)
-			console_input(u, (Uint8)c);
+	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	switch(d) {
+	case 0xa0: return file_dei(0, &u->dev[d], p);
+	case 0xb0: return file_dei(1, &u->dev[d], p);
+	case 0xc0: return datetime_dei(&u->dev[d], p);
 	}
+	return u->dev[addr];
 }
 
-int
-uxn_interrupt(void)
+static void
+emu_deo(Uxn *u, Uint8 addr, Uint8 v)
 {
-	return 1;
-}
-
-static int
-start(Uxn *u)
-{
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
-		return error("Boot", "Failed");
-	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
-	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
-	/* empty    */ uxn_port(u, 0x2, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x3, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x4, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x5, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x6, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x7, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x8, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file0    */ uxn_port(u, 0xa, file_dei, file_deo);
-	/* file1    */ uxn_port(u, 0xb, file_dei, file_deo);
-	/* datetime */ uxn_port(u, 0xc, datetime_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0xd, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0xe, nil_dei, nil_deo);
-	/* empty    */ uxn_port(u, 0xf, nil_dei, nil_deo);
-	return 1;
+	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	Uint16 mask = 0x1 << (d >> 4);
+	u->dev[addr] = v;
+	switch(d) {
+	case 0x00: system_deo(u, &u->dev[d], p); break;
+	case 0x10: console_deo(&u->dev[d], p); break;
+	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
+	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
+	}
+	if(p == 0x01 && !(SUPPORT & mask))
+		fprintf(stderr, "Warning: Incompatible emulation, device: %02x.\n", d);
 }
 
 int
@@ -121,19 +79,22 @@ main(int argc, char **argv)
 	Uxn u;
 	int i;
 	if(argc < 2)
-		return error("Usage", "uxncli game.rom args");
-	if(!start(&u))
-		return error("Start", "Failed");
+		return emu_error("Usage", "uxncli game.rom args");
+	if(!uxn_boot(&u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
+		return emu_error("Boot", "Failed");
 	if(!load_rom(&u, argv[1]))
-		return error("Load", "Failed");
-	fprintf(stderr, "Loaded %s\n", argv[1]);
+		return emu_error("Load", "Failed");
 	if(!uxn_eval(&u, PAGE_PROGRAM))
-		return error("Init", "Failed");
+		return emu_error("Init", "Failed");
 	for(i = 2; i < argc; i++) {
 		char *p = argv[i];
 		while(*p) console_input(&u, *p++);
 		console_input(&u, '\n');
 	}
-	run(&u);
+	while(!u.dev[0x0f]) {
+		int c = fgetc(stdin);
+		if(c != EOF)
+			console_input(&u, (Uint8)c);
+	}
 	return 0;
 }

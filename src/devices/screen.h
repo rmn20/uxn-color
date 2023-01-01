@@ -31,6 +31,6 @@ void screen_clear(UxnScreen *p, Layer *layer);
 void screen_redraw(UxnScreen *p, Uint32 *pixels);
 void screen_mono(UxnScreen *p, Uint32 *pixels);
 
-Uint8 screen_dei(Device *d, Uint8 port);
+Uint8 screen_dei(Uint8 *d, Uint8 port);
 void screen_deo(Device *d, Uint8 port);
 int clamp(int val, int min, int max);

@@ -63,6 +63,25 @@ error(char *msg, const char *err)
 	return 0;
 }
 
+static int
+console_input(Uxn *u, char c)
+{
+	Uint8 *d = &u->dev[0x10];
+	d[0x02] = c;
+	return uxn_eval(u, GETVEC(d));
+}
+
+static void
+console_deo(Uint8 *d, Uint8 port)
+{
+	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
+												  : 0;
+	if(fd) {
+		fputc(d[port], fd);
+		fflush(fd);
+	}
+}
+
 #pragma mark - Generics
 
 static void
@@ -179,12 +198,34 @@ init(void)
 static Uint8
 emu_dei(Uxn *u, Uint8 addr)
 {
+	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	switch(d) {
+	case 0x20: return screen_dei(&u->dev[d], p); 
+	case 0xa0: return file_dei(0, &u->dev[d], p);
+	case 0xb0: return file_dei(1, &u->dev[d], p);
+	case 0xc0: return datetime_dei(&u->dev[d], p);
+	}
+	return u->dev[addr];
 	return 0;
 }
 
 static void
 emu_deo(Uxn *u, Uint8 addr, Uint8 v)
 {
+Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	Uint16 mask = 0x1 << (d >> 4);
+	u->dev[addr] = v;
+	switch(d) {
+	case 0x00:
+		system_deo(u, &u->dev[d], p);
+		if(p > 0x7 && p < 0xe)
+			screen_palette(&uxn_screen, &u->dev[0x8]);
+		break;
+	case 0x10: console_deo(&u->dev[d], p); break;
+	/* case 0x20: screen_deo(u->ram, &u->dev[d], p); break; */
+	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
+	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
+	}
 }
 
 void
@@ -192,17 +233,6 @@ system_deo_special(Device *d, Uint8 port)
 {
 	if(port > 0x7 && port < 0xe)
 		screen_palette(&uxn_screen, &d->dat[0x8]);
-}
-
-static void
-console_deo(Device *d, Uint8 port)
-{
-	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
-												  : 0;
-	if(fd) {
-		fputc(d->dat[port], fd);
-		fflush(fd);
-	}
 }
 
 static Uint8
@@ -230,19 +260,6 @@ audio_deo(Device *d, Uint8 port)
 	}
 }
 
-static Uint8
-nil_dei(Device *d, Uint8 port)
-{
-	return d->dat[port];
-}
-
-static void
-nil_deo(Device *d, Uint8 port)
-{
-	(void)d;
-	(void)port;
-}
-
 /* Boot */
 
 static int
@@ -264,26 +281,10 @@ static int
 start(Uxn *u, char *rom)
 {
 	free(u->ram);
-	if(!uxn_boot(u, calloc(0x10300, 1), emu_dei, emu_deo))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");
-	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
-	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);
-	/* screen   */ devscreen = uxn_port(u, 0x2, screen_dei, screen_deo);
-	/* audio0   */ devaudio0 = uxn_port(u, 0x3, audio_dei, audio_deo);
-	/* audio1   */ uxn_port(u, 0x4, audio_dei, audio_deo);
-	/* audio2   */ uxn_port(u, 0x5, audio_dei, audio_deo);
-	/* audio3   */ uxn_port(u, 0x6, audio_dei, audio_deo);
-	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
-	/* control  */ uxn_port(u, 0x8, nil_dei, nil_deo);
-	/* mouse    */ uxn_port(u, 0x9, nil_dei, nil_deo);
-	/* file0    */ uxn_port(u, 0xa, file_dei, file_deo);
-	/* file1    */ uxn_port(u, 0xb, file_dei, file_deo);
-	/* datetime */ uxn_port(u, 0xc, datetime_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xd, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xe, nil_dei, nil_deo);
-	/* unused   */ uxn_port(u, 0xf, nil_dei, nil_deo);
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return error("Boot", "Failed to start rom.");
@@ -384,14 +385,6 @@ do_shortcut(Uxn *u, SDL_Event *event)
 }
 
 static int
-console_input(Uxn *u, char c)
-{
-	Device *d = &u->devold[1];
-	d->dat[0x2] = c;
-	return uxn_eval(u, GETVECTOR(d));
-}
-
-static int
 handle_events(Uxn *u)
 {
 	SDL_Event event;
@@ -408,8 +401,8 @@ handle_events(Uxn *u)
 		}
 		/* Audio */
 		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			Device *d = devaudio0 + (event.type - audio0_event);
-			uxn_eval(u, GETVECTOR(d));
+			/* Device *d = devaudio0 + (event.type - audio0_event);
+			uxn_eval(u, GETVECTOR(d)); */
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
@@ -467,7 +460,7 @@ run(Uxn *u)
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
-		uxn_eval(u, GETVECTOR(devscreen));
+		uxn_eval(u, GETVEC(&u->dev[0x20]));
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
 		now = SDL_GetPerformanceCounter();
@@ -477,12 +470,6 @@ run(Uxn *u)
 		}
 	}
 	return error("SDL_WaitEvent", SDL_GetError());
-}
-
-int
-uxn_interrupt(void)
-{
-	return !SDL_QuitRequested();
 }
 
 int

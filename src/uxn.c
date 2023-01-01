@@ -31,6 +31,9 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEVW8OLD(x, y) { dev->dat[(x) & 0xf] = y; dev->deo(dev, (x) & 0x0f); }
 #define DEVWOLD(d, x, y) { dev = (d); if(bs) { DEVW8OLD((x), (y) >> 8); DEVW8OLD((x) + 1, (y)); } else { DEVW8OLD((x), (y)) } }
 
+#define DEVR(o, x) { o = u->dei(u, x); if (bs) o = (o << 8) + u->dei(u, ((x) + 1) & 0xFF); }
+#define DEVW(x, y) { if (bs) { u->deo(u, (x), (y) >> 8); u->deo(u, ((x) + 1) & 0xFF, (y)); } else { u->deo(u, x, (y)); } }
+
 #define WARP(x) { if(bs) pc = (x); else pc += (Sint8)(x); }
 #define LIMIT 0x40000 /* around 3 ms */
 
@@ -41,21 +44,16 @@ uxn_eval(Uxn *u, Uint16 pc)
 	unsigned int limit = LIMIT;
 	Uint8 kptr, *sp;
 	Stack *src, *dst;
-	Device *dev;
 	if(!pc || u->devold[0].dat[0xf]) return 0;
 	while((instr = u->ram[pc++])) {
 		if(!limit--) {
-			if(!uxn_interrupt()) {
-				errcode = 6;
-				goto timeout;
-			}
 			limit = LIMIT;
 		}
 		/* Return Mode */
 		if(instr & 0x40) {
-			src = &u->rst; dst = &u->wst;
+			src = u->rst; dst = u->wst;
 		} else {
-			src = &u->wst; dst = &u->rst;
+			src = u->wst; dst = u->rst;
 		}
 		/* Keep Mode */
 		if(instr & 0x80) {
@@ -92,8 +90,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a; POKE(c, b) break;
 		case 0x14: /* LDA */ POP16(a) PEEK(b, a) PUSH(src, b) break;
 		case 0x15: /* STA */ POP16(a) POP(b) POKE(a, b) break;
-		case 0x16: /* DEI */ POP8(a) DEVROLD(b, &u->devold[a >> 4], a) PUSH(src, b) break;
-		case 0x17: /* DEO */ POP8(a) POP(b) DEVWOLD(&u->devold[a >> 4], a, b) break;
+		case 0x16: /* DEI */ POP8(a) DEVR(b, a) PUSH(src, b) break;
+		case 0x17: /* DEO */ POP8(a) POP(b) DEVW(a, b) break;
 		/* Arithmetic */
 		case 0x18: /* ADD */ POP(a) POP(b) PUSH(src, b + a) break;
 		case 0x19: /* SUB */ POP(a) POP(b) PUSH(src, b - a) break;
@@ -106,13 +104,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 		}
 	}
 	return 1;
-
 err:
-	/* set 1 in errcode if it involved the return stack instead of the working stack */
-	/*        (stack overflow & ( opcode was STH / JSR )) ^ Return Mode */
-	errcode |= ((errcode >> 1 & ((instr & 0x1e) == 0x0e)) ^ instr >> 6) & 1;
-timeout:
-	return uxn_halt(u, errcode, pc - 1);
+	return uxn_halt(u, instr, errcode, pc - 1);
 }
 
 /* clang-format on */
@@ -125,6 +118,8 @@ uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo)
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
 	u->ram = ram;
+	u->wst = (Stack *)(ram + 0x10000);
+	u->rst = (Stack *)(ram + 0x10100);
 	u->dev = (Uint8 *)(ram + 0x10200);
 	u->dei = dei;
 	u->deo = deo;
