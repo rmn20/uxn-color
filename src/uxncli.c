@@ -69,7 +69,7 @@ nil_deo(Device *d, Uint8 port)
 static int
 console_input(Uxn *u, char c)
 {
-	Device *d = &u->dev[1];
+	Device *d = &u->devold[1];
 	d->dat[0x2] = c;
 	return uxn_eval(u, GETVECTOR(d));
 }
@@ -77,7 +77,7 @@ console_input(Uxn *u, char c)
 static void
 run(Uxn *u)
 {
-	Device *d = &u->dev[0];
+	Device *d = &u->devold[0];
 	while(!d->dat[0xf]) {
 		int c = fgetc(stdin);
 		if(c != EOF)

@@ -154,7 +154,7 @@ file_delete(UxnFile *c)
 static UxnFile *
 file_instance(Device *d)
 {
-	return &uxn_file[d - &d->u->dev[DEV_FILE0]];
+	return &uxn_file[d - &d->u->devold[DEV_FILE0]];
 }
 
 /* IO */
