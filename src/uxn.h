@@ -26,6 +26,12 @@ typedef unsigned int Uint32;
 #define DEVPOKE16(x, y) { d->dat[(x)] = (y) >> 8; d->dat[(x) + 1] = (y); }
 #define GETVECTOR(d) ((d)->dat[0] << 8 | (d)->dat[1])
 
+/* new macros */
+
+#define GETVEC(d) ((d)[0] << 8 | (d)[1])
+#define POKDEV(x, y) { d[(x)] = (y) >> 8; d[(x) + 1] = (y); }
+#define PEKDEV(o, x) { (o) = (d[(x)] << 8) + d[(x) + 1]; }
+
 /* clang-format on */
 
 typedef struct {

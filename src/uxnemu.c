@@ -402,15 +402,13 @@ handle_events(Uxn *u)
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
-			mouse_pos(devmouse,
-				clamp(event.motion.x - PAD, 0, uxn_screen.width - 1),
-				clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
+			mouse_pos(u, devmouse->dat, clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
 		else if(event.type == SDL_MOUSEBUTTONUP)
-			mouse_up(devmouse, SDL_BUTTON(event.button.button));
+			mouse_up(u, devmouse->dat, SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEBUTTONDOWN)
-			mouse_down(devmouse, SDL_BUTTON(event.button.button));
+			mouse_down(u, devmouse->dat, SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEWHEEL)
-			mouse_scroll(devmouse, event.wheel.x, event.wheel.y);
+			mouse_scroll(u, devmouse->dat, event.wheel.x, event.wheel.y);
 		/* Controller */
 		else if(event.type == SDL_TEXTINPUT)
 			controller_key(devctrl, event.text.text[0]);

@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2021 Devine Lu Linvega
-Copyright (c) 2021 Andrew Alderwick
+Copyright (c) 2021 Devine Lu Linvega, Andrew Alderwick
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -10,7 +9,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-void mouse_down(Device *d, Uint8 mask);
-void mouse_up(Device *d, Uint8 mask);
-void mouse_pos(Device *d, Uint16 x, Uint16 y);
-void mouse_scroll(Device *d, Uint16 x, Uint16 y);
+void mouse_down(Uxn *u, Uint8 *d, Uint8 mask);
+void mouse_up(Uxn *u, Uint8 *d, Uint8 mask);
+void mouse_pos(Uxn *u, Uint8 *d, Uint16 x, Uint16 y);
+void mouse_scroll(Uxn *u, Uint8 *d, Uint16 x, Uint16 y);
