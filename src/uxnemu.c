@@ -82,6 +82,38 @@ console_deo(Uint8 *d, Uint8 port)
 	}
 }
 
+static Uint8
+emu_dei(Uxn *u, Uint8 addr)
+{
+	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	switch(d) {
+	case 0x20: return screen_dei(&u->dev[d], p);
+	case 0xa0: return file_dei(0, &u->dev[d], p);
+	case 0xb0: return file_dei(1, &u->dev[d], p);
+	case 0xc0: return datetime_dei(&u->dev[d], p);
+	}
+	return u->dev[addr];
+	return 0;
+}
+
+static void
+emu_deo(Uxn *u, Uint8 addr, Uint8 v)
+{
+	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	u->dev[addr] = v;
+	switch(d) {
+	case 0x00:
+		system_deo(u, &u->dev[d], p);
+		if(p > 0x7 && p < 0xe)
+			screen_palette(&uxn_screen, &u->dev[0x8]);
+		break;
+	case 0x10: console_deo(&u->dev[d], p); break;
+	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
+	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
+	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
+	}
+}
+
 #pragma mark - Generics
 
 static void
@@ -127,7 +159,7 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
-int
+static int
 set_size(void)
 {
 	gRect.x = PAD;
@@ -196,45 +228,6 @@ init(void)
 #pragma mark - Devices
 
 static Uint8
-emu_dei(Uxn *u, Uint8 addr)
-{
-	Uint8 p = addr & 0x0f, d = addr & 0xf0;
-	switch(d) {
-	case 0x20: return screen_dei(&u->dev[d], p);
-	case 0xa0: return file_dei(0, &u->dev[d], p);
-	case 0xb0: return file_dei(1, &u->dev[d], p);
-	case 0xc0: return datetime_dei(&u->dev[d], p);
-	}
-	return u->dev[addr];
-	return 0;
-}
-
-static void
-emu_deo(Uxn *u, Uint8 addr, Uint8 v)
-{
-	Uint8 p = addr & 0x0f, d = addr & 0xf0;
-	u->dev[addr] = v;
-	switch(d) {
-	case 0x00:
-		system_deo(u, &u->dev[d], p);
-		if(p > 0x7 && p < 0xe)
-			screen_palette(&uxn_screen, &u->dev[0x8]);
-		break;
-	case 0x10: console_deo(&u->dev[d], p); break;
-	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
-	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
-	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
-	}
-}
-
-void
-system_deo_special(Device *d, Uint8 port)
-{
-	if(port > 0x7 && port < 0xe)
-		screen_palette(&uxn_screen, &d->dat[0x8]);
-}
-
-static Uint8
 audio_dei(Device *d, Uint8 port)
 {
 	int instance = d - devaudio0;
@@ -262,31 +255,17 @@ audio_deo(Device *d, Uint8 port)
 /* Boot */
 
 static int
-load(Uxn *u, char *rom)
-{
-	SDL_RWops *f;
-	int r;
-	if(!(f = SDL_RWFromFile(rom, "rb"))) return 0;
-	r = f->read(f, u->ram + PAGE_PROGRAM, 1, 0x10000 - PAGE_PROGRAM);
-	f->close(f);
-	if(r < 1) return 0;
-	fprintf(stderr, "Loaded %s\n", rom);
-	fflush(stderr);
-	SDL_SetWindowTitle(gWindow, rom);
-	return 1;
-}
-
-static int
 start(Uxn *u, char *rom)
 {
 	free(u->ram);
 	if(!uxn_boot(u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
-	if(!load(u, rom))
+	if(!load_rom(u, rom))
 		return error("Boot", "Failed to load rom.");
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))
-		return error("Boot", "Failed to start rom.");
+		return error("Boot", "Failed to eval rom.");
+	SDL_SetWindowTitle(gWindow, rom);
 	return 1;
 }
 
