@@ -48,7 +48,7 @@ static SDL_Thread *stdin_thread;
 
 /* devices */
 
-static Device *devscreen, *devmouse, *devctrl, *devaudio0;
+static Device *devscreen, *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
@@ -265,8 +265,8 @@ start(Uxn *u, char *rom)
 	/* audio2   */ uxn_port(u, 0x5, audio_dei, audio_deo);
 	/* audio3   */ uxn_port(u, 0x6, audio_dei, audio_deo);
 	/* unused   */ uxn_port(u, 0x7, nil_dei, nil_deo);
-	/* control  */ devctrl = uxn_port(u, 0x8, nil_dei, nil_deo);
-	/* mouse    */ devmouse = uxn_port(u, 0x9, nil_dei, nil_deo);
+	/* control  */ uxn_port(u, 0x8, nil_dei, nil_deo);
+	/* mouse    */ uxn_port(u, 0x9, nil_dei, nil_deo);
 	/* file0    */ uxn_port(u, 0xa, file_dei, file_deo);
 	/* file1    */ uxn_port(u, 0xb, file_dei, file_deo);
 	/* datetime */ uxn_port(u, 0xc, datetime_dei, nil_deo);
@@ -402,22 +402,22 @@ handle_events(Uxn *u)
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
-			mouse_pos(u, devmouse->dat, clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
+			mouse_pos(u, u->dev[9].dat, clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
 		else if(event.type == SDL_MOUSEBUTTONUP)
-			mouse_up(u, devmouse->dat, SDL_BUTTON(event.button.button));
+			mouse_up(u, u->dev[9].dat, SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEBUTTONDOWN)
-			mouse_down(u, devmouse->dat, SDL_BUTTON(event.button.button));
+			mouse_down(u, u->dev[9].dat, SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEWHEEL)
-			mouse_scroll(u, devmouse->dat, event.wheel.x, event.wheel.y);
+			mouse_scroll(u, u->dev[9].dat, event.wheel.x, event.wheel.y);
 		/* Controller */
 		else if(event.type == SDL_TEXTINPUT)
-			controller_key(u, devctrl->dat, event.text.text[0]);
+			controller_key(u, u->dev[8].dat, event.text.text[0]);
 		else if(event.type == SDL_KEYDOWN) {
 			int ksym;
 			if(get_key(&event))
-				controller_key(u, devctrl->dat, get_key(&event));
+				controller_key(u, u->dev[8].dat, get_key(&event));
 			else if(get_button(&event))
-				controller_down(u, devctrl->dat, get_button(&event));
+				controller_down(u, u->dev[8].dat, get_button(&event));
 			else
 				do_shortcut(u, &event);
 			ksym = event.key.keysym.sym;
@@ -425,17 +425,17 @@ handle_events(Uxn *u)
 				return 1;
 			}
 		} else if(event.type == SDL_KEYUP)
-			controller_up(u, devctrl->dat, get_button(&event));
+			controller_up(u, u->dev[8].dat, get_button(&event));
 		else if(event.type == SDL_JOYAXISMOTION) {
 			Uint8 vec = get_vector_joystick(&event);
 			if(!vec)
-				controller_up(u, devctrl->dat, (0x03 << (!event.jaxis.axis * 2)) << 4);
+				controller_up(u, u->dev[8].dat, (3 << (!event.jaxis.axis * 2)) << 4);
 			else
-				controller_down(u, devctrl->dat, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
+				controller_down(u, u->dev[8].dat, (1 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
 		} else if(event.type == SDL_JOYBUTTONDOWN)
-			controller_down(u, devctrl->dat, get_button_joystick(&event));
+			controller_down(u, u->dev[8].dat, get_button_joystick(&event));
 		else if(event.type == SDL_JOYBUTTONUP)
-			controller_up(u, devctrl->dat, get_button_joystick(&event));
+			controller_up(u, u->dev[8].dat, get_button_joystick(&event));
 		/* Console */
 		else if(event.type == stdin_event)
 			console_input(u, event.cbutton.button);
