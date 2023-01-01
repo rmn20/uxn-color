@@ -41,14 +41,10 @@ int
 uxn_eval(Uxn *u, Uint16 pc)
 {
 	unsigned int a, b, c, j, k, bs, instr, errcode;
-	unsigned int limit = LIMIT;
 	Uint8 kptr, *sp;
 	Stack *src, *dst;
-	if(!pc || u->devold[0].dat[0xf]) return 0;
+	if(!pc || u->dev[0x0f]) return 0;
 	while((instr = u->ram[pc++])) {
-		if(!limit--) {
-			limit = LIMIT;
-		}
 		/* Return Mode */
 		if(instr & 0x40) {
 			src = u->rst; dst = u->wst;
@@ -124,14 +120,4 @@ uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo)
 	u->dei = dei;
 	u->deo = deo;
 	return 1;
-}
-
-Device *
-uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *d, Uint8 port), void (*deofn)(Device *d, Uint8 port))
-{
-	Device *d = &u->devold[id];
-	d->u = u;
-	d->dei = deifn;
-	d->deo = deofn;
-	return d;
 }

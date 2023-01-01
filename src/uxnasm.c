@@ -451,12 +451,12 @@ review(char *filename)
 static void
 writesym(char *filename)
 {
+	int i;
 	char symdst[0x60];
 	FILE *fp;
 	if(slen(filename) > 0x60 - 5)
 		return;
 	fp = fopen(scat(scpy(filename, symdst, slen(filename) + 1), ".sym"), "w");
-	int i;
 	if(fp != NULL) {
 		for(i = 0; i < p.llen; i++) {
 			fwrite(&p.labels[i].addr + 1, 1, 1, fp);

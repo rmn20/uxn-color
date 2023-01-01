@@ -48,7 +48,7 @@ static SDL_Thread *stdin_thread;
 
 /* devices */
 
-static Device *devscreen, *devaudio0;
+static Device  *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
@@ -213,7 +213,6 @@ static void
 emu_deo(Uxn *u, Uint8 addr, Uint8 v)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
-	Uint16 mask = 0x1 << (d >> 4);
 	u->dev[addr] = v;
 	switch(d) {
 	case 0x00:
@@ -450,11 +449,10 @@ handle_events(Uxn *u)
 static int
 run(Uxn *u)
 {
-	Device *devsys = &u->devold[0];
 	Uint64 now = SDL_GetPerformanceCounter(), frame_end, frame_interval = SDL_GetPerformanceFrequency() / 60;
 	for(;;) {
 		/* .System/halt */
-		if(devsys->dat[0xf])
+		if(u->dev[0x0f])
 			return error("Run", "Ended.");
 		frame_end = now + frame_interval;
 		exec_deadline = now + deadline_interval;
