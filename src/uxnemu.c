@@ -411,13 +411,13 @@ handle_events(Uxn *u)
 			mouse_scroll(u, devmouse->dat, event.wheel.x, event.wheel.y);
 		/* Controller */
 		else if(event.type == SDL_TEXTINPUT)
-			controller_key(devctrl, event.text.text[0]);
+			controller_key(u, devctrl->dat, event.text.text[0]);
 		else if(event.type == SDL_KEYDOWN) {
 			int ksym;
 			if(get_key(&event))
-				controller_key(devctrl, get_key(&event));
+				controller_key(u, devctrl->dat, get_key(&event));
 			else if(get_button(&event))
-				controller_down(devctrl, get_button(&event));
+				controller_down(u, devctrl->dat, get_button(&event));
 			else
 				do_shortcut(u, &event);
 			ksym = event.key.keysym.sym;
@@ -425,17 +425,17 @@ handle_events(Uxn *u)
 				return 1;
 			}
 		} else if(event.type == SDL_KEYUP)
-			controller_up(devctrl, get_button(&event));
+			controller_up(u, devctrl->dat, get_button(&event));
 		else if(event.type == SDL_JOYAXISMOTION) {
 			Uint8 vec = get_vector_joystick(&event);
 			if(!vec)
-				controller_up(devctrl, (0x03 << (!event.jaxis.axis * 2)) << 4);
+				controller_up(u, devctrl->dat, (0x03 << (!event.jaxis.axis * 2)) << 4);
 			else
-				controller_down(devctrl, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
+				controller_down(u, devctrl->dat, (0x01 << ((vec + !event.jaxis.axis * 2) - 1)) << 4);
 		} else if(event.type == SDL_JOYBUTTONDOWN)
-			controller_down(devctrl, get_button_joystick(&event));
+			controller_down(u, devctrl->dat, get_button_joystick(&event));
 		else if(event.type == SDL_JOYBUTTONUP)
-			controller_up(devctrl, get_button_joystick(&event));
+			controller_up(u, devctrl->dat, get_button_joystick(&event));
 		/* Console */
 		else if(event.type == stdin_event)
 			console_input(u, event.cbutton.button);
