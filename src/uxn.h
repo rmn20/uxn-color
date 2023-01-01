@@ -46,7 +46,7 @@ typedef struct Device {
 } Device;
 
 typedef struct Uxn {
-	Uint8 *ram;
+	Uint8 *ram, *dev;
 	Stack wst, rst;
 	Device devold[16];
 	Uint8 (*dei)(struct Uxn *u, Uint8 addr);

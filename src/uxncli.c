@@ -94,7 +94,7 @@ uxn_interrupt(void)
 static int
 start(Uxn *u)
 {
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8)), emu_dei, emu_deo))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
 		return error("Boot", "Failed");
 	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);

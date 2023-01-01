@@ -264,7 +264,7 @@ static int
 start(Uxn *u, char *rom)
 {
 	free(u->ram);
-	if(!uxn_boot(u, calloc(0x10000, 1), emu_dei, emu_deo))
+	if(!uxn_boot(u, calloc(0x10300, 1), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");

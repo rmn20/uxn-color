@@ -125,6 +125,9 @@ uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo)
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
 	u->ram = ram;
+	u->dev = (Uint8 *)(ram + 0x10200);
+	u->dei = dei;
+	u->deo = deo;
 	return 1;
 }
 
