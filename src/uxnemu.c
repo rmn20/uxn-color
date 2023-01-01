@@ -176,6 +176,17 @@ init(void)
 
 #pragma mark - Devices
 
+static Uint8
+emu_dei(Uxn *u, Uint8 addr)
+{
+	return 0;
+}
+
+static void
+emu_deo(Uxn *u, Uint8 addr, Uint8 v)
+{
+}
+
 void
 system_deo_special(Device *d, Uint8 port)
 {
@@ -253,7 +264,7 @@ static int
 start(Uxn *u, char *rom)
 {
 	free(u->ram);
-	if(!uxn_boot(u, calloc(0x10000, 1)))
+	if(!uxn_boot(u, calloc(0x10000, 1), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
 	if(!load(u, rom))
 		return error("Boot", "Failed to load rom.");

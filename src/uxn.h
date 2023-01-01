@@ -49,9 +49,14 @@ typedef struct Uxn {
 	Uint8 *ram;
 	Stack wst, rst;
 	Device dev[16];
+	Uint8 (*dei)(struct Uxn *u, Uint8 addr);
+	void (*deo)(struct Uxn *u, Uint8 addr, Uint8 value);
 } Uxn;
 
-int uxn_boot(Uxn *u, Uint8 *ram);
+typedef Uint8 Dei(Uxn *u, Uint8 addr);
+typedef void Deo(Uxn *u, Uint8 addr, Uint8 value);
+
+int uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo);
 int uxn_eval(Uxn *u, Uint16 pc);
 int uxn_interrupt(void);
 int uxn_halt(Uxn *u, Uint8 error, Uint16 addr);

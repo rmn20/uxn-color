@@ -24,6 +24,17 @@ error(char *msg, const char *err)
 	return 0;
 }
 
+static Uint8
+emu_dei(Uxn *u, Uint8 addr)
+{
+	return 0;
+}
+
+static void
+emu_deo(Uxn *u, Uint8 addr, Uint8 v)
+{
+}
+
 void
 system_deo_special(Device *d, Uint8 port)
 {
@@ -83,7 +94,7 @@ uxn_interrupt(void)
 static int
 start(Uxn *u)
 {
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8))))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10000, sizeof(Uint8)), emu_dei, emu_deo))
 		return error("Boot", "Failed");
 	/* system   */ uxn_port(u, 0x0, system_dei, system_deo);
 	/* console  */ uxn_port(u, 0x1, nil_dei, console_deo);

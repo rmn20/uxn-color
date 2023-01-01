@@ -116,7 +116,7 @@ timeout:
 /* clang-format on */
 
 int
-uxn_boot(Uxn *u, Uint8 *ram)
+uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo)
 {
 	Uint32 i;
 	char *cptr = (char *)u;
