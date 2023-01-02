@@ -46,8 +46,14 @@ uxn_eval(Uxn *u, Uint16 pc)
 		/* Short Mode */
 		bs = instr & 0x20;
 		switch(instr & 0x1f) {
-		case 0x00: /* LIT */ if(bs) { PEEK16(a, pc) PUSH16(src, a) pc += 2; }
-		                     else   { a = u->ram[pc]; PUSH8(src, a) pc++; } break;
+		case 0x00:
+		/* Literals/Calls */
+		if(instr == 0x20)      /* JMI  */ { sp = &u->wst->ptr; PEEK16(a, pc) pc = a; }
+		else if(instr == 0x40) /* JCI  */ { sp = &u->wst->ptr; src = u->wst; POP8(a) PEEK16(b, pc) pc = a ? (Uint16)b : pc + 2; }
+		else if(instr == 0x60) /* JSI  */ { sp = &u->wst->ptr; PEEK16(a, pc) PUSH16(u->rst, pc + 2) pc = a; }
+		else if(bs)            /* LIT2 */ { PEEK16(a, pc) PUSH16(src, a) pc = pc + 2; }
+		else                   /* LITr */ { a = u->ram[pc++]; PUSH8(src, a) } break;
+		/* ALU */
 		case 0x01: /* INC */ POP(a) PUSH(src, a + 1) break;
 		case 0x02: /* POP */ POP(a) break;
 		case 0x03: /* NIP */ POP(a) POP(b) PUSH(src, a) break;
