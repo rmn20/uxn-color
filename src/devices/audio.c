@@ -2,8 +2,7 @@
 #include "audio.h"
 
 /*
-Copyright (c) 2021 Devine Lu Linvega
-Copyright (c) 2021 Andrew Alderwick
+Copyright (c) 2021-2023 Devine Lu Linvega, Andrew Alderwick
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -73,21 +72,21 @@ audio_render(int instance, Sint16 *sample, Sint16 *end)
 }
 
 void
-audio_start(int instance, Device *d)
+audio_start(int instance, Uint8 *d, Uxn *u)
 {
 	UxnAudio *c = &uxn_audio[instance];
 	Uint16 addr, adsr;
 	Uint8 pitch;
-	DEVPEEK16(adsr, 0x8);
-	DEVPEEK16(c->len, 0xa);
-	DEVPEEK16(addr, 0xc);
+	PEKDEV(adsr, 0x8);
+	PEKDEV(c->len, 0xa);
+	PEKDEV(addr, 0xc);
 	if(c->len > 0x10000 - addr)
 		c->len = 0x10000 - addr;
-	c->addr = &d->u->ram[addr];
-	c->volume[0] = d->dat[0xe] >> 4;
-	c->volume[1] = d->dat[0xe] & 0xf;
-	c->repeat = !(d->dat[0xf] & 0x80);
-	pitch = d->dat[0xf] & 0x7f;
+	c->addr = &u->ram[addr];
+	c->volume[0] = d[0xe] >> 4;
+	c->volume[1] = d[0xe] & 0xf;
+	c->repeat = !(d[0xf] & 0x80);
+	pitch = d[0xf] & 0x7f;
 	if(pitch < 108 && c->len)
 		c->advance = advances[pitch % 12] >> (8 - pitch / 12);
 	else {

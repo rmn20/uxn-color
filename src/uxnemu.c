@@ -23,7 +23,7 @@
 #pragma clang diagnostic pop
 
 /*
-Copyright (c) 2021 Devine Lu Linvega
+Copyright (c) 2021-2023 Devine Lu Linvega, Andrew Alderwick
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -48,7 +48,6 @@ static SDL_Thread *stdin_thread;
 
 /* devices */
 
-static Device *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
@@ -83,11 +82,38 @@ console_deo(Uint8 *d, Uint8 port)
 }
 
 static Uint8
+audio_dei(int instance, Uint8 *d, Uint8 port)
+{
+	if(!audio_id) return d[port];
+	switch(port) {
+	case 0x4: return audio_get_vu(instance);
+	case 0x2: POKDEV(0x2, audio_get_position(instance)); /* fall through */
+	default: return d[port];
+	}
+}
+
+static void
+audio_deo(int instance, Uint8 *d, Uint8 port, Uxn *u)
+{
+	if(!audio_id) return;
+	if(port == 0xf) {
+		SDL_LockAudioDevice(audio_id);
+		audio_start(instance, d, u);
+		SDL_UnlockAudioDevice(audio_id);
+		SDL_PauseAudioDevice(audio_id, 0);
+	}
+}
+
+static Uint8
 emu_dei(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
 	case 0x20: return screen_dei(&u->dev[d], p);
+	case 0x30: return audio_dei(0, &u->dev[d], p);
+	case 0x40: return audio_dei(1, &u->dev[d], p);
+	case 0x50: return audio_dei(2, &u->dev[d], p);
+	case 0x60: return audio_dei(3, &u->dev[d], p);
 	case 0xa0: return file_dei(0, &u->dev[d], p);
 	case 0xb0: return file_dei(1, &u->dev[d], p);
 	case 0xc0: return datetime_dei(&u->dev[d], p);
@@ -109,6 +135,10 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 v)
 		break;
 	case 0x10: console_deo(&u->dev[d], p); break;
 	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
+	case 0x30: audio_deo(0, &u->dev[d], p, u); break;
+	case 0x40: audio_deo(1, &u->dev[d], p, u); break;
+	case 0x50: audio_deo(2, &u->dev[d], p, u); break;
+	case 0x60: audio_deo(3, &u->dev[d], p, u); break;
 	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
 	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
 	}
@@ -226,31 +256,6 @@ init(void)
 }
 
 #pragma mark - Devices
-
-static Uint8
-audio_dei(Device *d, Uint8 port)
-{
-	int instance = d - devaudio0;
-	if(!audio_id) return d->dat[port];
-	switch(port) {
-	case 0x4: return audio_get_vu(instance);
-	case 0x2: DEVPOKE16(0x2, audio_get_position(instance)); /* fall through */
-	default: return d->dat[port];
-	}
-}
-
-static void
-audio_deo(Device *d, Uint8 port)
-{
-	int instance = d - devaudio0;
-	if(!audio_id) return;
-	if(port == 0xf) {
-		SDL_LockAudioDevice(audio_id);
-		audio_start(instance, d);
-		SDL_UnlockAudioDevice(audio_id);
-		SDL_PauseAudioDevice(audio_id, 0);
-	}
-}
 
 /* Boot */
 
@@ -379,8 +384,7 @@ handle_events(Uxn *u)
 		}
 		/* Audio */
 		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			/* Device *d = devaudio0 + (event.type - audio0_event);
-			uxn_eval(u, GETVECTOR(d)); */
+			uxn_eval(u, GETVEC(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)

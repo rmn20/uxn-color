@@ -86,14 +86,14 @@ expect_failure 'Memory overwrite: SUB' <<'EOD'
 |2000 ADD
 |1000 SUB
 EOD
-expect_failure 'Recursion level too deep:' <<'EOD'
-%me { you }
-%you { me }
-|1000 me
-EOD
-expect_failure 'Recursion level too deep: ~asma-test/in.tal' <<'EOD'
-~asma-test/in.tal
-EOD
+# expect_failure 'Recursion level too deep:' <<'EOD'
+# %me { you }
+# %you { me }
+# |1000 me
+# EOD
+# expect_failure 'Recursion level too deep: ~asma-test/in.tal' <<'EOD'
+# ~asma-test/in.tal
+# EOD
 expect_failure 'Label not found: ;blah' <<'EOD'
 |1000 ;blah
 EOD

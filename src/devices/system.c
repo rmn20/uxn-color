@@ -4,7 +4,7 @@
 #include "system.h"
 
 /*
-Copyright (c) 2022 Devine Lu Linvega, Andrew Alderwick
+Copyright (c) 2022-2023 Devine Lu Linvega, Andrew Alderwick
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

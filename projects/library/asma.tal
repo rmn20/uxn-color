@@ -833,7 +833,6 @@
 	( hex short   ) ,asma-short-helper/raw JMP
 
 	&not-hex
-	.System/rst DEI #e0 GTH ,&too-deep JCN
 	;asma-trees/macros ;asma-traverse-tree JSR2 ,&not-macro JCN
 
 	&macro-loop
@@ -855,12 +854,7 @@
 	;asma-msg-token ;asma/error STA2
 	JMP2r
 
-	&too-deep
-	;asma-msg-too-deep ;asma/error STA2
-	JMP2r
-
 @asma-include
-	.System/rst DEI #e0 GTH ,asma-normal-body/too-deep JCN
 	;heap LDA2
 		;asma/token LDA2 ;append-heap-string JSR2
 		;asma-assemble-file-pass JSR2
@@ -876,7 +870,6 @@
 @asma-msg-token     "Unrecognised 20 "token 00
 @asma-msg-macro     "Macro 20 "already 20 "exists 00
 @asma-msg-rewound   "Memory 20 "overwrite 00
-@asma-msg-too-deep  "Recursion 20 "level 20 "too 20 "deep 00
 @asma-msg-redefined "Label 20 "redefined 00
 
 ( trees )
