@@ -1,6 +1,3 @@
-#ifndef UXN_UXN_H
-#define UXN_UXN_H
-
 /*
 Copyright (c) 2021 Devine Lu Linvega
 
@@ -19,24 +16,6 @@ typedef signed short Sint16;
 typedef unsigned int Uint32;
 
 #define PAGE_PROGRAM 0x0100
-
-#define DEVPEEK16(o, x) \
-	{ \
-		(o) = (d->dat[(x)] << 8) + d->dat[(x) + 1]; \
-	}
-#define DEVPOKE16(x, y) \
-	{ \
-		d->dat[(x)] = (y) >> 8; \
-		d->dat[(x) + 1] = (y); \
-	}
-#define GETVECTOR(d) ((d)->dat[0] << 8 | (d)->dat[1])
-
-typedef struct Device {
-	struct Uxn *u;
-	Uint8 dat[16];
-	Uint8 (*dei)(struct Device *d, Uint8);
-	void (*deo)(struct Device *d, Uint8);
-} Device;
 
 /* clang-format off */
 
@@ -63,8 +42,3 @@ typedef void Deo(Uxn *u, Uint8 addr, Uint8 value);
 int uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo);
 int uxn_eval(Uxn *u, Uint16 pc);
 int uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
-
-/* TODO: remove */
-
-Device *uxn_port(Uxn *u, Uint8 id, Uint8 (*deifn)(Device *, Uint8), void (*deofn)(Device *, Uint8));
-#endif /* UXN_UXN_H */

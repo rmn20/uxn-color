@@ -48,7 +48,7 @@ static SDL_Thread *stdin_thread;
 
 /* devices */
 
-static Device  *devaudio0;
+static Device *devaudio0;
 static Uint8 zoom = 1;
 static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
