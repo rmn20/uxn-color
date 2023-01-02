@@ -132,7 +132,9 @@ retry_realpath(const char *file_name)
 		else
 			return NULL;
 	}
-	return strdup(r);
+	x = malloc(strlen(r) + 1);
+	strcpy(x, r);
+	return x;
 }
 
 static void
