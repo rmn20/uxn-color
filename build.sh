@@ -115,7 +115,7 @@ echo "Assembling(asma).."
 if [ $norun = 1 ]; then exit; fi
 
 echo "Assembling(piano).."
-./bin/uxnasm projects/software/piano.tal bin/piano.rom 2> bin/piano.log
+./bin/uxnasm projects/software/piano.tal bin/piano.rom
 
 echo "Running.."
 ./bin/uxnemu bin/piano.rom

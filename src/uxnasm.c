@@ -416,9 +416,9 @@ assemble(FILE *f)
 {
 	char w[0x40];
 	scpy("on-reset", p.scope, 0x40);
-	while(fscanf(f, "%63s", w) == 1)
-		if(!parse(w, f))
-			return error("Unknown token", w);
+	while(fscanf(f, "%62s", w) == 1)
+		if(slen(w) > 0x3d || !parse(w, f))
+			return error("Invalid token", w);
 	return resolve();
 }
 

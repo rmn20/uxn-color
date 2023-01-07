@@ -32,8 +32,8 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint16 a, b, c, j, k, bs, instr;
 	Uint8 kptr, *sp;
+	Uint16 a, b, c, j, k, bs, instr;
 	Stack *src, *dst;
 	if(!pc || u->dev[0x0f]) return 0;
 	while((instr = u->ram[pc++])) {
