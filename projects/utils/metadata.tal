@@ -3,7 +3,7 @@
 |00 @System &vector $2 &pad $6 &r $2 &g $2 &b $2
 |10 @Console &vector $2 &read $1 &pad $5 &write $1
 |20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
-|b0 @Disk &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
+|b0 @File &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2
 
 |0000
 
@@ -11,9 +11,9 @@
 
 |0100 ( -> )
 
-	#f0af .System/r DEO2
-	#f0af .System/g DEO2
-	#f0af .System/b DEO2
+	#630f .System/r DEO2
+	#840f .System/g DEO2
+	#c60f .System/b DEO2
 
 	#0150 .Screen/width DEO2
 	#0050 .Screen/height DEO2
@@ -22,6 +22,9 @@
 	;dict/input ;pstr JSR2
 
 BRK
+
+(
+@|vectors )
 
 @await-src ( -> )
 
@@ -34,113 +37,133 @@ BRK
 
 	;src
 		DUP2 ;pstr JSR2 #0a18 DEO
-		;draw-metadata JSR2
+		;has-metadata JSR2
+			,&on-metadata JCN
+
+	#004c .Screen/x DEO2
+	#0024 .Screen/y DEO2
+	
+	;dict/empty ;draw-txt JSR2 POP2
 
 BRK
 
-@draw-metadata ( str* -- )
+&on-metadata ( -> )
 
-	 .Disk/name DEO2
-	( read )
-	#0006 .Disk/length DEO2
-	;&header .Disk/read DEO2
+	;load-metadata JSR2
+	;metadata/body ;pstr JSR2 #0a18 DEO
+	;draw-metadata JSR2
 
-	;&deo LDA2 #f037 NEQ2
-		;&missing JCN2
+BRK
 
-	;&start LDA2 #0100 SUB2 ;seek JSR2
-	#0004 .Disk/length DEO2
-	;&end
-		DUP2 .Disk/read DEO2
-		LDA2 ;&start LDA2 SUB2 .Disk/length DEO2
-	;data
-		DUP2 .Disk/read DEO2
+(
+@|core )
 
-	( draw )
-	#0058 STH2k .Screen/x DEO2
-	#0018 .Screen/y DEO2
+@has-metadata ( src* -- bool )
+
+	.File/name DEO2
+	#0006 .File/length DEO2
+	;metadata/header .File/read DEO2
+	;metadata/deo LDA2 #0637 EQU2
+
+JMP2r
+
+@load-metadata ( -- )
+
+	;metadata/start LDA2 #0100 SUB2 ;seek JSR2
+
+	( version )
+	#0001 .File/length DEO2
+	;metadata/version .File/read DEO2
 
 	( body )
-	;draw-str JSR2
-	#20 ;draw-chr JSR2
-	#02 ;draw-str-color JSR2 ;draw-lb JSR2
-	STH2kr .Screen/x DEO2
-	#01 ;draw-str-color JSR2 ;draw-lb JSR2
-	STH2r .Screen/x DEO2
-	;draw-str JSR2 ;draw-lb JSR2
-	POP2
+	;metadata/body STH2
+	&s
+		STH2kr
+			DUP2 .File/read DEO2
+			INC2r LDA ,&s JCN
+	POP2r
 
-	( icon )
-	;&icon LDA2 #0100 SUB2 ;seek JSR2
-	#0200 .Disk/length DEO2
-	;data
-		DUP2 .Disk/read DEO2
-		#76 ;draw-icon JSR2
+	( fields )
+	;metadata/fields
+		DUP2 .File/read DEO2
+		LDAk #03 MUL #00 SWP .File/length DEO2
+		INC2 .File/read DEO2
 
 JMP2r
-	&header $1 &start $3 &deo $2 &end $2 &icon $2
 
-&missing ( -- )
+(
+@|drawing )
 
-	;blank-icn #72 ;draw-icon JSR2
-	#0058 STH2k .Screen/x DEO2
+@draw-metadata ( -- )
+
+	#004c .Screen/x DEO2
 	#0018 .Screen/y DEO2
-	;src ;draw-str JSR2 POP2
-	;draw-lb JSR2
-	STH2r .Screen/x DEO2
-	;dict/empty ;draw-str JSR2 POP2
+	;metadata/body ;draw-txt JSR2 POP2
+	( find picture )
+	;metadata/fields LDAk LITr 00 STH
+	INC2 DUP2 STH2r ADD2 SWP2
+	&l
+		LDAk #83 NEQ ,&no-pict JCN
+			INC2k LDA2 #0100 SUB2 ;draw-icon JSR2
+			&no-pict
+		INC2 GTH2k ,&l JCN
+	POP2 POP2
 
 JMP2r
 
-@draw-icon ( addr* auto -- )
+@draw-icon ( location* -- )
 
-	#0008
+	;seek JSR2
+	#0090 .File/length DEO2
+	;metadata/icon
+		DUP2 .File/read DEO2
+		.Screen/addr DEO2
+	#26 .Screen/auto DEO
+	#001c
 		DUP2 .Screen/x DEO2
 		.Screen/y DEO2
-	.Screen/auto DEO
-	.Screen/addr DEO2
-	#01 .Screen/sprite 
-		DEOk DEOk DEOk DEOk
-		DEOk DEOk DEOk DEO
+	#81 .Screen/sprite DEOk DEOk DEO
 
 JMP2r
 
-@draw-lb ( -- )
+@draw-txt ( txt* -- end* )
 
-	.Screen/y DEI2k #000c ADD2 ROT DEO2
-
-JMP2r
-
-@draw-str-color ( str* color -- str* )
-
-	;draw-chr/color STA
-
-@draw-str ( str* -- str* )
-
-	LDAk #00 EQU ,&skip JCN
 	#01 .Screen/auto DEO
-	&while
-		LDAk ,draw-chr JSR
-		INC2 LDAk ,&while JCN
-	&skip
-	INC2
+	.Screen/x DEI2 ,&anchor STR2
+	&w
+		LDAk #20 SUB #00 SWP #30 SFT2 ;font ADD2 .Screen/addr DEO2
+		#03 .Screen/sprite DEO
+		LDAk #0a NEQ ,&no-lb JCN
+			[ LIT2 &anchor $2 ] ,draw-lb JSR
+			&no-lb
+		INC2 LDAk ,&w JCN
 
 JMP2r
 
-@draw-chr ( char -- )
+@draw-lb ( anchor* -- )
 
-	#20 SUB #00 SWP #30 SFT2 ;font ADD2 .Screen/addr DEO2
-	[ LIT &color 01 ] .Screen/sprite DEO
+	.Screen/x DEO2
+	.Screen/y DEI2k #0008 ADD2 ROT DEO2
+
+JMP2r
+
+(
+@|stdlib )
+
+@phex ( short* -- )
+
+	SWP ,&byte JSR
+	&byte ( byte -- ) DUP #04 SFT ,&char JSR
+	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
 
 JMP2r
 
 @seek ( length* -- )
 
-	.Disk/name DEI2k ROT  DEO2
-	#0001 .Disk/length DEO2
-	#0000
+	.File/name DEI2k ROT DEO2
+	#0000 INC2k .File/length DEO2
 	&l
-		;&b .Disk/read DEO2
+		;&b .File/read DEO2
 		INC2 GTH2k ,&l JCN
 	POP2 POP2
 	
@@ -152,12 +175,12 @@ JMP2r
 @skey ( key buf -- proc ) OVR #21 LTH ,&eval JCN #00 SWP ;sput JSR2 #00 JMP2r &eval POP2 #01 JMP2r
 @pstr ( str* -- ) &w LDAk #18 DEO INC2 LDAk ,&w JCN POP2 JMP2r
 
+(
+@|assets )
+
 @dict
 	&input "Input(.tal): 20 $1
 	&empty "Metadata 20 "Missing $1
-
-@blank-icn
-	aa55 aa55 aa55 aa55
 
 @font ( atari8 )
 0000 0000 0000 0000 6060 6060 6000 6000
@@ -209,5 +232,9 @@ c060 3018 0c06 0300 3c0c 0c0c 0c0c 3c00
 1818 1818 1818 1818 380c 0c06 0c0c 3800
 0000 60f2 9e0c 0000 3c42 9985 8599 423c
 
-@data
+@metadata
+	&header $1 &start $3 &deo $2 &version $1
+	&body $100
+	&fields $100
+	&icon $90
 
