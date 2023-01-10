@@ -6,7 +6,6 @@
 
 |0000
 
-	@count $2
 	@center &x $2 &y $2
 
 |0100 ( -> )
@@ -25,6 +24,7 @@
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
 	.Screen/height DEI2 #01 SFT2 .center/y STZ2
 	( draw )
+	;draw-size JSR2
 	;draw-sprites JSR2
 	;draw-1bpp JSR2
 	;draw-2bpp JSR2
@@ -32,15 +32,20 @@
 	
 BRK
 
+(
+@|vectors )
+
 @on-frame ( -> )
 
-	#01 .Screen/auto DEO
-	.count LDZ2 INC2 [ DUP2 ] .count STZ2
-	.center/x LDZ2 #0050 ADD2 .Screen/x DEO2
+	.center/x LDZ2 #0070 SUB2 .Screen/x DEO2
 	.center/y LDZ2 #0048 SUB2 .Screen/y DEO2
-	;draw-short JSR2
+	;anim-chr #00 [ LIT &f $1 ] INCk ,&f STR #07 AND #40 SFT ADD2 .Screen/addr DEO2
+	#81 .Screen/sprite DEO
 
 BRK
+
+(
+@|drawing )
 
 @draw-sprites ( -- )
 	
@@ -119,19 +124,41 @@ JMP2r
 
 JMP2r
 
-@draw-short ( short* -- )
+@draw-size ( -- )
 
-	SWP ,&byte JSR
-	&byte ( byte -- ) DUP #04 SFT ,&hex JSR #0f AND
-	&hex ( char -- )
-	#00 SWP #30 SFT2 ;font-hex ADD2 .Screen/addr DEO2
+	#01 .Screen/auto DEO
+	.center/x LDZ2 #0030 ADD2 .Screen/x DEO2
+	.center/y LDZ2 #0048 SUB2 .Screen/y DEO2
+	.Screen/width DEI2 ;draw-dec JSR2
+	;x-icn .Screen/addr DEO2
 	#01 .Screen/sprite DEO
+	.Screen/height DEI2
+
+@draw-dec ( short* -- )
+
+	#00 ,&z STR
+	#2710 ,&parse JSR
+	#03e8 ,&parse JSR
+	#0064 ,&parse JSR
+	#000a ,&parse JSR
+	NIP
+	&emit
+		DUP [ LIT &z $1 ] EQU ,&skip JCN
+			#ff ,&z STR #00 OVR #30 SFT ;font-hex ADD2 .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+			&skip
+	POP
 
 JMP2r
+	&parse DIV2k DUP ,&emit JSR MUL2 SUB2 JMP2r
 
+(
+@|assets )
+
+@x-icn
+	0000 0018 1800 0000
 @preview_icn
 	0f38 675f dfbf bfbf 0007 1820 2344 4848
-
 @font-hex
 	007c 8282 8282 827c 0030 1010 1010 1010
 	007c 8202 7c80 80fe 007c 8202 1c02 827c
@@ -141,3 +168,11 @@ JMP2r
 	007c 8202 7e82 827e 00fc 8282 fc82 82fc
 	007c 8280 8080 827c 00fc 8282 8282 82fc
 	007c 8280 f080 827c 007c 8280 f080 8080
+
+@anim-chr
+	0000 0018 1800 0000 c381 0000 0000 81c3 0000 183c 3c18 0000 0000 0000 0000 0000 
+	0018 3c7e 7e3c 1800 0000 0000 0000 0000 3c7e ffe7 e7ff 7e3c 0000 0018 1800 0000 
+	ffff e7c3 c3e7 ffff 0000 183c 3c18 0000 ffe7 c381 81c3 e7ff 0018 3c7e 7e3c 1800 
+	c381 0000 0000 81c3 3c7e ffe7 e7ff 7e3c 0000 0000 0000 0000 ffff e7c3 c3e7 ffff 
+	0000 0000 0000 0000 ffe7 c381 81c3 e7ff
+
