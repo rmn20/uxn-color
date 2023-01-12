@@ -360,6 +360,7 @@ resolve(void)
 {
 	Label *l;
 	int i;
+	Uint16 a;
 	for(i = 0; i < p.rlen; i++) {
 		Reference *r = &p.refs[i];
 		switch(r->rune) {
@@ -382,13 +383,20 @@ resolve(void)
 		case ':':
 		case '=':
 		case ';':
+			if(!(l = findlabel(r->name)))
+				return error("Unknown absolute reference", r->name);
+			p.data[r->addr] = l->addr >> 0x8;
+			p.data[r->addr + 1] = l->addr & 0xff;
+			l->refs++;
+			break;
 		case '?':
 		case '!':
 		default:
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
-			p.data[r->addr] = l->addr >> 0x8;
-			p.data[r->addr + 1] = l->addr & 0xff;
+			a = l->addr - r->addr - 2;
+			p.data[r->addr] = a >> 0x8;
+			p.data[r->addr + 1] = a & 0xff;
 			l->refs++;
 			break;
 		}
