@@ -51,7 +51,7 @@ tasks:
             rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
         else
             wget -nv -NP out "https://${SITE}/"uxn{,-essentials}-win64.{tar.gz,zip} || true
-            touch out/needs-solar-build
+            : touch out/needs-solar-build
         fi
     - build-macos: |
         if ssh -o ConnectTimeout=10 mac true; then
