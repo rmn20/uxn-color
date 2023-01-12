@@ -444,8 +444,9 @@ writesym(char *filename)
 	fp = fopen(scat(scpy(filename, symdst, slen(filename) + 1), ".sym"), "w");
 	if(fp != NULL) {
 		for(i = 0; i < p.llen; i++) {
-			fwrite(&p.labels[i].addr + 1, 1, 1, fp);
-			fwrite((Uint8*)&p.labels[i].addr, 1, 1, fp);
+			Uint8 hb = p.labels[i].addr >> 8, lb = p.labels[i].addr & 0xff;
+			fwrite(&hb, 1, 1, fp);
+			fwrite(&lb, 1, 1, fp);
 			fwrite(p.labels[i].name, slen(p.labels[i].name) + 1, 1, fp);
 		}
 	}
