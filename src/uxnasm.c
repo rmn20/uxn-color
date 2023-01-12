@@ -302,26 +302,26 @@ parse(char *w, FILE *f)
 		makereference(p.scope, w, p.ptr);
 		return writebyte(0xff);
 	case ',': /* literal byte relative */
-		makereference(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr + 1);
 		return writelitbyte(0xff);
 	case '-': /* raw byte absolute */
 		makereference(p.scope, w, p.ptr);
 		return writebyte(0xff);
 	case '.': /* literal byte zero-page */
-		makereference(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr + 1);
 		return writelitbyte(0xff);
 	case ':': /* raw short absolute */
 	case '=':
 		makereference(p.scope, w, p.ptr);
 		return writeshort(0xffff, 0);
 	case ';': /* literal short absolute */
-		makereference(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr + 1);
 		return writeshort(0xffff, 1);
 	case '!': /* JMI */
-		makereference(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr + 1);
 		return writebyte(0x20) && writeshort(0xffff, 0);
 	case '?': /* JCI */
-		makereference(p.scope, w, p.ptr);
+		makereference(p.scope, w, p.ptr + 1);
 		return writebyte(0x40) && writeshort(0xffff, 0);
 	case '"': /* raw string */
 		i = 0;
@@ -348,7 +348,7 @@ parse(char *w, FILE *f)
 					return 0;
 			return 1;
 		} else {
-			makereference(p.scope, w - 1, p.ptr);
+			makereference(p.scope, w - 1, p.ptr + 1);
 			return writebyte(0x60) && writeshort(0xffff, 0);
 		}
 	}
@@ -364,6 +364,7 @@ resolve(void)
 		Reference *r = &p.refs[i];
 		switch(r->rune) {
 		case '_':
+		case ',':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown relative reference", r->name);
 			p.data[r->addr] = (Sint8)(l->addr - r->addr - 2);
@@ -371,39 +372,23 @@ resolve(void)
 				return error("Relative reference is too far", r->name);
 			l->refs++;
 			break;
-		case ',':
-			if(!(l = findlabel(r->name)))
-				return error("Unknown relative reference", r->name);
-			p.data[r->addr + 1] = (Sint8)(l->addr - r->addr - 3);
-			if((Sint8)p.data[r->addr + 1] != (l->addr - r->addr - 3))
-				return error("Relative reference is too far", r->name);
-			l->refs++;
-			break;
 		case '-':
-			if(!(l = findlabel(r->name)))
-				return error("Unknown absolute reference", r->name);
-			p.data[r->addr] = l->addr & 0xff;
-			l->refs++;
-			break;
 		case '.':
 			if(!(l = findlabel(r->name)))
 				return error("Unknown zero-page reference", r->name);
-			p.data[r->addr + 1] = l->addr & 0xff;
+			p.data[r->addr] = l->addr & 0xff;
 			l->refs++;
 			break;
 		case ':':
 		case '=':
+		case ';':
+		case '?':
+		case '!':
+		default:
 			if(!(l = findlabel(r->name)))
 				return error("Unknown absolute reference", r->name);
 			p.data[r->addr] = l->addr >> 0x8;
 			p.data[r->addr + 1] = l->addr & 0xff;
-			l->refs++;
-			break;
-		default:
-			if(!(l = findlabel(r->name)))
-				return error("Unknown absolute reference", r->name);
-			p.data[r->addr + 1] = l->addr >> 0x8;
-			p.data[r->addr + 2] = l->addr & 0xff;
 			l->refs++;
 			break;
 		}
