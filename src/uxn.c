@@ -75,8 +75,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x0f: /* STH */ POP(a) PUSH(dst, a) break;
 		case 0x10: /* LDZ */ POP8(a) PEEK(b, a) PUSH(src, b) break;
 		case 0x11: /* STZ */ POP8(a) POP(b) POKE(a, b) break;
-		case 0x12: /* LDR */ POP8(a) PEEK(b, pc + (Sint8)a & 0xffff) PUSH(src, b) break;
-		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a & 0xffff; POKE(c, b) break;
+		case 0x12: /* LDR */ POP8(a) b = pc + (Sint8)a; PEEK(c, b) PUSH(src, c) break;
+		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a; POKE(c, b) break;
 		case 0x14: /* LDA */ POP16(a) PEEK(b, a) PUSH(src, b) break;
 		case 0x15: /* STA */ POP16(a) POP(b) POKE(a, b) break;
 		case 0x16: /* DEI */ POP8(a) DEVR(b, a) PUSH(src, b) break;
