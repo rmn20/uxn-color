@@ -42,13 +42,15 @@ int
 uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 {
 	Uint8 *d = &u->dev[0x00];
-	if(instr & 0x40)
-		u->rst->err = err;
-	else
-		u->wst->err = err;
-	if(GETVEC(d))
-		uxn_eval(u, GETVEC(d));
-	else {
+	Uint16 handler = GETVEC(d);
+	if(handler) {
+		u->wst->ptr = 4;
+		u->wst->dat[0] = addr >> 0x8;
+		u->wst->dat[1] = addr & 0xff;
+		u->wst->dat[2] = instr;
+		u->wst->dat[3] = err;
+		return uxn_eval(u, handler);
+	} else {
 		system_inspect(u);
 		fprintf(stderr, "%s %s, by %02x at 0x%04x.\n", (instr & 0x40) ? "Return-stack" : "Working-stack", errors[err - 1], instr, addr);
 	}
