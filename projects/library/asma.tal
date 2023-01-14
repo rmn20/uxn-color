@@ -732,6 +732,20 @@
 	&ignore-error
 	JMP2r
 
+@asma-jci
+	#20 ,asma-jxi JMP ( tail call )
+
+@asma-jmi
+	#40
+	( fall through )
+
+@asma-jxi
+	;asma-write-byte JSR2
+	,asma-addr-helper JSR
+	;asma/addr LDA2 SUB2
+	#0002 SUB2
+	;asma-write-short JMP2 ( tail call )
+
 @asma-literal-rel-addr
 	LIT LIT ;asma-write-byte JSR2
 	( fall through )
@@ -851,8 +865,7 @@
 
 	&not-macro
 	POP2
-	;asma-msg-token ;asma/error STA2
-	JMP2r
+	#60 ;asma-jxi JMP2 ( tail call )
 
 @asma-include
 	;heap LDA2
@@ -867,7 +880,6 @@
 @asma-msg-zero-page "Address 20 "not 20 "in 20 "zero 20 "page 00
 @asma-msg-relative  "Address 20 "outside 20 "range 00
 @asma-msg-label     "Label 20 "not 20 "found 00
-@asma-msg-token     "Unrecognised 20 "token 00
 @asma-msg-macro     "Macro 20 "already 20 "exists 00
 @asma-msg-rewound   "Memory 20 "overwrite 00
 @asma-msg-redefined "Label 20 "redefined 00
@@ -892,7 +904,8 @@
 	&7d          $2         $2          "} 00          :asma-macro-end
 
 @asma-first-char-normal
-	&22          $2         $2          "" 00          :asma-raw-word
+	&21          $2         $2          "! 00          :asma-jmi
+	&22         :&21        $2          "" 00          :asma-raw-word
 	&23         :&22        $2          "# 00          :asma-literal-hex
 	&24         :&23       :&25         "$ 00          :asma-pad-relative
 	&25          $2         $2          "% 00          :asma-macro-define
@@ -905,7 +918,8 @@
 	&3a          $2         $2          ": 00          :asma-abs-addr
 	&3b         :&3a        $2          "; 00          :asma-literal-abs-addr
 	&3d         :&3b       :&40         "= 00          :asma-abs-addr
-	&40          $2         $2          "@ 00          :asma-label-define
+	&3f          $2         $2          "? 00          :asma-jci
+	&40         :&3f        $2          "@ 00          :asma-label-define
 	&5f         :&3d       :&7d         "_ 00          :asma-rel-addr
 	&7b          $2         $2          "{ 00          :asma-ignore
 	&7c         :&7b        $2          "| 00          :asma-pad-absolute

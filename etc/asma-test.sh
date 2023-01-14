@@ -57,10 +57,10 @@ EOD
 expect_failure 'Invalid hexadecimal: #000' <<'EOD'
 |1000 #000
 EOD
-expect_failure 'Unrecognised token: 0' <<'EOD'
+expect_failure 'Label not found: 0' <<'EOD'
 |1000 0
 EOD
-expect_failure 'Unrecognised token: 000' <<'EOD'
+expect_failure 'Label not found: 000' <<'EOD'
 |1000 000
 EOD
 expect_failure 'Address not in zero page: .hello' <<'EOD'
@@ -75,7 +75,7 @@ expect_failure 'Address outside range: ,hello' <<'EOD'
 |1000 @hello
 |2000 ,hello
 EOD
-expect_failure 'Unrecognised token: hello' <<'EOD'
+expect_failure 'Label not found: hello' <<'EOD'
 hello
 EOD
 expect_failure 'Macro already exists: %me' <<'EOD'
@@ -112,7 +112,7 @@ EOD
 expect_failure 'Label not found: .blah' <<'EOD'
 |1000 .blah
 EOD
-expect_failure "Unrecognised token: 'a" <<'EOD'
+expect_failure "Label not found: 'a" <<'EOD'
 |1000 'a
 EOD
 echo 'All OK'
