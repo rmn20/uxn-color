@@ -76,6 +76,10 @@ error(const char *name, const char *msg)
 static char *
 sublabel(char *src, char *scope, char *name)
 {
+	if(slen(scope) + slen(name) >= 0x3f) {
+		error("Sublabel length too long", name);
+		return NULL;
+	}
 	return scat(scat(scpy(scope, src, 0x40), "/"), name);
 }
 
@@ -178,9 +182,11 @@ makereference(char *scope, char *label, Uint16 addr)
 	if(p.rlen == 0x800)
 		return error("References limit exceeded", label);
 	r = &p.refs[p.rlen++];
-	if(label[1] == '&')
-		scpy(sublabel(subw, scope, label + 2), r->name, 0x40);
-	else {
+	if(label[1] == '&') {
+		if(!sublabel(subw, scope, label + 2))
+			return error("Invalid sublabel", label);
+		scpy(subw, r->name, 0x40);
+	} else {
 		int pos = spos(label + 1, '/');
 		if(pos > 0) {
 			Label *l;
@@ -287,7 +293,7 @@ parse(char *w, FILE *f)
 		scpy(w + 1, p.scope, 0x40);
 		break;
 	case '&': /* sublabel */
-		if(!makelabel(sublabel(subw, p.scope, w + 1)))
+		if(!sublabel(subw, p.scope, w + 1) || !makelabel(subw))
 			return error("Invalid sublabel", w);
 		break;
 	case '#': /* literals hex */
