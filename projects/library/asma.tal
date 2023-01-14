@@ -906,10 +906,10 @@
 @asma-first-char-normal
 	&21          $2         $2          "! 00          :asma-jmi
 	&22         :&21        $2          "" 00          :asma-raw-word
-	&23         :&22        $2          "# 00          :asma-literal-hex
-	&24         :&23       :&25         "$ 00          :asma-pad-relative
-	&25          $2         $2          "% 00          :asma-macro-define
-	&26         :&24       :&2c         26 00 ( & )    :asma-sublabel-define
+	&23         :&22       :&25         "# 00          :asma-literal-hex
+	&24          $2         $2          "$ 00          :asma-pad-relative
+	&25         :&24        $2          "% 00          :asma-macro-define
+	&26         :&23       :&2c         26 00 ( & )    :asma-sublabel-define
 	&28          $2         $2          "( 00          :asma-comment-start
 	&29         :&28        $2          ") 00          :asma-comment-end
 	&2c         :&29       :&2d         ", 00          :asma-literal-rel-addr
