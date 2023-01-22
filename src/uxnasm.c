@@ -39,7 +39,7 @@ typedef struct {
 	Uint16 llen, mlen, rlen;
 	Label labels[0x400];
 	Macro macros[0x100];
-	Reference refs[0x800];
+	Reference refs[0x1000];
 	char scope[0x40];
 } Program;
 
@@ -179,7 +179,7 @@ makereference(char *scope, char *label, Uint16 addr)
 {
 	char subw[0x40], parent[0x40];
 	Reference *r;
-	if(p.rlen == 0x800)
+	if(p.rlen == 0x1000)
 		return error("References limit exceeded", label);
 	r = &p.refs[p.rlen++];
 	if(label[1] == '&') {
