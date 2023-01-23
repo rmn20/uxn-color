@@ -109,7 +109,6 @@ uxnemu orca.rom | shim
 The following resources are a good place to start:
 
 * [XXIIVV — uxntal](https://wiki.xxiivv.com/site/uxntal.html)
-* [XXIIVV — uxntal cheatsheet](https://wiki.xxiivv.com/site/uxntal_cheatsheet.html)
 * [XXIIVV — uxntal reference](https://wiki.xxiivv.com/site/uxntal_reference.html)
 * [compudanzas — uxn tutorial](https://compudanzas.net/uxn_tutorial.html)
 * [Fediverse — #uxn tag](https://merveilles.town/tags/uxn)
