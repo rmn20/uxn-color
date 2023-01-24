@@ -9,14 +9,17 @@
 	@timer $1
 	@frame $1
 
+(
+@|vectors )
+
 |0100
 
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	( theme )
-	#aff0 .System/r DEO2
+	#aff5 .System/r DEO2
 	#af00 .System/g DEO2
-	#af00 .System/b DEO2
+	#af05 .System/b DEO2
 	( screen size )
 	#0140 .Screen/width DEO2
 	#0100 .Screen/height DEO2
@@ -27,8 +30,8 @@
 	#0008 .ball/vx STZ2
 	#0000 .ball/vy STZ2
 	( once )
-	;make-shadow JSR2
-	;draw-background JSR2
+	make-shadow
+	draw-background
 
 BRK
 
@@ -40,14 +43,17 @@ BRK
 	#00 .timer STZ
 	( 12 frames animation )
 	.frame LDZ INC DUP #0c NEQ MUL .frame STZ
-	,move-ball JSR
+	move-ball
 
 BRK
 
+(
+@|core )
+
 @check-flip-vx ( x -- x )
 
-	( left ) DUP2 #0010 LTH2 ,&flip JCN 
-	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ,&flip JCN ,&else JMP
+	( left ) DUP2 #0010 LTH2 ?&flip 
+	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip ,&else JMP
 	&flip .ball/vx LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
 	&else
 
@@ -55,7 +61,7 @@ JMP2r
 
 @check-flip-vy ( y -- y )
 
-	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ,&flip JCN ,&else JMP
+	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ?&flip ,&else JMP
 	&flip .ball/vy LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
 	&else
 
@@ -70,13 +76,13 @@ JMP2r
 	#0800
 	&loop-bg
 		#40 .Screen/sprite DEO
-		INC GTHk ,&loop-bg JCN
+		INC GTHk ?&loop-bg
 	POP2
 
 	.ball/vx LDZ2k STH2k ROT STZ2
-	.ball/x LDZ2k STH2r ADD2 ,check-flip-vx JSR ROT STZ2
+	.ball/x LDZ2k STH2r ADD2 check-flip-vx ROT STZ2
 	.ball/vy LDZ2k INC2 STH2k ROT STZ2
-	.ball/y LDZ2k STH2r ADD2 ,check-flip-vy JSR ROT STZ2
+	.ball/y LDZ2k STH2r ADD2 check-flip-vy ROT STZ2
 
 @draw-ball ( -- )
 
@@ -88,7 +94,7 @@ JMP2r
 	#0700
 	&loop-shadow
 		#4f .Screen/sprite DEO
-		INC GTHk ,&loop-shadow JCN
+		INC GTHk ?&loop-shadow
 	POP2
 	.frame LDZ
 	( bg )
@@ -100,7 +106,7 @@ JMP2r
 	#0700
 	&loop-bg
 		STHkr .Screen/sprite DEO
-		INC GTHk ,&loop-bg JCN
+		INC GTHk ?&loop-bg
 	POP2
 	POPr
 	( fg )
@@ -112,7 +118,7 @@ JMP2r
 	#0700
 	&loop-fg
 		STHkr .Screen/sprite DEO
-		INC GTHk ,&loop-fg JCN
+		INC GTHk ?&loop-fg
 	POP2
 	POPr
 
@@ -130,9 +136,9 @@ JMP2r
 		.Screen/width DEI2 #03 SFT2 NIP #08 SUB #00
 		&horhor
 			#0f .Screen/sprite DEO
-			INC GTHk ,&horhor JCN
+			INC GTHk ?&horhor
 		POP2
-		INC GTHk ,&horver JCN
+		INC GTHk ?&horver
 	POP2
 	( ver lines )
 	#02 .Screen/auto DEO
@@ -144,20 +150,20 @@ JMP2r
 		.Screen/height DEI2 #03 SFT2 NIP #0a SUB #00
 		&verhor
 			#0f .Screen/sprite DEO
-			INC GTHk ,&verhor JCN
+			INC GTHk ?&verhor
 		POP2
-		INC GTHk ,&verver JCN
+		INC GTHk ?&verver
 	POP2
 
 JMP2r
 
 @make-shadow ( -- )
 
-	;bg ;shadow #0188 ;mcpy JSR2
+	;bg ;shadow #0188 mcpy
 	#0188 #0000
 	&loop
 		DUP2 ;shadow ADD2 LDA2k #aa55 AND2 SWP2 STA2
-		INC2 INC2 GTH2k ,&loop JCN
+		INC2 INC2 GTH2k ?&loop
 	POP2 POP2
 
 JMP2r
@@ -168,11 +174,14 @@ JMP2r
 	OVR2 ADD2 SWP2
 	&loop
 		LDAk STH2kr STA INC2r
-		INC2 GTH2k ,&loop JCN
+		INC2 GTH2k ?&loop
 	POP2 POP2
 	POP2r
 
 JMP2r
+
+(
+@|assets )
 
 @hor-icn
 	0000 0000 0000 00ff
