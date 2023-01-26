@@ -445,10 +445,13 @@ run(Uxn *u)
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
 		now = SDL_GetPerformanceCounter();
-		if(!BENCH && ((Sint64)(frame_end - now)) > 0) {
-			SDL_Delay((frame_end - now) / ms_interval);
-			now = frame_end;
-		}
+		if(u->dev[0x20]) {
+			if(!BENCH && ((Sint64)(frame_end - now)) > 0) {
+				SDL_Delay((frame_end - now) / ms_interval);
+				now = frame_end;
+			}
+		} else
+			SDL_WaitEvent(NULL);
 	}
 	return error("SDL_WaitEvent", SDL_GetError());
 }
