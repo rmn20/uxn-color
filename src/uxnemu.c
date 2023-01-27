@@ -433,11 +433,11 @@ static int
 run(Uxn *u)
 {
 	Uint64 now = SDL_GetPerformanceCounter(), frame_end = now, frame_interval = SDL_GetPerformanceFrequency() / 60;
-	for(;!u->dev[0x0f]; now = SDL_GetPerformanceCounter()) {
+	for(; !u->dev[0x0f]; now = SDL_GetPerformanceCounter()) {
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
-		if (((Sint64)(frame_end - SDL_GetPerformanceCounter())) >= 0) {
+		if(((Sint64)(frame_end - SDL_GetPerformanceCounter())) <= 0) {
 			frame_end = now + frame_interval;
 			uxn_eval(u, GETVEC(&u->dev[0x20]));
 		}
