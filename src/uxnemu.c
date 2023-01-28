@@ -432,20 +432,28 @@ handle_events(Uxn *u)
 static int
 run(Uxn *u)
 {
-	Uint64 now = SDL_GetPerformanceCounter(), frame_end = now, frame_interval = SDL_GetPerformanceFrequency() / 60;
-	for(; !u->dev[0x0f]; now = SDL_GetPerformanceCounter()) {
+	Uint64 now = SDL_GetPerformanceCounter(), frame_end, frame_interval = SDL_GetPerformanceFrequency() / 60;
+	for(;;) {
+		/* .System/halt */
+		if(u->dev[0x0f])
+			return error("Run", "Ended.");
+		frame_end = now + frame_interval;
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
-		if(((Sint64)(frame_end - SDL_GetPerformanceCounter())) <= 0) {
-			frame_end = now + frame_interval;
-			uxn_eval(u, GETVEC(&u->dev[0x20]));
-		}
+		uxn_eval(u, GETVEC(&u->dev[0x20]));
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
-		SDL_WaitEventTimeout(NULL, GETVEC(&u->dev[0x20]) ? (frame_end - SDL_GetPerformanceCounter()) / ms_interval : 0x100000);
+		now = SDL_GetPerformanceCounter();
+		if(u->dev[0x20]) {
+			if(!BENCH && ((Sint64)(frame_end - now)) > 0) {
+				SDL_Delay((frame_end - now) / ms_interval);
+				now = frame_end;
+			}
+		} else
+			SDL_WaitEvent(NULL);
 	}
-	return error("Run", "Ended.");
+	return error("SDL_WaitEvent", SDL_GetError());;
 }
 
 int
