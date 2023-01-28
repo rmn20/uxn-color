@@ -170,7 +170,7 @@ file_init(UxnFile *c, char *filename, size_t max_len, int override_sandbox)
 }
 
 static Uint16
-file_read(UxnFile *c, void *dest, Uint16 len)
+file_read(UxnFile *c, void *dest, int len)
 {
 	if(c->outside_sandbox) return 0;
 	if(c->state != FILE_READ && c->state != DIR_READ) {
@@ -288,7 +288,7 @@ load_rom(Uxn *u, char *filename)
 {
 	int ret;
 	file_init(uxn_file, filename, strlen(filename) + 1, 1);
-	ret = file_read(uxn_file, &u->ram[PAGE_PROGRAM], 0x10000 - PAGE_PROGRAM);
+	ret = file_read(uxn_file, &u->ram[PAGE_PROGRAM], 0x100000 - PAGE_PROGRAM);
 	reset(uxn_file);
 	return ret;
 }

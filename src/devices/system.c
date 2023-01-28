@@ -69,24 +69,16 @@ mmu_init(Mmu *m, Uint16 pages)
 }
 
 void
-mmu_copy(Uint8 *ram, Uint16 length, Uint16 src_page, Uint16 src_addr, Uint16 dst_page, Uint16 dst_addr)
-{
-	Uint16 i;
-	for(i = 0; i < length; i++) {
-		ram[dst_page * 0x10000 + dst_addr + i] = ram[src_page * 0x10000 + src_addr + i];
-	}
-}
-
-void
 mmu_eval(Uint8 *ram, Uint16 addr)
 {
-	Uint16 a = addr;
+	Uint16 a = addr, i = 0;
 	Uint8 o = ram[a++];
 	if(o == 1) {
 		Uint16 length = (ram[a++] << 8) + ram[a++];
 		Uint16 src_page = ((ram[a++] << 8) + ram[a++]) % 16, src_addr = (ram[a++] << 8) + ram[a++];
 		Uint16 dst_page = ((ram[a++] << 8) + ram[a++]) % 16, dst_addr = (ram[a++] << 8) + ram[a];
-		mmu_copy(ram, length, src_page, src_addr, dst_page, dst_addr);
+		for(i = 0; i < length; i++)
+			ram[dst_page * 0x10000 + dst_addr + i] = ram[src_page * 0x10000 + src_addr + i];
 	}
 }
 

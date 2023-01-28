@@ -455,7 +455,6 @@ run(Uxn *u)
 			SDL_WaitEvent(NULL);
 	}
 	return error("SDL_WaitEvent", SDL_GetError());
-	;
 }
 
 int
