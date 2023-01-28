@@ -53,6 +53,7 @@ static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
 char *rom_path;
+Mmu mmu;
 
 static int
 error(char *msg, const char *err)
@@ -262,8 +263,8 @@ init(void)
 static int
 start(Uxn *u, char *rom)
 {
-	free(u->ram);
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
+	free(mmu.pages);
+	if(!uxn_boot(u, mmu_init(&mmu, 16), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
 	if(!load_rom(u, rom))
 		return error("Boot", "Failed to load rom.");
@@ -453,7 +454,8 @@ run(Uxn *u)
 		} else
 			SDL_WaitEvent(NULL);
 	}
-	return error("SDL_WaitEvent", SDL_GetError());;
+	return error("SDL_WaitEvent", SDL_GetError());
+	;
 }
 
 int
@@ -462,11 +464,9 @@ main(int argc, char **argv)
 	SDL_DisplayMode DM;
 	Uxn u = {0};
 	int i, loaded = 0;
-
 	if(!init())
 		return error("Init", "Failed to initialize emulator.");
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
-
 	/* set default zoom */
 	if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);

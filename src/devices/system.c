@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../uxn.h"
 #include "system.h"
@@ -57,14 +58,49 @@ uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 	return 0;
 }
 
+/* MMU */
+
+Uint8 *
+mmu_init(Mmu *m, Uint16 pages)
+{
+	m->length = pages;
+	m->pages = (Uint8 *)calloc(0x10000 * pages, sizeof(Uint8));
+	return m->pages;
+}
+
+void
+mmu_copy(Uint8 *ram, Uint16 length, Uint16 src_page, Uint16 src_addr, Uint16 dst_page, Uint16 dst_addr)
+{
+	Uint16 i;
+	for(i = 0; i < length; i++) {
+		ram[dst_page * 0x10000 + dst_addr + i] = ram[src_page * 0x10000 + src_addr + i];
+	}
+}
+
+void
+mmu_eval(Uint8 *ram, Uint16 addr)
+{
+	Uint16 a = addr;
+	Uint8 o = ram[a++];
+	if(o == 1) {
+		Uint16 length = (ram[a++] << 8) + ram[a++];
+		Uint16 src_page = ((ram[a++] << 8) + ram[a++]) % 16, src_addr = (ram[a++] << 8) + ram[a++];
+		Uint16 dst_page = ((ram[a++] << 8) + ram[a++]) % 16, dst_addr = (ram[a++] << 8) + ram[a];
+		mmu_copy(ram, length, src_page, src_addr, dst_page, dst_addr);
+	}
+}
+
 /* IO */
 
 void
 system_deo(Uxn *u, Uint8 *d, Uint8 port)
 {
+	Uint16 a;
 	switch(port) {
-	case 0x2: u->wst = (Stack *)(u->ram + (d[port] ? (d[port] * 0x100) : 0x10000)); break;
-	case 0x3: u->rst = (Stack *)(u->ram + (d[port] ? (d[port] * 0x100) : 0x10100)); break;
+	case 0x3:
+		PEKDEV(a, 0x2);
+		mmu_eval(u->ram, a);
+		break;
 	case 0xe:
 		if(u->wst->ptr || u->rst->ptr) system_inspect(u);
 		break;

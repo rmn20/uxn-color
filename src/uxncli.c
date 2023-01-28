@@ -78,9 +78,10 @@ main(int argc, char **argv)
 {
 	Uxn u;
 	int i;
+	Mmu mmu;
 	if(argc < 2)
 		return emu_error("Usage", "uxncli game.rom args");
-	if(!uxn_boot(&u, (Uint8 *)calloc(0x10300, sizeof(Uint8)), emu_dei, emu_deo))
+	if(!uxn_boot(&u, mmu_init(&mmu, 16), emu_dei, emu_deo))
 		return emu_error("Boot", "Failed");
 	if(!load_rom(&u, argv[1]))
 		return emu_error("Load", "Failed");

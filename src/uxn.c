@@ -100,9 +100,9 @@ uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo)
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0x00;
-	u->wst = (Stack *)(ram + 0x10000);
-	u->rst = (Stack *)(ram + 0x10100);
-	u->dev = (Uint8 *)(ram + 0x10200);
+	u->wst = (Stack *)(ram + 0xf0000);
+	u->rst = (Stack *)(ram + 0xf0100);
+	u->dev = (Uint8 *)(ram + 0xf0200);
 	u->ram = ram;
 	u->dei = dei;
 	u->deo = deo;
