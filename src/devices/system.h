@@ -11,11 +11,6 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define RAM_PAGES 0x10
 
-typedef struct {
-	Uint8 *pages;
-} Mmu;
-
-Uint8 *system_init(Mmu *m, Uint16 pages);
 int system_load(Uxn *u, char *filename);
-void system_inspect(Uxn *u);
 void system_deo(Uxn *u, Uint8 *d, Uint8 port);
+void system_inspect(Uxn *u);

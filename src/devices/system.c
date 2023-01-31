@@ -41,15 +41,8 @@ system_inspect(Uxn *u)
 
 /* RAM */
 
-Uint8 *
-system_init(Mmu *m, Uint16 pages)
-{
-	m->pages = (Uint8 *)calloc(0x10000 * pages, sizeof(Uint8));
-	return m->pages;
-}
-
 void
-mmu_eval(Uint8 *ram, Uint16 addr)
+system_cmd(Uint8 *ram, Uint16 addr)
 {
 	Uint16 a = addr, i = 0;
 	Uint8 o = ram[a++];
@@ -85,7 +78,7 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 	switch(port) {
 	case 0x3:
 		PEKDEV(a, 0x2);
-		mmu_eval(u->ram, a);
+		system_cmd(u->ram, a);
 		break;
 	case 0xe:
 		if(u->wst->ptr || u->rst->ptr) system_inspect(u);
@@ -113,4 +106,3 @@ uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 	}
 	return 0;
 }
-

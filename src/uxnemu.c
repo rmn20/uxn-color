@@ -53,7 +53,6 @@ static Uint32 stdin_event, audio0_event;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
 char *rom_path;
-Mmu mmu;
 
 static int
 error(char *msg, const char *err)
@@ -263,8 +262,8 @@ init(void)
 static int
 start(Uxn *u, char *rom)
 {
-	free(mmu.pages);
-	if(!uxn_boot(u, system_init(&mmu, RAM_PAGES), emu_dei, emu_deo))
+	free(u->ram);
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
 	if(!system_load(u, rom))
 		return error("Boot", "Failed to load rom.");
