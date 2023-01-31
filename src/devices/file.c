@@ -140,10 +140,7 @@ retry_realpath(const char *file_name)
 		else
 			return NULL;
 	}
-	x = malloc(strlen(r) + 1);
-	strcpy(x, r);
-	free(r);
-	return x;
+	return r;
 }
 
 static void
