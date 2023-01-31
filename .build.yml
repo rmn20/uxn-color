@@ -46,12 +46,12 @@ tasks:
         done
         [ -e ~/.ssh/id_rsa ] || complete-build
     - build-windows: |
-        if false && ssh -o ConnectTimeout=10 win true; then
+        if ssh -o ConnectTimeout=10 win true; then
             ssh win "export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); MSYSTEM=MSYS ./build.sh --no-run"
             rsync -rp win:uxn/bin/ build/uxn-win64/uxn/
         else
             wget -nv -NP out "https://${SITE}/"uxn{,-essentials}-win64.{tar.gz,zip} || true
-            : touch out/needs-solar-build
+            touch out/needs-solar-build
         fi
     - build-macos: |
         if ssh -o ConnectTimeout=10 mac true; then
