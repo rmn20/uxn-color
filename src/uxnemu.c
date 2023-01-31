@@ -264,9 +264,9 @@ static int
 start(Uxn *u, char *rom)
 {
 	free(mmu.pages);
-	if(!uxn_boot(u, mmu_init(&mmu, 16), emu_dei, emu_deo))
+	if(!uxn_boot(u, system_init(&mmu, RAM_PAGES), emu_dei, emu_deo))
 		return error("Boot", "Failed to start uxn.");
-	if(!load_rom(u, rom))
+	if(!system_load(u, rom))
 		return error("Boot", "Failed to load rom.");
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))

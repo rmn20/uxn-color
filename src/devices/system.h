@@ -9,11 +9,13 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-void system_inspect(Uxn *u);
-void system_deo(Uxn *u, Uint8 *d, Uint8 port);
+#define RAM_PAGES 0x10
 
 typedef struct {
-	Uint8 length, *pages;
+	Uint8 *pages;
 } Mmu;
 
-Uint8 *mmu_init(Mmu *m, Uint16 pages);
+Uint8 *system_init(Mmu *m, Uint16 pages);
+int system_load(Uxn *u, char *filename);
+void system_inspect(Uxn *u);
+void system_deo(Uxn *u, Uint8 *d, Uint8 port);

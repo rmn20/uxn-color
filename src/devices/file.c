@@ -286,19 +286,3 @@ file_dei(Uint8 id, Uint8 *d, Uint8 port)
 	}
 	return d[port];
 }
-
-/* Boot */
-
-int
-load_rom(Uxn *u, char *filename)
-{
-	int l, i = 0;
-	FILE *f = fopen(filename, "rb");
-	if(!f)
-		return 0;
-	l = fread(&u->ram[PAGE_PROGRAM], 1, 0x10000 - PAGE_PROGRAM, f);
-	while(l && ++i < 15)
-		l = fread(u->ram + 0x10000 * i, 1, 0x10000, f);
-	fclose(f);
-	return 1;
-}
