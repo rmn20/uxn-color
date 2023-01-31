@@ -70,6 +70,7 @@ CC="${CC:-cc}"
 CFLAGS="${CFLAGS:--std=c89 -Wall -Wno-unknown-pragmas}"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*|MINGW*) # MSYS2 on Windows
+	FILE_LDFLAGS="-liberty"
 	if [ $console = 1 ];
 	then
 		UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs | sed -e 's/ -mwindows//g')"
@@ -98,8 +99,8 @@ fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c -o bin/uxncli
+${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
 
 if [ $install = 1 ]
 then

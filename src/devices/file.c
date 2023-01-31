@@ -8,6 +8,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <libiberty/libiberty.h>
+#define realpath(s, dummy) lrealpath(s)
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
@@ -84,14 +89,17 @@ file_read_dir(UxnFile *c, char *dest, Uint16 len)
 			continue;
 		if(strcmp(c->de->d_name, "..") == 0) {
 			/* hide "sandbox/.." */
-			char cwd[PATH_MAX] = {'\0'}, t[PATH_MAX] = {'\0'};
+			char cwd[PATH_MAX] = {'\0'}, *t;
 			/* Note there's [currently] no way of chdir()ing from uxn, so $PWD
 			 * is always the sandbox top level. */
 			getcwd(cwd, sizeof(cwd));
 			/* We already checked that c->current_filename exists so don't need a wrapper. */
-			realpath(c->current_filename, t);
-			if(strcmp(cwd, t) == 0)
+			t = realpath(c->current_filename, NULL);
+			if(strcmp(cwd, t) == 0) {
+				free(t);
 				continue;
+			}
+			free(t);
 		}
 		if(strlen(c->current_filename) + 1 + strlen(c->de->d_name) < sizeof(pathname))
 			sprintf(pathname, "%s/%s", c->current_filename, c->de->d_name);
@@ -108,7 +116,7 @@ file_read_dir(UxnFile *c, char *dest, Uint16 len)
 static char *
 retry_realpath(const char *file_name)
 {
-	char r[PATH_MAX] = {'\0'}, p[PATH_MAX] = {'\0'}, *x;
+	char *r, p[PATH_MAX] = {'\0'}, *x;
 	if(file_name == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -123,7 +131,7 @@ retry_realpath(const char *file_name)
 		strcat(p, "/"); /* TODO: use a macro instead of '/' for the path delimiter */
 	}
 	strcat(p, file_name);
-	while(realpath(p, r) == NULL) {
+	while((r = realpath(p, NULL)) == NULL) {
 		if(errno != ENOENT)
 			return NULL;
 		x = strrchr(p, '/'); /* TODO: path delimiter macro */
@@ -134,6 +142,7 @@ retry_realpath(const char *file_name)
 	}
 	x = malloc(strlen(r) + 1);
 	strcpy(x, r);
+	free(r);
 	return x;
 }
 
