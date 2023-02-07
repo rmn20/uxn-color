@@ -119,7 +119,6 @@ emu_dei(Uxn *u, Uint8 addr)
 	case 0xc0: return datetime_dei(&u->dev[d], p);
 	}
 	return u->dev[addr];
-	return 0;
 }
 
 static void
