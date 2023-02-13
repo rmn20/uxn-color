@@ -23,7 +23,7 @@ static int
 emu_error(char *msg, const char *err)
 {
 	fprintf(stderr, "Error %s: %s\n", msg, err);
-	return 0;
+	return 1;
 }
 
 static int
@@ -85,7 +85,7 @@ main(int argc, char **argv)
 	if(!system_load(&u, argv[1]))
 		return emu_error("Load", "Failed");
 	if(!uxn_eval(&u, PAGE_PROGRAM))
-		return emu_error("Init", "Failed");
+		return u.dev[0x0f] & 0x7f;
 	for(i = 2; i < argc; i++) {
 		char *p = argv[i];
 		while(*p) console_input(&u, *p++);
@@ -96,5 +96,5 @@ main(int argc, char **argv)
 		if(c != EOF)
 			console_input(&u, (Uint8)c);
 	}
-	return 0;
+	return u.dev[0x0f] & 0x7f;
 }
