@@ -341,11 +341,16 @@ get_vector_joystick(SDL_Event *event)
 static Uint8
 get_key(SDL_Event *event)
 {
+	int sym = event->key.keysym.sym;
 	SDL_Keymod mods = SDL_GetModState();
-	if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
-		return event->key.keysym.sym;
-	if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
-		return event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
+	if(sym < 0x20 || sym == SDLK_DELETE)
+		return sym;
+	if(mods & KMOD_CTRL) {
+		if(sym < SDLK_a)
+			return sym;
+		else if(sym <= SDLK_z)
+			return sym - (mods & KMOD_SHIFT) * 0x20;
+	}
 	return 0x00;
 }
 
