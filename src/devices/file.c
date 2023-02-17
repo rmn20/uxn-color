@@ -65,7 +65,7 @@ static Uint16
 get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int fail_nonzero)
 {
 	struct stat st;
-	if(len < strlen(basename) + 7)
+	if(len < strlen(basename) + 8)
 		return 0;
 	if(stat(pathname, &st))
 		return fail_nonzero ? sprintf(p, "!!!! %s\n", basename) : 0;
