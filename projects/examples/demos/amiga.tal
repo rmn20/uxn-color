@@ -40,7 +40,7 @@ BRK
 	( every 4th frame )
 	.timer LDZ INC .timer STZk POP #03 EQU JMP [ BRK ]
 	( reset timer )
-	#00 .timer STZ
+	[ LIT2 00 -timer ] STZ
 	( 12 frames animation )
 	.frame LDZ INC DUP #0c NEQ MUL .frame STZ
 	move-ball
@@ -53,7 +53,7 @@ BRK
 @check-flip-vx ( x -- x )
 
 	( left ) DUP2 #0010 LTH2 ?&flip 
-	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip ,&else JMP
+	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip !&else
 	&flip .ball/vx LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
 	&else
 
@@ -61,7 +61,7 @@ JMP2r
 
 @check-flip-vy ( y -- y )
 
-	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ?&flip ,&else JMP
+	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ?&flip !&else
 	&flip .ball/vy LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
 	&else
 
@@ -72,13 +72,12 @@ JMP2r
 	( clear )
 	.ball/x LDZ2 .Screen/x DEO2
 	.ball/y LDZ2 .Screen/y DEO2
-	#76 .Screen/auto DEO
-	#0800
+	[ LIT2 76 -Screen/auto ] DEO
+	#f8
 	&loop-bg
-		#40 .Screen/sprite DEO
-		INC GTHk ?&loop-bg
-	POP2
-
+		[ LIT2 40 -Screen/sprite ] DEO
+		INC DUP ?&loop-bg
+	POP
 	.ball/vx LDZ2k STH2k ROT STZ2
 	.ball/x LDZ2k STH2r ADD2 check-flip-vx ROT STZ2
 	.ball/vy LDZ2k INC2 STH2k ROT STZ2
@@ -90,44 +89,42 @@ JMP2r
 	.ball/x LDZ2 #0008 ADD2 .Screen/x DEO2
 	.ball/y LDZ2 #0008 ADD2 .Screen/y DEO2
 	;shadow .Screen/addr DEO2
-	#66 .Screen/auto DEO
-	#0700
+	[ LIT2 66 -Screen/auto ] DEO
+	#f9
 	&loop-shadow
-		#4f .Screen/sprite DEO
-		INC GTHk ?&loop-shadow
-	POP2
+		[ LIT2 4f -Screen/sprite ] DEO
+		INC DUP ?&loop-shadow
+	POP
 	.frame LDZ
 	( bg )
-	DUP #06 DIV INC #05 MUL #40 ADD STH
+	DUP #06 DIV INC #05 MUL #40 ADD ,&bg STR
 	.ball/x LDZ2 .Screen/x DEO2
 	.ball/y LDZ2 .Screen/y DEO2
 	;bg .Screen/addr DEO2
-	#66 .Screen/auto DEO
-	#0700
+	[ LIT2 66 -Screen/auto ] DEO
+	#f9
 	&loop-bg
-		STHkr .Screen/sprite DEO
-		INC GTHk ?&loop-bg
-	POP2
-	POPr
+		[ LIT2 &bg $1 -Screen/sprite ] DEO
+		INC DUP ?&loop-bg
+	POP
 	( fg )
-	DUP #06 DIV #00 EQU INC #05 MUL #40 ADD STH
+	DUP #06 DIV #00 EQU INC #05 MUL #40 ADD ,&fg STR
 	.ball/x LDZ2 .Screen/x DEO2
 	.ball/y LDZ2 .Screen/y DEO2
 	#06 DIVk MUL SUB #00 SWP #0188 MUL2 ;ball-icn ADD2 .Screen/addr DEO2
-	#66 .Screen/auto DEO
-	#0700
+	[ LIT2 66 -Screen/auto ] DEO
+	#f9
 	&loop-fg
-		STHkr .Screen/sprite DEO
-		INC GTHk ?&loop-fg
-	POP2
-	POPr
+		[ LIT2 &fg $1 -Screen/sprite ] DEO
+		INC DUP ?&loop-fg
+	POP
 
 JMP2r
 
 @draw-background ( -- )
 
 	( hor lines )
-	#01 .Screen/auto DEO
+	[ LIT2 01 -Screen/auto ] DEO
 	;hor-icn .Screen/addr DEO2
 	.Screen/height DEI2 #04 SFT2 NIP #04 SUB #00
 	&horver
@@ -135,13 +132,13 @@ JMP2r
 		#00 OVR #40 SFT2 #0020 ADD2 .Screen/y DEO2
 		.Screen/width DEI2 #03 SFT2 NIP #08 SUB #00
 		&horhor
-			#0f .Screen/sprite DEO
+			[ LIT2 0f -Screen/sprite ] DEO
 			INC GTHk ?&horhor
 		POP2
 		INC GTHk ?&horver
 	POP2
 	( ver lines )
-	#02 .Screen/auto DEO
+	[ LIT2 02 -Screen/auto ] DEO
 	;ver-icn .Screen/addr DEO2
 	.Screen/width DEI2 #04 SFT2 NIP #03 SUB #00
 	&verver
@@ -149,7 +146,7 @@ JMP2r
 		#00 OVR #40 SFT2 #0019 ADD2 .Screen/x DEO2
 		.Screen/height DEI2 #03 SFT2 NIP #0a SUB #00
 		&verhor
-			#0f .Screen/sprite DEO
+			[ LIT2 0f -Screen/sprite ] DEO
 			INC GTHk ?&verhor
 		POP2
 		INC GTHk ?&verver
