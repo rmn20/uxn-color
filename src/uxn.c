@@ -11,42 +11,42 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-/*	a,b,c: general use.  bs: byte/short bool.
-	pc: program counter. sp: ptr to src stack ptr. kptr: "keep" mode copy of src stack ptr.
-	x,y: macro in params. d: macro in device. j: macro temp variables. o: macro out param. */
+/*	a,b,c: general use. m2: byte/short mode flag.
+	tsp: macro temp stack ptr. ksp: "keep" mode copy of stack ptr. sp: ptr to stack ptr.
+	x,y: macro in params. o: macro out param. */
 
 #define HALT(c) { return uxn_halt(u, instr, (c), pc - 1); }
-#define JUMP(x) { if(bs) pc = (x); else pc += (Sint8)(x); }
+#define JUMP(x) { if(m2) pc = (x); else pc += (Sint8)(x); }
 #define PUSH8(x) { if(s->ptr == 0xff) HALT(2) s->dat[s->ptr++] = (x); }
-#define PUSH16(x) { if((j = s->ptr) >= 0xfe) HALT(2) k = (x); s->dat[j] = k >> 8; s->dat[j + 1] = k; s->ptr = j + 2; }
-#define PUSH(x) { if(bs) { PUSH16(x) } else { PUSH8(x) } }
-#define POP8(o) { if(!(j = *sp)) HALT(1) o = (Uint16)s->dat[--j]; *sp = j; }
-#define POP16(o) { if((j = *sp) <= 1) HALT(1) o = (s->dat[j - 2] << 8) + s->dat[j - 1]; *sp = j - 2; }
-#define POP(o) { if(bs) { POP16(o) } else { POP8(o) } }
-#define POKE(x, y) { if(bs) { u->ram[(x)] = (y) >> 8; u->ram[(x) + 1] = (y); } else { u->ram[(x)] = y; } }
-#define PEEK16(o, x) { o = (u->ram[(x)] << 8) + u->ram[(x) + 1]; }
-#define PEEK(o, x) { if(bs) PEEK16(o, x) else o = u->ram[(x)]; }
-#define DEVR(o, x) { o = u->dei(u, x); if (bs) o = (o << 8) + u->dei(u, (x) + 1); }
-#define DEVW(x, y) { if (bs) { u->deo(u, (x), (y) >> 8); u->deo(u, (x) + 1, (y)); } else { u->deo(u, x, (y)); } }
+#define PUSH16(x) { if((tsp = s->ptr) >= 0xfe) HALT(2) k = (x); s->dat[tsp] = k >> 8; s->dat[tsp + 1] = k; s->ptr = tsp + 2; }
+#define PUSH(x) { if(m2) { PUSH16(x) } else { PUSH8(x) } }
+#define POP8(o) { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
+#define POP16(o) { if((tsp = *sp) <= 0x01) HALT(1) o = s->dat[tsp - 1] | (s->dat[tsp - 2] << 8); *sp = tsp - 2; }
+#define POP(o) { if(m2) { POP16(o) } else { POP8(o) } }
+#define POKE(x, y) { if(m2) { u->ram[(x)] = (y) >> 8; u->ram[(x) + 1] = (y); } else { u->ram[(x)] = y; } }
+#define PEEK16(o, x) { o = (u->ram[(x)] << 8) | u->ram[(x) + 1]; }
+#define PEEK(o, x) { if(m2) PEEK16(o, x) else o = u->ram[(x)]; }
+#define DEVR(o, x) { o = u->dei(u, x); if (m2) o = (o << 8) | u->dei(u, (x) + 1); }
+#define DEVW(x, y) { if (m2) { u->deo(u, (x), (y) >> 8); u->deo(u, (x) + 1, (y)); } else { u->deo(u, x, (y)); } }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint8 kptr, *sp;
-	Uint16 a, b, c, j, k, bs, instr, opcode;
+	Uint8 ksp, tsp, *sp;
+	Uint16 a, b, c, k, m2, instr, opcode;
 	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
 		instr = u->ram[pc++];
+		opcode = instr & 0x1f;
 		/* Short Mode */
-		bs = instr & 0x20;
+		m2 = instr & 0x20;
 		/* Return Mode */
 		s = instr & 0x40 ? u->rst : u->wst;
 		/* Keep Mode */
-		if(instr & 0x80) { kptr = s->ptr; sp = &kptr; }
+		if(instr & 0x80) { ksp = s->ptr; sp = &ksp; }
 		else sp = &s->ptr;
 		/* Opcodes */
-		opcode = instr & 0x1f;
 		switch(opcode - (!opcode * (instr >> 5))) {
 		/* Immediate */
 		case -0x0: /* BRK */ return 1;
