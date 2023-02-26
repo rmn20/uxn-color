@@ -17,23 +17,27 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define HALT(c) { return uxn_halt(u, instr, (c), pc - 1); }
 #define JUMP(x) { if(m2) pc = (x); else pc += (Sint8)(x); }
+
 #define PUSH8(x) { if(s->ptr == 0xff) HALT(2) s->dat[s->ptr++] = (x); }
-#define PUSH16(x) { if((tsp = s->ptr) >= 0xfe) HALT(2) k = (x); s->dat[tsp] = k >> 8; s->dat[tsp + 1] = k; s->ptr = tsp + 2; }
+#define PUSH16(x) { if((tsp = s->ptr) >= 0xfe) HALT(2) t = (x); s->dat[tsp] = t >> 8; s->dat[tsp + 1] = t; s->ptr = tsp + 2; }
 #define PUSH(x) { if(m2) { PUSH16(x) } else { PUSH8(x) } }
+
 #define POP8(o) { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
 #define POP16(o) { if((tsp = *sp) <= 0x01) HALT(1) o = s->dat[tsp - 1] | (s->dat[tsp - 2] << 8); *sp = tsp - 2; }
 #define POP(o) { if(m2) { POP16(o) } else { POP8(o) } }
-#define POKE(x, y) { if(m2) { u->ram[(x)] = (y) >> 8; u->ram[(x) + 1] = (y); } else { u->ram[(x)] = y; } }
+
+#define POKE(x, y) { if(m2) { t = (y); u->ram[(x)] = t >> 8; u->ram[(x) + 1] = t; } else { u->ram[(x)] = (y); } }
 #define PEEK16(o, x) { o = (u->ram[(x)] << 8) | u->ram[(x) + 1]; }
 #define PEEK(o, x) { if(m2) PEEK16(o, x) else o = u->ram[(x)]; }
-#define DEVR(o, x) { o = u->dei(u, x); if (m2) o = (o << 8) | u->dei(u, (x) + 1); }
-#define DEVW(x, y) { if (m2) { u->deo(u, (x), (y) >> 8); u->deo(u, (x) + 1, (y)); } else { u->deo(u, x, (y)); } }
+
+#define DEVR(o, x) { o = u->dei(u, x); if(m2) o = (o << 8) | u->dei(u, (x) + 1); }
+#define DEVW(x, y) { if(m2) { u->deo(u, (x), (y) >> 8); u->deo(u, (x) + 1, (y)); } else { u->deo(u, x, (y)); } }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint8 ksp, tsp, *sp;
-	Uint16 a, b, c, k, m2, instr, opcode;
+	Uint8 instr, opcode, m2, ksp, tsp, *sp;
+	Uint16 a, b, c, t;
 	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
@@ -75,8 +79,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x0f: /* STH */ POP(a) s = (instr & 0x40) ? u->wst : u->rst; PUSH(a) break;
 		case 0x10: /* LDZ */ POP8(a) PEEK(b, a) PUSH(b) break;
 		case 0x11: /* STZ */ POP8(a) POP(b) POKE(a, b) break;
-		case 0x12: /* LDR */ POP8(a) b = pc + (Sint8)a; PEEK(c, b) PUSH(c) break;
-		case 0x13: /* STR */ POP8(a) POP(b) c = pc + (Sint8)a; POKE(c, b) break;
+		case 0x12: /* LDR */ POP8(a) PEEK(b, pc + (Sint8)a) PUSH(b) break;
+		case 0x13: /* STR */ POP8(a) POP(b) POKE(pc + (Sint8)a, b) break;
 		case 0x14: /* LDA */ POP16(a) PEEK(b, a) PUSH(b) break;
 		case 0x15: /* STA */ POP16(a) POP(b) POKE(a, b) break;
 		case 0x16: /* DEI */ POP8(a) DEVR(b, a) PUSH(b) break;
