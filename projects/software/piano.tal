@@ -146,7 +146,8 @@ BRK
 
 @on-touch-wave-view ( -> )
 
-	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2 .Audio0/length DEO2
+	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2
+		( min ) #0010 GTH2k JMP SWP2 POP2 .Audio0/length DEO2
 	draw-wave
 
 BRK
@@ -286,19 +287,37 @@ JMP2r
 
 @draw-wave ( -- )
 
-	( #01 draw-wave-length )
-	( dotted zero )
-
+	( background )
+	.wave-view/x1 LDZ2 .Screen/x DEO2
+	.wave-view/y1 LDZ2 .Screen/y DEO2
+	;fill-icn .Screen/addr DEO2
+	[ LIT2 75 -Screen/auto ] DEO
+	#e0 &lbg
+		;dotted-icn .Screen/addr DEO2
+		[ LIT2 03 -Screen/sprite ] DEO
+		INC DUP ?&lbg
+	POP
 	.wave-view/x1 LDZ2 .Screen/x DEO2
 
 	( waveform )
 	[ LIT2 01 -Screen/auto ] DEO
 	;sin-pcm/end ;sin-pcm
 	&loop
-		LDAk #00 SWP #02 SFT2 .wave-view/y1 LDZ2 ADD2 .Screen/y DEO2
-		( draw ) DUP2 ;sin-pcm SUB2 NIP .Audio0/length DEI2 NIP GTH INC INC .Screen/pixel DEO
+
+		DUP2 ;sin-pcm SUB2 .Audio0/length DEI2 DIV2k MUL2 SUB2 ;sin-pcm ADD2 LDA
+
+
+		 #00 SWP #02 SFT2 .wave-view/y1 LDZ2 ADD2 .Screen/y DEO2
+		( draw ) DUP2 ;sin-pcm SUB2 NIP .Audio0/length DEI2 NIP #01 SUB GTH INC .Screen/pixel DEO
 		INC2 GTH2k ?&loop
 	POP2 POP2
+
+	( length line )
+	.wave-view/x1 LDZ2 .Audio0/length DEI2 #0001 SUB2 ADD2 .Screen/x DEO2
+	.wave-view/y1 LDZ2 .Screen/y DEO2
+	;line-icn .Screen/addr DEO2
+	[ LIT2 71 -Screen/auto ] DEO
+	[ LIT2 05 -Screen/sprite ] DEO
 
 	( range )
 	#01 .Screen/auto DEO
@@ -310,31 +329,6 @@ JMP2r
 	#00 .Screen/auto DEO
 
 JMP2r
-
-@draw-wave-length ( color -- )
-
-	( clear background )
-	#f2 .Screen/auto DEO
-	.wave-view/x1 LDZ2 DUP2 .Screen/x DEO2
-	.wave-view/y1 LDZ2 DUP2 .Screen/y DEO2
-	,&wipe JSR
-	.Screen/y DEO2
-	#0080 ADD2 .Screen/x DEO2
-	,&wipe JSR
-	#00 .Screen/auto DEO
-
-	STH
-	.wave-view/x1 LDZ2 .Audio0/length DEI2 ADD2 .Screen/x DEO2
-	.wave-view/y1 LDZ2 DUP2 #0020 ADD2 SWP2
-	&loop
-		DUP2 .Screen/y DEO2
-		( draw ) STHkr .Screen/pixel DEO
-		INC2 GTH2k ?&loop
-	POP2 POP2
-	POPr
-
-JMP2r
-	&wipe #00 .Screen/sprite DEOk DEOk DEOk DEO JMP2r
 
 @draw-knob ( x* y* value -- )
 
@@ -396,6 +390,20 @@ JMP2r
 
 @|assets )
 
+@dotted-icn [
+	0000 0000 0000 0000
+	0000 0000 0000 0000
+	0000 0000 0000 0000
+	0000 0000 0000 0000
+	aa00 0000 0000 0000
+	0000 0000 0000 0000
+	0000 0000 0000 0000
+	0000 0000 0000 0000 ]
+@line-icn [
+	8080 8080 8080 8080
+	]
+@fill-icn [
+	ffff ffff ffff ffff ]
 @cursor-icn [
 	80c0 e0f0 f8e0 1000 ]
 @arrow-icns [
