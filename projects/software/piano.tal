@@ -12,7 +12,6 @@
 
 	@last-note $1
 	@octave $1
-	@pointer &x $2 &y $2
 	@center &x $2 &y $2
 	@adsr-view &x1 $2 &y1 $2 &x2 $2 &y2 $2
 	@wave-view &x1 $2 &y1 $2 &x2 $2 &y2 $2
@@ -21,20 +20,23 @@
 |0100 ( -> )
 
 	( theme )
-	#0fe5 .System/r DEO2
-	#0fc5 .System/g DEO2
-	#0f25 .System/b DEO2
+	#0fe3 .System/r DEO2
+	#0fc3 .System/g DEO2
+	#0f23 .System/b DEO2
+	( resize )
+	#0180 .Screen/width DEO2
+	#00e0 .Screen/height DEO2
 	( find center )
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
-	.Screen/height DEI2 #01 SFT2 #0018 ADD2 .center/y STZ2
+	.Screen/height DEI2 #01 SFT2 #0010 ADD2 .center/y STZ2
 	( place octave )
 	.center/x LDZ2 #0080 SUB2 .octave-view/x1 STZ2
-	.center/y LDZ2 #0008 ADD2 .octave-view/y1 STZ2
+	.center/y LDZ2 #0010 ADD2 .octave-view/y1 STZ2
 	.octave-view/x1 LDZ2 #0050 ADD2 .octave-view/x2 STZ2
 	.octave-view/y1 LDZ2 #0018 ADD2 .octave-view/y2 STZ2
 	( place adsr )
 	.center/x LDZ2 #0020 SUB2 .adsr-view/x1 STZ2
-	.center/y LDZ2 #0008 ADD2 .adsr-view/y1 STZ2
+	.center/y LDZ2 #0010 ADD2 .adsr-view/y1 STZ2
 	.adsr-view/x1 LDZ2 #00a0 ADD2 .adsr-view/x2 STZ2
 	.adsr-view/y1 LDZ2 #0018 ADD2 .adsr-view/y2 STZ2
 	( place waveform )
@@ -58,9 +60,12 @@
 
 BRK
 
+(
+@|vectors )
+
 @on-frame ( -> )
 
-	#00 .Screen/auto DEO
+	[ LIT2 00 -Screen/auto ] DEO
 	.adsr-view/y2 LDZ2 #0020 SUB2 .Screen/y DEO2
 	#1000
 	&loop
@@ -75,11 +80,6 @@ BRK
 BRK
 
 @on-control ( -> )
-
-	( clear last cursor )
-	.pointer/x LDZ2 .Screen/x DEO2
-	.pointer/y LDZ2 .Screen/y DEO2
-	#40 .Screen/sprite DEO
 
 	.Controller/key DEI
 	[ LIT "a ] NEQk NIP ?&no-c #30 .octave LDZ #0c MUL ADD play &no-c
@@ -114,7 +114,6 @@ BRK
 	POP
 
 	draw-octave
-	draw-wave
 
 BRK
 
@@ -147,8 +146,7 @@ BRK
 @on-touch-wave-view ( -> )
 
 	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2
-		( min ) #0010 GTH2k JMP SWP2 POP2 .Audio0/length DEO2
-	draw-wave
+		( min ) #0010 GTH2k [ JMP SWP2 POP2 ] set-length
 
 BRK
 
@@ -212,6 +210,15 @@ BRK
 
 JMP2r
 
+@set-length ( length* -- )
+
+	.Audio0/length DEO2
+
+!draw-wave
+
+(
+@|drawing )
+
 @update-cursor ( color addr* -- )
 
 	[ LIT2 00 -Screen/auto ] DEO
@@ -237,7 +244,7 @@ JMP2r
 	;arrow-icns .Screen/addr DEO2
 	[ LIT2 01 -Screen/sprite ] DEO
 	;font-hex .octave LDZ #03 ADD #00 SWP #30 SFT2 ADD2 .Screen/addr DEO2
-	[ LIT2 03 -Screen/sprite ] DEO
+	[ LIT2 02 -Screen/sprite ] DEO
 	;arrow-icns/down .Screen/addr DEO2
 	[ LIT2 01 -Screen/sprite ] DEO
 	( octave )
@@ -294,41 +301,32 @@ JMP2r
 	[ LIT2 75 -Screen/auto ] DEO
 	#e0 &lbg
 		;dotted-icn .Screen/addr DEO2
-		[ LIT2 03 -Screen/sprite ] DEO
+		[ LIT2 0c -Screen/sprite ] DEO
 		INC DUP ?&lbg
 	POP
 	.wave-view/x1 LDZ2 .Screen/x DEO2
-
 	( waveform )
 	[ LIT2 01 -Screen/auto ] DEO
 	;sin-pcm/end ;sin-pcm
 	&loop
-
 		DUP2 ;sin-pcm SUB2 .Audio0/length DEI2 DIV2k MUL2 SUB2 ;sin-pcm ADD2 LDA
-
-
-		 #00 SWP #02 SFT2 .wave-view/y1 LDZ2 ADD2 .Screen/y DEO2
+		#00 SWP #02 SFT2 .wave-view/y1 LDZ2 ADD2 .Screen/y DEO2
 		( draw ) DUP2 ;sin-pcm SUB2 NIP .Audio0/length DEI2 NIP #01 SUB GTH INC .Screen/pixel DEO
 		INC2 GTH2k ?&loop
 	POP2 POP2
-
 	( length line )
 	.wave-view/x1 LDZ2 .Audio0/length DEI2 #0001 SUB2 ADD2 .Screen/x DEO2
 	.wave-view/y1 LDZ2 .Screen/y DEO2
 	;line-icn .Screen/addr DEO2
 	[ LIT2 71 -Screen/auto ] DEO
 	[ LIT2 05 -Screen/sprite ] DEO
-
 	( range )
-	#01 .Screen/auto DEO
+	[ LIT2 01 -Screen/auto ] DEO
 	.wave-view/x1 LDZ2 .Screen/x DEO2
-	.wave-view/y1 LDZ2 #0010 SUB2 .Screen/y DEO2
-	.Audio0/addr DEI2 draw-short
-	.wave-view/x2 LDZ2 #0020 SUB2 .Screen/x DEO2
-	.Audio0/length DEI2 draw-short
-	#00 .Screen/auto DEO
+	.wave-view/y1 LDZ2 #0018 SUB2 .Screen/y DEO2
+	.Audio0/length DEI2
 
-JMP2r
+!draw-short
 
 @draw-knob ( x* y* value -- )
 
@@ -347,7 +345,7 @@ JMP2r
 	( marker )
 	.Screen/x DEI2 #0004 SUB2 #0000 STHkr ;knob-offsetx ADD2 LDA ADD2 .Screen/x DEO2
 	.Screen/y DEI2 #0010 SUB2 #0000 STHr ;knob-offsety ADD2 LDA ADD2 .Screen/y DEO2
-	;knob-icns #0020 ADD2 .Screen/addr DEO2
+	;knob-icns/index .Screen/addr DEO2
 	[ LIT2 05 -Screen/sprite ] DEO
 
 JMP2r
@@ -387,8 +385,10 @@ JMP2r
 @phex ( short* -- ) SWP phex/b &b DUP #04 SFT phex/c &c #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO JMP2r
 
 (
-
 @|assets )
+
+@notes-lut [
+	30 32 34 35 37 39 3b 3c ]
 
 @dotted-icn [
 	0000 0000 0000 0000
@@ -410,9 +410,6 @@ JMP2r
 	0010 387c fe10 1000
 &down
 	0010 1010 fe7c 3810 ]
-@notes-lut [
-	30 32 34 35
-	37 39 3b 3c ]
 @keys-left-icns [
 	7c7c 7c7c 7c7c 7c7c
 	7c7c 7c7c 7c7c 7e7f
