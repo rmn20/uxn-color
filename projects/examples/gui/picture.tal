@@ -1,70 +1,66 @@
 ( GUI Picture )
 
-|00 @System     &vector $2 &wst      $1 &rst    $1 &eaddr  $2 &ecode  $1 &pad     $1 &r       $2 &g      $2 &b     $2 &debug  $1 &halt $1
-|20 @Screen     &vector $2 &width    $2 &height $2 &auto   $1 &pad    $1 &x       $2 &y       $2 &addr   $2 &pixel $1 &sprite $1
-
-( variables )
-
-|0000
-
-( program )
+|00 @System &vector $2 &wst $1 &rst $1 &eaddr $2 &ecode $1 &pad $1 &r $2 &g $2 &b $2 &debug $1 &halt $1
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 
 |0100
-	
-	( theme ) 
-	#f0f7 .System/r DEO2 
-	#f00e .System/g DEO2 
+
+	( theme )
+	#f0f7 .System/r DEO2
+	#f00e .System/g DEO2
 	#f00c .System/b DEO2
 
-	#0030 .Screen/x DEO2
-	#0030 .Screen/y DEO2
-	;picture-icn #20 #10 #01 ;draw-icn JSR2
+	#0010
+		DUP2 .Screen/x DEO2
+		.Screen/y DEO2
+	;akane20x10 #20 #10 #01 draw-icn
 
 	#0100 .Screen/x DEO2
-	#0090 .Screen/y DEO2
-	#10 #10 ;dafu10x10 #0a ;draw-small JSR2
+	#0028 .Screen/y DEO2
+	#1010 ;dafu10x10 #0a draw-fast
 
 BRK
 
 @draw-icn ( addr* width height color -- )
 
 	#05 .Screen/auto DEO
-	STH 
-	( set bounds ) ,&height STR ,&width STR .Screen/addr DEO2
-	( set origin ) .Screen/x DEI2 ,&x STR2
-	LIT &height $1 #00
+	,&color STR
+	,&height STR
+	,&width STR
+	.Screen/addr DEO2
+	.Screen/x DEI2
+	,&x STR2
+	[ LIT2 00 &height $1 ] SUB
 	&ver
-		LIT2 &x $2 .Screen/x DEO2
-		LIT &width $1 #00
+		[ LIT2 &x $2 ] .Screen/x DEO2
+		[ LIT2 00 &width $1 ] SUB
 		&hor
-			STHkr .Screen/sprite DEO
-			INC GTHk ,&hor JCN
-		POP2
+			[ LIT &color $1 ] .Screen/sprite DEO
+			INC DUP ?&hor
+		POP
 		.Screen/y DEI2k #0008 ADD2 ROT DEO2
-		INC GTHk ,&ver JCN
-	POP2
-	POPr
+		INC DUP ?&ver
+	POP
 	#00 .Screen/auto DEO
 
 JMP2r
 
 ( makes use of the auto byte )
 
-@draw-small ( w h addr* color -- )
+@draw-fast ( w h addr* color -- )
 
-	STH
+	,&color STR
 	.Screen/addr DEO2
-	SWP #01 SUB #40 SFT #06 ADD .Screen/auto DEO
-	#00
+	SWP #01 SUB #40 SFT #06 ORA .Screen/auto DEO
+	#00 SWP SUB
 	&loop
-		STHkr .Screen/sprite DEO
-		INC GTHk ,&loop JCN
-	POP2
-	POPr
+		[ LIT2 &color $1 -Screen/sprite ] DEO
+		INC DUP ?&loop
+	POP
 
 JMP2r
 
-@picture-icn ( akane2010.bit 20 x 10 )
+@akane20x10
 	0000 0000 0000 0000 2b41 2341 2b41 2341
 	8881 8081 8880 8080 0a00 2000 8800 2000
 	8004 2004 8804 2a04 0000 0000 8000 0000
