@@ -27,13 +27,16 @@
 	#0180 .Screen/width DEO2
 	#00e0 .Screen/height DEO2
 	( find center )
-	.Screen/width DEI2 #01 SFT2 .center/x STZ2
-	.Screen/height DEI2 #01 SFT2 #0010 ADD2 .center/y STZ2
-	( place octave )
-	.center/x LDZ2 #0080 SUB2 .octave-view/x1 STZ2
-	.center/y LDZ2 #0010 ADD2 .octave-view/y1 STZ2
-	.octave-view/x1 LDZ2 #0050 ADD2 .octave-view/x2 STZ2
-	.octave-view/y1 LDZ2 #0018 ADD2 .octave-view/y2 STZ2
+	.Screen/width DEI2 #01 SFT2
+		DUP2 .center/x STZ2
+		#0080 SUB2
+		DUP2 .octave-view/x1 STZ2
+			#0050 ADD2 .octave-view/x2 STZ2
+	.Screen/height DEI2 #01 SFT2 #0010 ADD2
+		DUP2 .center/y STZ2
+		#0010 ADD2
+		DUP2 .octave-view/y1 STZ2
+			#0018 ADD2 .octave-view/y2 STZ2
 	( place adsr )
 	.center/x LDZ2 #0020 SUB2 .adsr-view/x1 STZ2
 	.center/y LDZ2 #0010 ADD2 .adsr-view/y1 STZ2
@@ -44,6 +47,7 @@
 	.center/y LDZ2 #0040 SUB2 .wave-view/y1 STZ2
 	.wave-view/x1 LDZ2 #0100 ADD2 .wave-view/x2 STZ2
 	.wave-view/y1 LDZ2 #0040 ADD2 .wave-view/y2 STZ2
+	( setup synth )
 	#041c .Audio0/adsr DEO2
 	#dd .Audio0/volume DEO
 	;sin-pcm .Audio0/addr DEO2
@@ -65,14 +69,21 @@ BRK
 
 @on-frame ( -> )
 
+	[ LIT &last $1 ] .Audio0/output DEI NEQk ?&changed
+		POP2 BRK
+		&changed
+	,&last STR POP
+
+	( redraw )
 	[ LIT2 00 -Screen/auto ] DEO
 	.adsr-view/y2 LDZ2 #0020 SUB2 .Screen/y DEO2
 	#1000
 	&loop
 		.adsr-view/x2 LDZ2 #003a SUB2 .Screen/x DEO2
-		#10 OVR SUB .Audio0/output DEI #0f AND LTH .Screen/pixel DEO
-		.adsr-view/x2 LDZ2 #003a SUB2 INC2 INC2 .Screen/x DEO2
-		#10 OVR SUB .Audio0/output DEI #04 SFT LTH .Screen/pixel DEO
+		#10 OVR SUB .Audio0/output DEI
+			DUP2 #0f AND LTH .Screen/pixel DEO
+		.Screen/x DEI2k INC2 INC2 ROT DEO2
+			#04 SFT LTH .Screen/pixel DEO
 		.Screen/y DEI2k INC2 INC2 ROT DEO2
 		INC GTHk ?&loop
 	POP2
@@ -83,11 +94,16 @@ BRK
 
 	.Controller/key DEI
 	[ LIT "a ] NEQk NIP ?&no-c #30 .octave LDZ #0c MUL ADD play &no-c
+	[ LIT "w ] NEQk NIP ?&no-c# #31 .octave LDZ #0c MUL ADD play &no-c#
 	[ LIT "s ] NEQk NIP ?&no-d #32 .octave LDZ #0c MUL ADD play &no-d
+	[ LIT "e ] NEQk NIP ?&no-d# #33 .octave LDZ #0c MUL ADD play &no-d#
 	[ LIT "d ] NEQk NIP ?&no-e #34 .octave LDZ #0c MUL ADD play &no-e
 	[ LIT "f ] NEQk NIP ?&no-f #35 .octave LDZ #0c MUL ADD play &no-f
+	[ LIT "t ] NEQk NIP ?&no-f# #36 .octave LDZ #0c MUL ADD play &no-f#
 	[ LIT "g ] NEQk NIP ?&no-g #37 .octave LDZ #0c MUL ADD play &no-g
+	[ LIT "y ] NEQk NIP ?&no-g# #38 .octave LDZ #0c MUL ADD play &no-g#
 	[ LIT "h ] NEQk NIP ?&no-a #39 .octave LDZ #0c MUL ADD play &no-a
+	[ LIT "u ] NEQk NIP ?&no-a# #3a .octave LDZ #0c MUL ADD play &no-a#
 	[ LIT "j ] NEQk NIP ?&no-b #3b .octave LDZ #0c MUL ADD play &no-b
 	[ LIT "k ] NEQk NIP ?&no-c2 #3c .octave LDZ #0c MUL ADD play &no-c2
 	[ #1b ] NEQk NIP ?&no-esc #010f DEO &no-esc
