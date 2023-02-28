@@ -93,6 +93,7 @@ BRK
 @on-control ( -> )
 
 	.Controller/key DEI
+	( octave )
 	[ LIT "a ] NEQk NIP ?&no-c #30 .octave LDZ #0c MUL ADD play &no-c
 	[ LIT "w ] NEQk NIP ?&no-c# #31 .octave LDZ #0c MUL ADD play &no-c#
 	[ LIT "s ] NEQk NIP ?&no-d #32 .octave LDZ #0c MUL ADD play &no-d
@@ -106,6 +107,9 @@ BRK
 	[ LIT "u ] NEQk NIP ?&no-a# #3a .octave LDZ #0c MUL ADD play &no-a#
 	[ LIT "j ] NEQk NIP ?&no-b #3b .octave LDZ #0c MUL ADD play &no-b
 	[ LIT "k ] NEQk NIP ?&no-c2 #3c .octave LDZ #0c MUL ADD play &no-c2
+	( controls )
+	[ LIT "z ] NEQk NIP ?&no-dec .octave LDZk #01 SUB SWP STZ &no-dec
+	[ LIT "x ] NEQk NIP ?&no-inc .octave LDZk INC SWP STZ &no-inc
 	[ #1b ] NEQk NIP ?&no-esc #010f DEO &no-esc
 	POP
 
@@ -153,7 +157,7 @@ BRK
 	.Mouse/x DEI2 .Mouse/y DEI2 .wave-view within-rect
 		?on-touch-wave-view
 	.Mouse/x DEI2 .Mouse/y DEI2 .adsr-view within-rect
-		?on-touch-adsr-view
+		?on-touch-knobs-view
 	.Mouse/x DEI2 .Mouse/y DEI2 .octave-view within-rect
 		?on-touch-octave-view
 
@@ -190,31 +194,39 @@ BRK
 
 BRK
 
-@on-touch-adsr-view ( -> )
+@on-touch-knobs-view ( -> )
 
 	.Mouse/x DEI2 .adsr-view/x1 LDZ2 SUB2 #03 SFT2 NIP #03 DIV
-	[ #00 ] NEQk NIP ?&no-a
-		.Audio0/adsr DEI touch2 .Audio0/adsr DEO &no-a
-	[ #01 ] NEQk NIP ?&no-d
-		.Audio0/adsr DEI touch .Audio0/adsr DEO &no-d
-	[ #02 ] NEQk NIP ?&no-s
-		.Audio0/adsr INC DEI touch2 .Audio0/adsr INC DEO &no-s
-	[ #03 ] NEQk NIP ?&no-r
-		.Audio0/adsr INC DEI touch .Audio0/adsr INC DEO &no-r
-	[ #05 ] NEQk NIP ?&no-left
-		.Audio0/volume DEI touch2 .Audio0/volume DEO &no-left
-	[ #06 ] NEQk NIP ?&no-right
-		.Audio0/volume DEI touch .Audio0/volume DEO &no-right
-	POP
+	.Mouse/y DEI2 .adsr-view/y1 LDZ2 SUB2 NIP
+	OVR #04 LTH ?on-touch-adsr
+	OVR #04 GTH ?on-touch-vol
+	POP2
 
-	( release ) #00 .Mouse/state DEO
+BRK
+
+@on-touch-adsr ( knob value -> )
+
+	STH2
+	( mask ) #ffff #000f #03 OVRr STHr SUB #60 SFT SFT2 EOR2
+		.Audio0/adsr DEI2 AND2
+	( value ) #000f STHr OVR LTHk JMP SWP POP SUB
+	( shift ) #03 STHr SUB #60 SFT SFT2 ORA2
+	.Audio0/adsr DEO2
 	draw-adsr
 
 BRK
-@touch
-	DUP #f0 AND STH #01 .Mouse/state DEI #01 GTH #0e MUL ADD ADD #0f AND STHr ADD JMP2r
-@touch2
-	#10 .Mouse/state DEI #01 GTH #e0 MUL ADD ADD JMP2r
+
+@on-touch-vol ( knob value -> )
+
+	SWP #03 SUB INC INC SWP STH2
+	( mask ) #0f OVRr STHr #60 SFT SFT
+		.Audio0/volume DEI AND
+	( value ) #0f STHr OVR LTHk JMP SWP POP SUB
+	( shift ) #01 STHr SUB #20 SFT #40 SFT SFT ORA
+	.Audio0/volume DEO
+	draw-adsr
+
+BRK
 
 (
 @|core )
