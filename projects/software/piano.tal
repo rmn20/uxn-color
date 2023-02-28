@@ -165,8 +165,17 @@ BRK
 
 @on-touch-wave-view ( -> )
 
+	.Mouse/state DEI #01 GTH ?&paint
 	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2
 		( min ) #0010 GTH2k [ JMP SWP2 POP2 ] set-length
+
+BRK
+
+&paint ( -> )
+
+	.Mouse/y DEI2 .wave-view/y1 LDZ2 SUB2 #20 SFT2 NIP
+	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2 ;sin-pcm ADD2 STA
+	draw-wave
 
 BRK
 
@@ -209,7 +218,7 @@ BRK
 	STH2
 	( mask ) #ffff #000f #03 OVRr STHr SUB #60 SFT SFT2 EOR2
 		.Audio0/adsr DEI2 AND2
-	( value ) #000f STHr OVR LTHk JMP SWP POP SUB
+	( value ) #000f STHr OVR LTHk [ JMP SWP POP ] SUB
 	( shift ) #03 STHr SUB #60 SFT SFT2 ORA2
 	.Audio0/adsr DEO2
 	draw-adsr
@@ -221,8 +230,8 @@ BRK
 	SWP #03 SUB INC INC SWP STH2
 	( mask ) #0f OVRr STHr #60 SFT SFT
 		.Audio0/volume DEI AND
-	( value ) #0f STHr OVR LTHk JMP SWP POP SUB
-	( shift ) #01 STHr SUB #20 SFT #40 SFT SFT ORA
+	( value ) #0f STHr OVR LTHk [ JMP SWP POP ] SUB
+	( shift ) #01 STHr SUB #60 SFT SFT ORA
 	.Audio0/volume DEO
 	draw-adsr
 
