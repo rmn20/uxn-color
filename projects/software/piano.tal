@@ -5,12 +5,12 @@
 |10 @Console &vector $2 &read $1 &pad $5 &write $1 &error $1
 |20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
 |30 @Audio0 &vector $2 &position $2 &output $1 &pad $3 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1
+|40 @Audio1 &vector $2 &position $2 &output $1 &pad $3 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1
 |80 @Controller &vector $2 &button $1 &key $1
 |90 @Mouse &vector $2 &x $2 &y $2 &state $1 &pad $3 &modx $2 &mody $2
 
 |0000
 
-	@last-note $1
 	@octave $1
 	@center &x $2 &y $2
 	@adsr-view &x1 $2 &y1 $2 &x2 $2 &y2 $2
@@ -48,10 +48,13 @@
 	.wave-view/x1 LDZ2 #0100 ADD2 .wave-view/x2 STZ2
 	.wave-view/y1 LDZ2 #0040 ADD2 .wave-view/y2 STZ2
 	( setup synth )
-	#041c .Audio0/adsr DEO2
-	#dd .Audio0/volume DEO
+	#041c set-env
+	#dd set-vol
 	;sin-pcm .Audio0/addr DEO2
-	#0100 .Audio0/length DEO2
+	;sin-pcm .Audio1/addr DEO2
+	#0100
+		DUP2 .Audio0/length DEO2
+		.Audio1/length DEO2
 	( inital drawing )
 	draw-octave
 	draw-adsr
@@ -68,6 +71,14 @@ BRK
 @|vectors )
 
 @on-frame ( -> )
+
+	.Mouse/state DEI ?&skip-sft
+	[ LIT2 00 &soft $1 ] EQUk ?&no-soft
+		soften
+		DUP #01 SUB ,&soft STR
+		&no-soft
+	POP2
+	&skip-sft
 
 	[ LIT &last $1 ] .Audio0/output DEI NEQk ?&changed
 		POP2 BRK
@@ -129,8 +140,6 @@ BRK
 	[ #24 ] NEQk NIP ?&sd #45 play &sd
 	[ #44 ] NEQk NIP ?&sl #46 play &sl
 	[ #84 ] NEQk NIP ?&sr #47 play &sr
-	[ #40 ] NEQk NIP ?&l .Audio0/addr DEI2 #0010 SUB2 .Audio0/addr DEO2 &l
-	[ #80 ] NEQk NIP ?&r .Audio0/addr DEI2 #0010 ADD2 .Audio0/addr DEO2 &r
 	POP
 
 	draw-octave
@@ -176,6 +185,7 @@ BRK
 	.Mouse/y DEI2 .wave-view/y1 LDZ2 SUB2 #20 SFT2 NIP
 	.Mouse/x DEI2 .wave-view/x1 LDZ2 SUB2 ;sin-pcm ADD2 STA
 	draw-wave
+	#10 ;on-frame/soft STA
 
 BRK
 
@@ -220,8 +230,7 @@ BRK
 		.Audio0/adsr DEI2 AND2
 	( value ) #000f STHr OVR LTHk [ JMP SWP POP ] SUB
 	( shift ) #03 STHr SUB #60 SFT SFT2 ORA2
-	.Audio0/adsr DEO2
-	draw-adsr
+	set-env
 
 BRK
 
@@ -232,8 +241,7 @@ BRK
 		.Audio0/volume DEI AND
 	( value ) #0f STHr OVR LTHk [ JMP SWP POP ] SUB
 	( shift ) #01 STHr SUB #60 SFT SFT ORA
-	.Audio0/volume DEO
-	draw-adsr
+	set-vol
 
 BRK
 
@@ -243,15 +251,55 @@ BRK
 @play ( pitch -- )
 
 	DUP #0c DIVk MUL SUB ;draw-octave/last STA
-	.Audio0/pitch DEO
+	DUP .Audio0/pitch DEO
+		#0c SUB .Audio1/pitch DEO
 
 JMP2r
 
 @set-length ( length* -- )
 
-	.Audio0/length DEO2
+	DUP2 .Audio0/length DEO2
+		.Audio1/length DEO2
 
 !draw-wave
+
+@set-vol ( vol -- )
+
+	DUP .Audio0/volume DEO
+		.Audio1/volume DEO
+
+!draw-adsr
+
+@set-env ( adsr* -- )
+
+	DUP2 .Audio0/adsr DEO2
+		.Audio1/adsr DEO2
+
+!draw-adsr
+
+@soften ( -- )
+
+	#0100 #0000
+	&l
+		DUP2 ;sin-pcm ADD2 get-average SWP2 STA POP
+		INC2 GTH2k ?&l
+	POP2 POP2
+	draw-wave
+
+JMP2r
+
+@get-average ( addr* -- addr* average* )
+
+	[ LIT2r 0000 ]
+	DUP2 #0001 SUB2 DUP2 #0002 ADD2 SWP2
+	&l
+		LDAk LITr 00 STH ADD2r
+		INC2 GTH2k ?&l
+	POP2 POP2
+	LDAk #00 SWP DUP2 DUP2 STH2r
+	#01 SFT2 ADD2 ADD2 ADD2 #02 SFT2
+
+JMP2r
 
 (
 @|drawing )
@@ -481,6 +529,8 @@ JMP2r
 	007c 8202 7e82 827e 00fc 8282 fc82 82fc
 	007c 8280 8080 827c 00fc 8282 8282 82fc
 	007c 8280 f080 827c 007c 8280 f080 8080 ]
+
+( pad ) [ 8080 8080 ]
 @sin-pcm [
 	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
 	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
@@ -499,3 +549,5 @@ JMP2r
 	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
 	5053 5659 5c5f 6265 686b 6e71 7477 7a7d ]
 	&end
+( pad ) [ 8080 8080 ]
+
