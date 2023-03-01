@@ -67,7 +67,7 @@ console_input(Uxn *u, char c)
 {
 	Uint8 *d = &u->dev[0x10];
 	d[0x02] = c;
-	return uxn_eval(u, GETVEC(d));
+	return uxn_eval(u, PEEK16(d));
 }
 
 static void
@@ -388,7 +388,7 @@ handle_events(Uxn *u)
 		}
 		/* Audio */
 		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			uxn_eval(u, GETVEC(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
+			uxn_eval(u, PEEK16(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
@@ -445,7 +445,7 @@ run(Uxn *u)
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
-		uxn_eval(u, GETVEC(&u->dev[0x20]));
+		uxn_eval(u, PEEK16(&u->dev[0x20]));
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
 		now = SDL_GetPerformanceCounter();
