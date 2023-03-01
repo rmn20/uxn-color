@@ -39,6 +39,15 @@ screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 }
 
 static void
+screen_wipe(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y)
+{
+	int v, h;
+	for(v = 0; v < 8; v++)
+		for(h = 0; h < 8; h++)
+			screen_write(p, layer, x + h, y + v, 0);
+}
+
+static void
 screen_blit(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
 	int v, h, opaque = (color % 5) || !color;
@@ -183,8 +192,12 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		if(addr > 0xfff0)
 			return;
 		for(i = 0; i <= n; i++) {
-			screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, &ram[addr], d[0xf] & 0xf, d[0xf] & 0x10, d[0xf] & 0x20, twobpp);
-			addr += (d[0x6] & 0x04) << (1 + twobpp);
+			if(!(d[0xf] & 0xf))
+				screen_wipe(&uxn_screen, layer, x + dy * i, y + dx * i);
+			else {
+				screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, &ram[addr], d[0xf] & 0xf, d[0xf] & 0x10, d[0xf] & 0x20, twobpp);
+				addr += (d[0x6] & 0x04) << (1 + twobpp);
+			}
 		}
 		POKDEV(0xc, addr);   /* auto addr+length */
 		POKDEV(0x8, x + dx); /* auto x+8 */
