@@ -28,13 +28,12 @@ static Uint32 palette_mono[] = {
 static void
 screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	Uint32 i;
-	if(x > p->width || y > p->height)
-		return;
-	i = x + y * p->width;
-	if(color != layer->pixels[i]) {
-		layer->pixels[i] = color;
-		layer->changed = 1;
+	if(x < p->width && y < p->height) {
+		Uint32 i = x + y * p->width;
+		if(color != layer->pixels[i]) {
+			layer->pixels[i] = color;
+			layer->changed = 1;
+		}
 	}
 }
 
@@ -189,7 +188,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		n = d[0x6] >> 4;
 		dx = (d[0x6] & 0x01) << 3;
 		dy = (d[0x6] & 0x02) << 2;
-		if(addr > 0xfff0)
+		if(addr > 0x10000 - ((n + 1) << (3 + twobpp)))
 			return;
 		for(i = 0; i <= n; i++) {
 			if(!(d[0xf] & 0xf))
