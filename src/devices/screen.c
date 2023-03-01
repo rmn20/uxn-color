@@ -16,7 +16,7 @@ WITH REGARD TO THIS SOFTWARE.
 
 UxnScreen uxn_screen;
 
-static Uint8 blending[5][16] = {
+static Uint8 blending[4][16] = {
 	{0, 0, 0, 0, 1, 0, 1, 1, 2, 2, 0, 2, 3, 3, 3, 0},
 	{0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3},
 	{1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1},
