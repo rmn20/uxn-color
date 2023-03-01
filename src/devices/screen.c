@@ -28,12 +28,13 @@ static Uint32 palette_mono[] = {
 static void
 screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	if(x < p->width && y < p->height) {
-		Uint32 i = x + y * p->width;
-		if(color != layer->pixels[i]) {
-			layer->pixels[i] = color;
-			layer->changed = 1;
-		}
+	Uint32 i;
+	if(x > p->width || y > p->height)
+		return;
+	i = x + y * p->width;
+	if(color != layer->pixels[i]) {
+		layer->pixels[i] = color;
+		layer->changed = 1;
 	}
 }
 
@@ -42,7 +43,7 @@ screen_blit(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8
 {
 	int v, h, opaque = (color % 5) || !color;
 	for(v = 0; v < 8; v++) {
-		Uint16 c = sprite[v] | (twobpp ? sprite[v + 8] : 0) << 8;
+		Uint16 c = sprite[v] | (twobpp ? (sprite[v + 8] << 8) : 0);
 		for(h = 7; h >= 0; --h, c >>= 1) {
 			Uint8 ch = (c & 1) | ((c >> 7) & 2);
 			if(opaque || ch)
@@ -179,7 +180,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		n = d[0x6] >> 4;
 		dx = (d[0x6] & 0x01) << 3;
 		dy = (d[0x6] & 0x02) << 2;
-		if(addr > 0x10000 - ((n + 1) << (3 + twobpp)))
+		if(addr > 0xfff0)
 			return;
 		for(i = 0; i <= n; i++) {
 			screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, &ram[addr], d[0xf] & 0xf, d[0xf] & 0x10, d[0xf] & 0x20, twobpp);
