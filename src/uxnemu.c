@@ -87,7 +87,7 @@ audio_dei(int instance, Uint8 *d, Uint8 port)
 	if(!audio_id) return d[port];
 	switch(port) {
 	case 0x4: return audio_get_vu(instance);
-	case 0x2: POKDEV(0x2, audio_get_position(instance)); /* fall through */
+	case 0x2: POKE16(d + 0x2, audio_get_position(instance)); /* fall through */
 	default: return d[port];
 	}
 }

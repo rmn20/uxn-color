@@ -17,19 +17,14 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define HALT(c) { return uxn_halt(u, instr, (c), pc - 1); }
 #define JUMP(x) { if(m2) pc = (x); else pc += (Sint8)(x); }
-
 #define PUSH8(x) { if(s->ptr == 0xff) HALT(2) s->dat[s->ptr++] = (x); }
-#define PUSH16(x) { if((tsp = s->ptr) >= 0xfe) HALT(2) t = (x); s->dat[tsp] = t >> 8; s->dat[tsp + 1] = t; s->ptr = tsp + 2; }
+#define PUSH16(x) { if((tsp = s->ptr) >= 0xfe) HALT(2) t = (x); POKE16(&s->dat[tsp], t); s->ptr = tsp + 2; }
 #define PUSH(x) { if(m2) { PUSH16(x) } else { PUSH8(x) } }
-
 #define POP8(o) { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
-#define POP16(o) { if((tsp = *sp) <= 0x01) HALT(1) o = s->dat[tsp - 1] | (s->dat[tsp - 2] << 8); *sp = tsp - 2; }
+#define POP16(o) { if((tsp = *sp) <= 0x01) HALT(1) o = PEEK16(&s->dat[tsp - 2]); *sp = tsp - 2; }
 #define POP(o) { if(m2) { POP16(o) } else { POP8(o) } }
-
-#define POKE(x, y) { if(m2) { t = (y); u->ram[(x)] = t >> 8; u->ram[(x) + 1] = t; } else { u->ram[(x)] = (y); } }
-#define PEEK16(o, x) { o = (u->ram[(x)] << 8) | u->ram[(x) + 1]; }
-#define PEEK(o, x) { if(m2) PEEK16(o, x) else o = u->ram[(x)]; }
-
+#define POKE(x, y) { if(m2) { t = (y); POKE16(u->ram + x, t) } else { u->ram[(x)] = (y); } }
+#define PEEK(o, x) { if(m2) { o = PEEK16(u->ram + x); } else o = u->ram[(x)]; }
 #define DEVR(o, x) { o = u->dei(u, x); if(m2) o = (o << 8) | u->dei(u, (x) + 1); }
 #define DEVW(x, y) { if(m2) { u->deo(u, (x), (y) >> 8); u->deo(u, (x) + 1, (y)); } else { u->deo(u, x, (y)); } }
 
@@ -55,12 +50,12 @@ uxn_eval(Uxn *u, Uint16 pc)
 		/* Immediate */
 		case -0x0: /* BRK */ return 1;
 		case -0x1: /* JCI */ POP8(b) if(!b) { pc += 2; break; }
-		case -0x2: /* JMI */ PEEK16(a, pc) pc += a + 2; break;
-		case -0x3: /* JSI */ s = u->rst; PUSH16(pc + 2) PEEK16(a, pc) pc += a + 2; break;
+		case -0x2: /* JMI */ pc += PEEK16(u->ram + pc) + 2; break;
+		case -0x3: /* JSI */ s = u->rst; PUSH16(pc + 2) pc += PEEK16(u->ram + pc) + 2; break;
 		case -0x4: /* LIT */
 		case -0x6: /* LITr */ a = u->ram[pc++]; PUSH8(a) break;
 		case -0x5: /* LIT2 */
-		case -0x7: /* LIT2r */ PEEK16(a, pc) PUSH16(a) pc += 2; break;
+		case -0x7: /* LIT2r */ PUSH16(PEEK16(u->ram + pc)) pc += 2; break;
 		/* ALU */
 		case 0x01: /* INC */ POP(a) PUSH(a + 1) break;
 		case 0x02: /* POP */ POP(a) break;

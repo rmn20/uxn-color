@@ -156,35 +156,26 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 	switch(port) {
 	case 0x3:
 		if(!FIXED_SIZE) {
-			Uint16 w;
-			PEKDEV(w, 0x2);
-			screen_resize(&uxn_screen, clamp(w, 1, 1024), uxn_screen.height);
+			screen_resize(&uxn_screen, clamp(PEEK16(d + 2), 1, 1024), uxn_screen.height);
 		}
 		break;
 	case 0x5:
 		if(!FIXED_SIZE) {
-			Uint16 h;
-			PEKDEV(h, 0x4);
-			screen_resize(&uxn_screen, uxn_screen.width, clamp(h, 1, 1024));
+			screen_resize(&uxn_screen, uxn_screen.width, clamp(PEEK16(d + 4), 1, 1024));
 		}
 		break;
 	case 0xe: {
-		Uint16 x, y;
+		Uint16 x = PEEK16(d + 0x8), y = PEEK16(d + 0xa);
 		Uint8 layer = d[0xe] & 0x40;
-		PEKDEV(x, 0x8);
-		PEKDEV(y, 0xa);
 		screen_write(&uxn_screen, layer ? &uxn_screen.fg : &uxn_screen.bg, x, y, d[0xe] & 0x3);
-		if(d[0x6] & 0x01) POKDEV(0x8, x + 1); /* auto x+1 */
-		if(d[0x6] & 0x02) POKDEV(0xa, y + 1); /* auto y+1 */
+		if(d[0x6] & 0x01) POKE16(d + 0x8, x + 1); /* auto x+1 */
+		if(d[0x6] & 0x02) POKE16(d + 0xa, y + 1); /* auto y+1 */
 		break;
 	}
 	case 0xf: {
-		Uint16 x, y, dx, dy, addr;
+		Uint16 x = PEEK16(d + 0x8), y = PEEK16(d + 0xa), dx, dy, addr = PEEK16(d + 0xc);
 		Uint8 i, n, twobpp = !!(d[0xf] & 0x80);
 		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		PEKDEV(x, 0x8);
-		PEKDEV(y, 0xa);
-		PEKDEV(addr, 0xc);
 		n = d[0x6] >> 4;
 		dx = (d[0x6] & 0x01) << 3;
 		dy = (d[0x6] & 0x02) << 2;
@@ -198,9 +189,9 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 				addr += (d[0x6] & 0x04) << (1 + twobpp);
 			}
 		}
-		POKDEV(0xc, addr);   /* auto addr+length */
-		POKDEV(0x8, x + dx); /* auto x+8 */
-		POKDEV(0xa, y + dy); /* auto y+8 */
+		POKE16(d + 0xc, addr);   /* auto addr+length */
+		POKE16(d + 0x8, x + dx); /* auto x+8 */
+		POKE16(d + 0xa, y + dy); /* auto y+8 */
 		break;
 	}
 	}
