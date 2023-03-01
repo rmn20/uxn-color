@@ -237,8 +237,8 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 	Uint16 addr, len, res;
 	switch(port) {
 	case 0x5:
-		PEKDEV(addr, 0x4);
-		PEKDEV(len, 0xa);
+		addr = PEEK16(d + 0x4);
+		len = PEEK16(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_stat(c, &ram[addr], len);
@@ -249,21 +249,21 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 		POKDEV(0x2, res);
 		break;
 	case 0x9:
-		PEKDEV(addr, 0x8);
+		addr = PEEK16(d + 0x8);
 		res = file_init(c, (char *)&ram[addr], 0x10000 - addr, 0);
 		POKDEV(0x2, res);
 		break;
 	case 0xd:
-		PEKDEV(addr, 0xc);
-		PEKDEV(len, 0xa);
+		addr = PEEK16(d + 0xc);
+		len = PEEK16(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_read(c, &ram[addr], len);
 		POKDEV(0x2, res);
 		break;
 	case 0xf:
-		PEKDEV(addr, 0xe);
-		PEKDEV(len, 0xa);
+		addr = PEEK16(d + 0xe);
+		len = PEEK16(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_write(c, &ram[addr], len, d[0x7]);
