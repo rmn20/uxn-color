@@ -139,14 +139,14 @@ screen_mono(UxnScreen *p, Uint32 *pixels)
 /* IO */
 
 Uint8
-screen_dei(Uint8 *d, Uint8 port)
+screen_dei(Uxn *u, Uint8 addr)
 {
-	switch(port) {
-	case 0x2: return uxn_screen.width >> 8;
-	case 0x3: return uxn_screen.width;
-	case 0x4: return uxn_screen.height >> 8;
-	case 0x5: return uxn_screen.height;
-	default: return d[port];
+	switch(addr) {
+	case 0x22: return uxn_screen.width >> 8;
+	case 0x23: return uxn_screen.width;
+	case 0x24: return uxn_screen.height >> 8;
+	case 0x25: return uxn_screen.height;
+	default: return u->dev[addr];
 	}
 }
 
@@ -155,14 +155,12 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x3:
-		if(!FIXED_SIZE) {
+		if(!FIXED_SIZE)
 			screen_resize(&uxn_screen, clamp(PEEK16(d + 2), 1, 1024), uxn_screen.height);
-		}
 		break;
 	case 0x5:
-		if(!FIXED_SIZE) {
+		if(!FIXED_SIZE)
 			screen_resize(&uxn_screen, uxn_screen.width, clamp(PEEK16(d + 4), 1, 1024));
-		}
 		break;
 	case 0xe: {
 		Uint16 x = PEEK16(d + 0x8), y = PEEK16(d + 0xa);
