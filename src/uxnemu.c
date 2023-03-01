@@ -70,14 +70,19 @@ console_input(Uxn *u, char c)
 	return uxn_eval(u, PEEK16(d));
 }
 
+
 static void
 console_deo(Uint8 *d, Uint8 port)
 {
-	FILE *fd = port == 0x8 ? stdout : port == 0x9 ? stderr
-												  : 0;
-	if(fd) {
-		fputc(d[port], fd);
-		fflush(fd);
+	switch(port) {
+	case 0x8:
+		fputc(d[port], stdout);
+		fflush(stdout);
+		return;
+	case 0x9:
+		fputc(d[port], stderr);
+		fflush(stderr);
+		return;
 	}
 }
 
