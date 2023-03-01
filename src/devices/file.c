@@ -242,16 +242,16 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_stat(c, &ram[addr], len);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	case 0x6:
 		res = file_delete(c);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	case 0x9:
 		addr = PEEK16(d + 0x8);
 		res = file_init(c, (char *)&ram[addr], 0x10000 - addr, 0);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	case 0xd:
 		addr = PEEK16(d + 0xc);
@@ -259,7 +259,7 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_read(c, &ram[addr], len);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	case 0xf:
 		addr = PEEK16(d + 0xe);
@@ -267,7 +267,7 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_write(c, &ram[addr], len, d[0x7]);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	}
 }
@@ -281,7 +281,7 @@ file_dei(Uint8 id, Uint8 *d, Uint8 port)
 	case 0xc:
 	case 0xd:
 		res = file_read(c, &d[port], 1);
-		POKDEV(0x2, res);
+		POKE16(d + 0x2, res);
 		break;
 	}
 	return d[port];

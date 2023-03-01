@@ -29,17 +29,17 @@ mouse_up(Uxn *u, Uint8 *d, Uint8 mask)
 void
 mouse_pos(Uxn *u, Uint8 *d, Uint16 x, Uint16 y)
 {
-	POKDEV(0x2, x);
-	POKDEV(0x4, y);
+	POKE16(d + 0x2, x);
+	POKE16(d + 0x4, y);
 	uxn_eval(u, PEEK16(d));
 }
 
 void
 mouse_scroll(Uxn *u, Uint8 *d, Uint16 x, Uint16 y)
 {
-	POKDEV(0xa, x);
-	POKDEV(0xc, -y);
+	POKE16(d + 0xa, x);
+	POKE16(d + 0xc, -y);
 	uxn_eval(u, PEEK16(d));
-	POKDEV(0xa, 0);
-	POKDEV(0xc, 0);
+	POKE16(d + 0xa, 0);
+	POKE16(d + 0xc, 0);
 }

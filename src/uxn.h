@@ -16,8 +16,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define POKE16(d, v) { (d)[0] = (v) >> 8; (d)[1] = (v); }
 #define PEEK16(d) ((d)[0] << 8 | (d)[1])
 
-#define POKDEV(x, y) { d[(x)] = (y) >> 8; d[(x) + 1] = (y); }
-
 /* clang-format on */
 
 typedef unsigned char Uint8;
