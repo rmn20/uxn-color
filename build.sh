@@ -93,7 +93,7 @@ then
 	CFLAGS="${CFLAGS} -DDEBUG -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla -g -Og -fsanitize=address -fsanitize=undefined"
 	CORE='src/uxn.c'
 else
-	CFLAGS="${CFLAGS} -DNDEBUG -Os -g0 -s"
+	CFLAGS="${CFLAGS} -DNDEBUG -O2 -g0 -s"
 	CORE='src/uxn-fast.c'
 fi
 
