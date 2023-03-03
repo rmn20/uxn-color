@@ -38,19 +38,19 @@ WITH REGARD TO THIS SOFTWARE.
 
 static 
 Uint16 callbacks[] = {
-        0xffff, /* 00 system   1011 0000 1111 1110 */
-        0xffff, /* 10 console  0000 0000 1100 0000 */
-        0xc028, /* 20 screen   0011 1100 0000 0011 */
-        0xffff, /* 30 audio 0  0011 1000 0000 0001 */
-        0xffff, /* 40 audio 1  0011 1000 0000 0001 */
-        0xffff, /* 50 audio 2  0011 1000 0000 0001 */
-        0xffff, /* 60 audio 3  0011 1000 0000 0001 */
-        0x0000, /* 70 midi  */
+        0xffff, /* 00 system */
+        0xffff, /* 10 console */
+        0xc028, /* 20 screen */
+        0x8000, /* 30 audio 0 */
+        0x8000, /* 40 audio 1 */
+        0x8000, /* 50 audio 2 */
+        0x8000, /* 60 audio 3 */
+        0x0000, /* 70 midi */
         0x0000, /* 80 mouse */
-        0x0000, /* 90 file  */
-        0xffff, /* a0 file 0   0000 1110 1100 1111 */
-        0xffff, /* b0 file 1   0000 1110 1100 1111 */
-        0xffff, /* c0 datetime 1111 1111 1110 0000 */
+        0x0000, /* 90 controller*/
+        0xa260, /* a0 file 0 */
+        0xa260, /* b0 file 1 */
+        0xffff, /* c0 datetime */
         0x0000, /* d0 empty */
         0x0000, /* e0 empty */
         0x0000  /* f0 empty */
