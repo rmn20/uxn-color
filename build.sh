@@ -91,7 +91,7 @@ if [ $debug = 1 ];
 then
 	echo "[debug]"
 	CFLAGS="${CFLAGS} -DDEBUG -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla -g -Og -fsanitize=address -fsanitize=undefined"
-	CORE='src/uxn.c'
+	CORE='src/uxn-fast.c'
 else
 	CFLAGS="${CFLAGS} -DNDEBUG -O2 -g0 -s"
 	CORE='src/uxn-fast.c'

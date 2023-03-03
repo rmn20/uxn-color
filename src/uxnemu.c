@@ -70,7 +70,6 @@ console_input(Uxn *u, char c)
 	return uxn_eval(u, PEEK16(d));
 }
 
-
 static void
 console_deo(Uint8 *d, Uint8 port)
 {
