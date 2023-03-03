@@ -1,7 +1,5 @@
 #include "uxn.h"
 
-#include <stdio.h>
-
 /*
 Copyright (u) 2022-2023 Devine Lu Linvega, Andrew Alderwick, Andrew Richards
 
@@ -36,6 +34,27 @@ WITH REGARD TO THIS SOFTWARE.
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { stack->dat[stack->ptr++] = (v); }
 #define PUSH2(stack, v) { tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
+#define SEND(a, b) { u->dev[a] = b; if((callbacks[(a) >> 4] >> ((a) & 0xf)) & 0x1) u->deo(u, a, b); }
+
+static 
+Uint16 callbacks[] = {
+        0xffff, /* 00 system   1011 0000 1111 1110 */
+        0xffff, /* 10 console  0000 0000 1100 0000 */
+        0xc028, /* 20 screen   0011 1100 0000 0011 */
+        0xffff, /* 30 audio 0  0011 1000 0000 0001 */
+        0xffff, /* 40 audio 1  0011 1000 0000 0001 */
+        0xffff, /* 50 audio 2  0011 1000 0000 0001 */
+        0xffff, /* 60 audio 3  0011 1000 0000 0001 */
+        0x0000, /* 70 midi  */
+        0x0000, /* 80 mouse */
+        0x0000, /* 90 file  */
+        0xffff, /* a0 file 0   0000 1110 1100 1111 */
+        0xffff, /* b0 file 1   0000 1110 1100 1111 */
+        0xffff, /* c0 datetime 1111 1111 1110 0000 */
+        0x0000, /* d0 empty */
+        0x0000, /* e0 empty */
+        0x0000  /* f0 empty */
+};
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -104,8 +123,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x15: /* STA  */ t=T2;n=L;       DEC(3, 0) u->ram[t] = n; break; 
 			case 0x36: /* DEI2 */ t=T;            INC(1, 1) PUT(1, u->dei(u, t)) PUT(0, u->dei(u, t + 1)) break;      
 			case 0x16: /* DEI  */ t=T;            INC(1, 0) PUT(0, u->dei(u, t)) break;
-			case 0x37: /* DEO2 */ t=T;n=N;l=L;    DEC(3, 0) u->deo(u, t, l); u->deo(u, t + 1, n); break; 
-			case 0x17: /* DEO  */ t=T;n=N;        DEC(2, 0) u->deo(u, t, n); break; 
+			case 0x37: /* DEO2 */ t=T;n=N;l=L;    DEC(3, 0) SEND(t, l) SEND(t + 1, n) break; 
+			case 0x17: /* DEO  */ t=T;n=N;        DEC(2, 0) SEND(t, n) break; 
 			case 0x38: /* ADD2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n + t) break; 
 			case 0x18: /* ADD  */ t=T;n=N;        INC(2,-1) PUT(0, n + t) break;
 			case 0x39: /* SUB2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n - t) break; 

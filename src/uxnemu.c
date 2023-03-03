@@ -130,7 +130,6 @@ static void
 emu_deo(Uxn *u, Uint8 addr, Uint8 v)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
-	u->dev[addr] = v;
 	switch(d) {
 	case 0x00:
 		system_deo(u, &u->dev[d], p);
