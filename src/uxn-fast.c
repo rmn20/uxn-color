@@ -30,8 +30,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define L2 PEEK16(s->dat+s->ptr-6)
 
 #define HALT(c) { return uxn_halt(u, instr, (c), pc - 1); }
-#define INC(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; }
-#define DEC(mul, sub) { if(mul > s->ptr) HALT(1) s->ptr -= !k * mul - sub; }
+#define INC(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 255) HALT(2) }
+#define DEC(mul, sub) { if(mul > s->ptr) HALT(1) s->ptr -= !k * mul - sub; if(s->ptr > 255) HALT(2) }
 #define PUT(o, v) { s->dat[s->ptr - o - 1] = (v); }
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { stack->dat[stack->ptr++] = (v); }
