@@ -29,7 +29,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define N2 PEEK16(s->dat+s->ptr-4)
 #define L2 PEEK16(s->dat+s->ptr-6)
 
-#define HALT(c) { return uxn_halt(u, instr, (c), pc - 1); }
+#define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
 #define INC(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 255) HALT(2) }
 #define DEC(mul, sub) { if(mul > s->ptr) HALT(1) s->ptr -= !k * mul - sub; if(s->ptr > 255) HALT(2) }
 #define PUT(o, v) { s->dat[s->ptr - o - 1] = (v); }
@@ -40,17 +40,15 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint8 instr, opc, k;
+	Uint8 ins, opc, k;
 	Uint16 t, n, l, tmp;
 	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
-		instr = u->ram[pc++];
-		k = !!(instr & 0x80);
-		s = instr & 0x40 ? u->rst : u->wst;
-		opc = instr & 0x3f;
-		if(!(instr & 0x1f))
-			opc = 0 - (instr >> 5);
+		ins = u->ram[pc++];
+		k = !!(ins & 0x80);
+		s = ins & 0x40 ? u->rst : u->wst;
+		opc = !(ins & 0x1f) ? 0 - (ins >> 5) : ins & 0x3f;
 		switch(opc) {
 			/* IMM */
 			case 0x00: /* BRK   */ return 1;
@@ -90,8 +88,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0d: /* JCN  */ t=T;n=N;        DEC(2, 0) pc += !!n * (Sint8)t; break; 
 			case 0x2e: /* JSR2 */ t=T2;           DEC(2, 0) PUSH2(u->rst, pc) pc = t; break;                 
 			case 0x0e: /* JSR  */ t=T;            DEC(1, 0) PUSH2(u->rst, pc) pc += (Sint8)t; break;
-			case 0x2f: /* STH2 */ t=T2; if(instr & 0x40){ u->rst->ptr -= !k * 2; PUSH2(u->wst, t); } else{ u->wst->ptr -= !k * 2; PUSH2(u->rst, t); } break; 
-			case 0x0f: /* STH  */ t=T;  if(instr & 0x40){ u->rst->ptr -= !k; PUSH(u->wst, t); } else{ u->wst->ptr -= !k; PUSH(u->rst, t); } break; 
+			case 0x2f: /* STH2 */ t=T2; if(ins & 0x40) { u->rst->ptr -= !k * 2; PUSH2(u->wst, t); } else{ u->wst->ptr -= !k * 2; PUSH2(u->rst, t); } break; 
+			case 0x0f: /* STH  */ t=T;  if(ins & 0x40) { u->rst->ptr -= !k; PUSH(u->wst, t); } else{ u->wst->ptr -= !k; PUSH(u->rst, t); } break; 
 			case 0x30: /* LDZ2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + t)) break;                       
 			case 0x10: /* LDZ  */ t=T;            INC(1, 0) PUT(0, u->ram[t]) break; 
 			case 0x31: /* STZ2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + t, n) break;                     
