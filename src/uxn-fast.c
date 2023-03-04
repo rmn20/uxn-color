@@ -35,6 +35,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define PUSH(stack, v) { stack->dat[stack->ptr++] = (v); }
 #define PUSH2(stack, v) { tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
 #define SEND(a, b) { u->dev[a] = b; if((send_events[(a) >> 4] >> ((a) & 0xf)) & 0x1) u->deo(u, a); }
+#define LISTEN(a, b) { PUT(a, ((receive_events[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? u->dei(u, b) : u->dev[b])  }
 
 static 
 Uint16 send_events[] = {
@@ -42,8 +43,8 @@ Uint16 send_events[] = {
 	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000 };
 static
 Uint16 receive_events[] = {
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
+	0x0000, 0x0000, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000, 0x07fd, 0x0000, 0x0000, 0x0000 };
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -110,8 +111,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x14: /* LDA  */ t=T2;           INC(2,-1) PUT(0, u->ram[t]) break;
 			case 0x35: /* STA2 */ t=T2;n=N2;      DEC(4, 0) POKE16(u->ram + t, n) break;
 			case 0x15: /* STA  */ t=T2;n=L;       DEC(3, 0) u->ram[t] = n; break;
-			case 0x36: /* DEI2 */ t=T;            INC(1, 1) PUT(1, u->dei(u, t)) PUT(0, u->dei(u, t + 1)) break;
-			case 0x16: /* DEI  */ t=T;            INC(1, 0) PUT(0, u->dei(u, t)) break;
+			case 0x36: /* DEI2 */ t=T;            INC(1, 1) LISTEN(1, t) LISTEN(0, t + 1) break;
+			case 0x16: /* DEI  */ t=T;            INC(1, 0) LISTEN(0, t) break;
 			case 0x37: /* DEO2 */ t=T;n=N;l=L;    DEC(3, 0) SEND(t, l) SEND(t + 1, n) break;
 			case 0x17: /* DEO  */ t=T;n=N;        DEC(2, 0) SEND(t, n) break;
 			case 0x38: /* ADD2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n + t) break;
