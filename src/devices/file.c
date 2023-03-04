@@ -271,18 +271,3 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 		break;
 	}
 }
-
-Uint8
-file_dei(Uint8 id, Uint8 *d, Uint8 port)
-{
-	UxnFile *c = &uxn_file[id];
-	Uint16 res;
-	switch(port) {
-	case 0xc:
-	case 0xd:
-		res = file_read(c, &d[port], 1);
-		POKE16(d + 0x2, res);
-		break;
-	}
-	return d[port];
-}

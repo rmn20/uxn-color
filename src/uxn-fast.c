@@ -34,13 +34,16 @@ WITH REGARD TO THIS SOFTWARE.
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { stack->dat[stack->ptr++] = (v); }
 #define PUSH2(stack, v) { tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
-#define SEND(a, b) { u->dev[a] = b; if((callbacks[(a) >> 4] >> ((a) & 0xf)) & 0x1) u->deo(u, a); }
+#define SEND(a, b) { u->dev[a] = b; if((send_events[(a) >> 4] >> ((a) & 0xf)) & 0x1) u->deo(u, a); }
 
 static 
-Uint16 callbacks[] = {
+Uint16 send_events[] = {
 	0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000,
-	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000
-};
+	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000 };
+static
+Uint16 receive_events[] = {
+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 };
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
