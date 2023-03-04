@@ -38,22 +38,8 @@ WITH REGARD TO THIS SOFTWARE.
 
 static 
 Uint16 callbacks[] = {
-        0xffff, /* 00 system */
-        0xffff, /* 10 console */
-        0xc028, /* 20 screen */
-        0x8000, /* 30 audio 0 */
-        0x8000, /* 40 audio 1 */
-        0x8000, /* 50 audio 2 */
-        0x8000, /* 60 audio 3 */
-        0x0000, /* 70 midi */
-        0x0000, /* 80 mouse */
-        0x0000, /* 90 controller*/
-        0xa260, /* a0 file 0 */
-        0xa260, /* b0 file 1 */
-        0xffff, /* c0 datetime */
-        0x0000, /* d0 empty */
-        0x0000, /* e0 empty */
-        0x0000  /* f0 empty */
+	0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000,
+	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
 int
@@ -79,65 +65,65 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0xfa: /* LITr  */ PUSH(u->rst, u->ram[pc++]); break;
 			case 0xf9: /* LIT2r */ PUSH2(u->rst, PEEK16(u->ram + pc)); pc += 2; break;
 			/* ALU */
-			case 0x21: /* INC2 */ t=T2;           INC(2, 0) PUT2(0, t + 1) break;                              
-			case 0x01: /* INC  */ t=T;            INC(1, 0) PUT(0, t + 1); break; 
-			case 0x22: /* POP2 */                 DEC(2, 0) break;                                                     
-			case 0x02: /* POP  */                 DEC(1, 0) break; 
-			case 0x23: /* NIP2 */ t=T2;           DEC(2, 0) PUT2(0, t) break;                                 
-			case 0x03: /* NIP  */ t=T;            DEC(1, 0) PUT(0, t) break; 
-			case 0x24: /* SWP2 */ t=T2;n=N2;      INC(4, 0) PUT2(2, t) PUT2(0, n); break;             
-			case 0x04: /* SWP  */ t=T;n=N;        INC(2, 0) PUT(0, n) PUT(1, t); break; 
-			case 0x25: /* ROT2 */ t=T2;n=N2;l=L2; INC(6, 0) PUT2(0, l) PUT2(2, t) PUT2(4, n) break; 
-			case 0x05: /* ROT  */ t=T;n=N;l=L;    INC(3, 0) PUT(0, l) PUT(1, t) PUT(2, n) break; 
-			case 0x26: /* DUP2 */ t=T2;           INC(2, 2) PUT2(0, t) PUT2(2, t) break;                     
-			case 0x06: /* DUP  */ t=T;            INC(1, 1) PUT(0, t) PUT(1, t) break; 
-			case 0x27: /* OVR2 */ t=T2;n=N2;      INC(4, 2) PUT2(0, n) PUT2(2, t) PUT2(4, n) break; 
-			case 0x07: /* OVR  */ t=T;n=N;        INC(2, 1) PUT(0, n) PUT(1, t) PUT(2, n) break; 
-			case 0x28: /* EQU2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n == t) break;                    
-			case 0x08: /* EQU  */ t=T;n=N;        INC(2,-1) PUT(0, n == t) break; 
-			case 0x29: /* NEQ2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n != t) break;                    
-			case 0x09: /* NEQ  */ t=T;n=N;        INC(2,-1) PUT(0, n != t) break; 
-			case 0x2a: /* GTH2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n > t)  break;                    
-			case 0x0a: /* GTH  */ t=T;n=N;        INC(2,-1) PUT(0, n > t) break; 
-			case 0x2b: /* LTH2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n < t)  break;                    
-			case 0x0b: /* LTH  */ t=T;n=N;        INC(2,-1) PUT(0, n < t) break; 
-			case 0x2c: /* JMP2 */ t=T2;           DEC(2, 0) pc = t; break;                                      
-			case 0x0c: /* JMP  */ t=T;            DEC(1, 0) pc += (Sint8)(t);  break; 
-			case 0x2d: /* JCN2 */ t=T2;n=L;       DEC(3, 0) if(n) { pc = t; } break;                    
-			case 0x0d: /* JCN  */ t=T;n=N;        DEC(2, 0) pc += !!n * (Sint8)t; break; 
-			case 0x2e: /* JSR2 */ t=T2;           DEC(2, 0) PUSH2(u->rst, pc) pc = t; break;                 
+			case 0x21: /* INC2 */ t=T2;           INC(2, 0) PUT2(0, t + 1) break;
+			case 0x01: /* INC  */ t=T;            INC(1, 0) PUT(0, t + 1); break;
+			case 0x22: /* POP2 */                 DEC(2, 0) break;
+			case 0x02: /* POP  */                 DEC(1, 0) break;
+			case 0x23: /* NIP2 */ t=T2;           DEC(2, 0) PUT2(0, t) break;
+			case 0x03: /* NIP  */ t=T;            DEC(1, 0) PUT(0, t) break;
+			case 0x24: /* SWP2 */ t=T2;n=N2;      INC(4, 0) PUT2(2, t) PUT2(0, n); break;
+			case 0x04: /* SWP  */ t=T;n=N;        INC(2, 0) PUT(0, n) PUT(1, t); break;
+			case 0x25: /* ROT2 */ t=T2;n=N2;l=L2; INC(6, 0) PUT2(0, l) PUT2(2, t) PUT2(4, n) break;
+			case 0x05: /* ROT  */ t=T;n=N;l=L;    INC(3, 0) PUT(0, l) PUT(1, t) PUT(2, n) break;
+			case 0x26: /* DUP2 */ t=T2;           INC(2, 2) PUT2(0, t) PUT2(2, t) break;
+			case 0x06: /* DUP  */ t=T;            INC(1, 1) PUT(0, t) PUT(1, t) break;
+			case 0x27: /* OVR2 */ t=T2;n=N2;      INC(4, 2) PUT2(0, n) PUT2(2, t) PUT2(4, n) break;
+			case 0x07: /* OVR  */ t=T;n=N;        INC(2, 1) PUT(0, n) PUT(1, t) PUT(2, n) break;
+			case 0x28: /* EQU2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n == t) break;
+			case 0x08: /* EQU  */ t=T;n=N;        INC(2,-1) PUT(0, n == t) break;
+			case 0x29: /* NEQ2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n != t) break;
+			case 0x09: /* NEQ  */ t=T;n=N;        INC(2,-1) PUT(0, n != t) break;
+			case 0x2a: /* GTH2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n > t)  break;
+			case 0x0a: /* GTH  */ t=T;n=N;        INC(2,-1) PUT(0, n > t) break;
+			case 0x2b: /* LTH2 */ t=T2;n=N2;      INC(4,-3) PUT(0, n < t)  break;
+			case 0x0b: /* LTH  */ t=T;n=N;        INC(2,-1) PUT(0, n < t) break;
+			case 0x2c: /* JMP2 */ t=T2;           DEC(2, 0) pc = t; break;
+			case 0x0c: /* JMP  */ t=T;            DEC(1, 0) pc += (Sint8)t;  break;
+			case 0x2d: /* JCN2 */ t=T2;n=L;       DEC(3, 0) if(n) { pc = t; } break;
+			case 0x0d: /* JCN  */ t=T;n=N;        DEC(2, 0) pc += !!n * (Sint8)t; break;
+			case 0x2e: /* JSR2 */ t=T2;           DEC(2, 0) PUSH2(u->rst, pc) pc = t; break;
 			case 0x0e: /* JSR  */ t=T;            DEC(1, 0) PUSH2(u->rst, pc) pc += (Sint8)t; break;
-			case 0x2f: /* STH2 */ t=T2; if(ins & 0x40) { u->rst->ptr -= !k * 2; PUSH2(u->wst, t); } else{ u->wst->ptr -= !k * 2; PUSH2(u->rst, t); } break; 
-			case 0x0f: /* STH  */ t=T;  if(ins & 0x40) { u->rst->ptr -= !k; PUSH(u->wst, t); } else{ u->wst->ptr -= !k; PUSH(u->rst, t); } break; 
-			case 0x30: /* LDZ2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + t)) break;                       
-			case 0x10: /* LDZ  */ t=T;            INC(1, 0) PUT(0, u->ram[t]) break; 
-			case 0x31: /* STZ2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + t, n) break;                     
-			case 0x11: /* STZ  */ t=T;n=N;        DEC(2, 0) u->ram[t] = n; break; 
-			case 0x32: /* LDR2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + pc + (Sint8)t)) break;           
+			case 0x2f: /* STH2 */ t=T2; if(ins & 0x40) { u->rst->ptr -= !k * 2; PUSH2(u->wst, t); } else{ u->wst->ptr -= !k * 2; PUSH2(u->rst, t); } break;
+			case 0x0f: /* STH  */ t=T;  if(ins & 0x40) { u->rst->ptr -= !k; PUSH(u->wst, t); } else{ u->wst->ptr -= !k; PUSH(u->rst, t); } break;
+			case 0x30: /* LDZ2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + t)) break;
+			case 0x10: /* LDZ  */ t=T;            INC(1, 0) PUT(0, u->ram[t]) break;
+			case 0x31: /* STZ2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + t, n) break;
+			case 0x11: /* STZ  */ t=T;n=N;        DEC(2, 0) u->ram[t] = n; break;
+			case 0x32: /* LDR2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + pc + (Sint8)t)) break;
 			case 0x12: /* LDR  */ t=T;            INC(1, 0) PUT(0, u->ram[pc + (Sint8)t]) break;
-			case 0x33: /* STR2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + pc + (Sint8)t, n) break;         
-			case 0x13: /* STR  */ t=T;n=N;        DEC(2, 0) u->ram[pc + (Sint8)t] = n; break; 
-			case 0x34: /* LDA2 */ t=T2;           INC(2, 0) PUT2(0, PEEK16(u->ram + t)) break;                      
+			case 0x33: /* STR2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + pc + (Sint8)t, n) break;
+			case 0x13: /* STR  */ t=T;n=N;        DEC(2, 0) u->ram[pc + (Sint8)t] = n; break;
+			case 0x34: /* LDA2 */ t=T2;           INC(2, 0) PUT2(0, PEEK16(u->ram + t)) break;
 			case 0x14: /* LDA  */ t=T2;           INC(2,-1) PUT(0, u->ram[t]) break;
-			case 0x35: /* STA2 */ t=T2;n=N2;      DEC(4, 0) POKE16(u->ram + t, n) break;                    
-			case 0x15: /* STA  */ t=T2;n=L;       DEC(3, 0) u->ram[t] = n; break; 
-			case 0x36: /* DEI2 */ t=T;            INC(1, 1) PUT(1, u->dei(u, t)) PUT(0, u->dei(u, t + 1)) break;      
+			case 0x35: /* STA2 */ t=T2;n=N2;      DEC(4, 0) POKE16(u->ram + t, n) break;
+			case 0x15: /* STA  */ t=T2;n=L;       DEC(3, 0) u->ram[t] = n; break;
+			case 0x36: /* DEI2 */ t=T;            INC(1, 1) PUT(1, u->dei(u, t)) PUT(0, u->dei(u, t + 1)) break;
 			case 0x16: /* DEI  */ t=T;            INC(1, 0) PUT(0, u->dei(u, t)) break;
-			case 0x37: /* DEO2 */ t=T;n=N;l=L;    DEC(3, 0) SEND(t, l) SEND(t + 1, n) break; 
-			case 0x17: /* DEO  */ t=T;n=N;        DEC(2, 0) SEND(t, n) break; 
-			case 0x38: /* ADD2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n + t) break; 
+			case 0x37: /* DEO2 */ t=T;n=N;l=L;    DEC(3, 0) SEND(t, l) SEND(t + 1, n) break;
+			case 0x17: /* DEO  */ t=T;n=N;        DEC(2, 0) SEND(t, n) break;
+			case 0x38: /* ADD2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n + t) break;
 			case 0x18: /* ADD  */ t=T;n=N;        INC(2,-1) PUT(0, n + t) break;
-			case 0x39: /* SUB2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n - t) break; 
+			case 0x39: /* SUB2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n - t) break;
 			case 0x19: /* SUB  */ t=T;n=N;        INC(2,-1) PUT(0, n - t) break;
-			case 0x3a: /* MUL2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n * t) break; 
+			case 0x3a: /* MUL2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n * t) break;
 			case 0x1a: /* MUL  */ t=T;n=N;        INC(2,-1) PUT(0, n * t) break;
-			case 0x3b: /* DIV2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n / t) break; 
+			case 0x3b: /* DIV2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n / t) break;
 			case 0x1b: /* DIV  */ t=T;n=N;        INC(2,-1) PUT(0, n / t) break;
-			case 0x3c: /* AND2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n & t) break; 
+			case 0x3c: /* AND2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n & t) break;
 			case 0x1c: /* AND  */ t=T;n=N;        INC(2,-1) PUT(0, n & t) break;
-			case 0x3d: /* ORA2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n | t) break; 
+			case 0x3d: /* ORA2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n | t) break;
 			case 0x1d: /* ORA  */ t=T;n=N;        INC(2,-1) PUT(0, n | t) break;
-			case 0x3e: /* EOR2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n ^ t) break; 
+			case 0x3e: /* EOR2 */ t=T2;n=N2;      INC(4,-2) PUT2(0, n ^ t) break;
 			case 0x1e: /* EOR  */ t=T;n=N;        INC(2,-1) PUT(0, n ^ t) break;
 			case 0x3f: /* SFT2 */ t=T;n=H2;       INC(3,-1) PUT2(0, n >> (t & 0x0f) << ((t & 0xf0) >> 4)) break;
 			case 0x1f: /* SFT  */ t=T;n=N;        INC(2,-1) PUT(0, n >> (t & 0x0f) << ((t & 0xf0) >> 4)) break;
