@@ -126,7 +126,7 @@ emu_dei(Uxn *u, Uint8 addr)
 }
 
 static void
-emu_deo(Uxn *u, Uint8 addr, Uint8 v)
+emu_deo(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {

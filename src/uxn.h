@@ -32,11 +32,11 @@ typedef struct Uxn {
 	Uint8 *ram, *dev;
 	Stack *wst, *rst;
 	Uint8 (*dei)(struct Uxn *u, Uint8 addr);
-	void (*deo)(struct Uxn *u, Uint8 addr, Uint8 value);
+	void (*deo)(struct Uxn *u, Uint8 addr);
 } Uxn;
 
 typedef Uint8 Dei(Uxn *u, Uint8 addr);
-typedef void Deo(Uxn *u, Uint8 addr, Uint8 value);
+typedef void Deo(Uxn *u, Uint8 addr);
 
 int uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
 int uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo);
