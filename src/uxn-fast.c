@@ -93,12 +93,12 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0b: /* LTH  */ t=T;n=N;        INC(2,-1) PUT(0, n < t) break;
 			case 0x2c: /* JMP2 */ t=T2;           DEC(2, 0) pc = t; break;
 			case 0x0c: /* JMP  */ t=T;            DEC(1, 0) pc += (Sint8)t; break;
-			case 0x2d: /* JCN2 */ t=T2;n=L;       DEC(3, 0) if(n) { pc = t; } break;
+			case 0x2d: /* JCN2 */ t=T2;n=L;       DEC(3, 0) if(n) pc = t; break;
 			case 0x0d: /* JCN  */ t=T;n=N;        DEC(2, 0) pc += !!n * (Sint8)t; break;
 			case 0x2e: /* JSR2 */ t=T2;           DEC(2, 0) PUSH2(u->rst, pc) pc = t; break;
 			case 0x0e: /* JSR  */ t=T;            DEC(1, 0) PUSH2(u->rst, pc) pc += (Sint8)t; break;
-			case 0x2f: /* STH2 */ t=T2;           if(ins & 0x40) { DEC(2, 0) PUSH2(u->wst, t) } else{ DEC(2, 0) PUSH2(u->rst, t) } break;
-			case 0x0f: /* STH  */ t=T;            if(ins & 0x40) { DEC(1, 0) PUSH(u->wst, t) } else{ DEC(1, 0) PUSH(u->rst, t) } break;
+			case 0x2f: /* STH2 */ t=T2;           DEC(2, 0) if(ins & 0x40) { PUSH2(u->wst, t) } else{ PUSH2(u->rst, t) } break;
+			case 0x0f: /* STH  */ t=T;            DEC(1, 0) if(ins & 0x40) { PUSH(u->wst, t) } else{ PUSH(u->rst, t) } break;
 			case 0x30: /* LDZ2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + t)) break;
 			case 0x10: /* LDZ  */ t=T;            INC(1, 0) PUT(0, u->ram[t]) break;
 			case 0x31: /* STZ2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + t, n) break;
