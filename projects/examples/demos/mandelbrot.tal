@@ -1,4 +1,6 @@
-( mandelbrot )
+( mandelbrot.tal )
+( )
+( by alderwick and d_m )
 
 %WIDTH { #02a0 }
 %HEIGHT { #0200 }
@@ -17,88 +19,106 @@
 	#0ff0 .System/g DEO2
 	#00ff .System/b DEO2
 
-	WIDTH .Screen/width DEO2 ( 640 )
-	HEIGHT .Screen/height DEO2 ( 480 )
+	( size )
+	WIDTH  .Screen/width  DEO2
+	HEIGHT .Screen/height DEO2
 
+	( run )
 	draw-mandel
+	BRK
 
-BRK
+( draw the mandelbrot set using 4.12 fixed point numbers )
+@draw-mandel ( -> )
+	XMAX XMIN SUB2 WIDTH DIV2 ,&dx STR2  ( ; &dx<-{xmax-min}/width )
+	YMAX YMIN SUB2 HEIGHT DIV2 ,&dy STR2 ( ; &dy<-{ymax-ymin}/height )
+	[ LIT2 01 -Screen/auto ] DEO         ( ; auto<-1 )
+	LIT2r 8000                           ( [8000] )
+	YMAX YMIN                            ( ymax* ymin* [8000] )
+	&yloop                               ( ymax* y* [8000] )
+		XMAX XMIN                        ( ymax* y* xmax* xmin* [8000] )
+		&xloop                           ( ymax* y* xmax* x* [8000] )
+			ROT2k evaluate               ( ymax* y* xmax* x* xmax* count^ [8000] )
+			.Screen/pixel DEO POP2       ( ymax* y* xmax* x* [8000] )
+			[ LIT2 &dx $2 ] ADD2         ( ymax* y* xmax* x+dx* [8000] )
+			OVR2 STH2kr ADD2             ( ymax* y* xmax* x+dx* 8000+xmax* [8000] )
+			OVR2 STH2kr ADD2             ( ymax* y* xmax* x+dx* 8000+xmax* 8000+x+dx* [8000] )
+			GTH2 ?&xloop                 ( ymax* y* xmax* x+dx* [8000] )
+		POP2 POP2                        ( ymax* y* [8000] )
+		#0000 .Screen/x DEO2             ( ymax* y* [8000] ; sc/x<-0 )
+		.Screen/y DEI2k                  ( ymax* y* d^ sy* [8000] )
+		INC2 ROT DEO2                    ( ymax* y* [8000] ; sc/y<-sy+1 )
+		[ LIT2 &dy $2 ] ADD2             ( ymax* y+dy* [8000] )
+		OVR2 STH2kr ADD2                 ( ymax* y+dy* 8000+ymax* [8000] )
+		OVR2 STH2kr ADD2                 ( ymax* y+dy* 8000+ymax* 8000+y+dy* [8000] )
+		GTH2 ?&yloop                     ( ymax* y+dy* [8000] )
+	POP2 POP2 POP2r JMP2r                ( )
 
-@draw-mandel ( -- )
+@evaluate ( x* y* -> count^ )
+	#0000 DUP2 ,&x1 STR2         ( x* y* ; x1<-0 )
+		  DUP2 ,&y1 STR2         ( x* y* ; y1<-0 )
+		  DUP2 ,&x2 STR2         ( x* y* ; x2<-0 )
+			   ,&y2 STR2         ( x* y* ; y2<-0 )
+	LIT2r 2000                   ( x* y* [20 00] )
+	&loop                        ( x* y* [20 n^] )
+		[ LIT2 &x1 $2 ]          ( x* y* x1* [20 n^] )
+		[ LIT2 &y1 $2 ]          ( x* y* x1* y1* [20 n^] )
+		smul2 DUP2 ADD2          ( x* y* 2x1y1* [20 n^] )
+		OVR2 ADD2 ,&y1 STR2      ( x* y* [20 n^] ; y1<-2x1y1+y* )
+		SWP2 [ LIT2 &x2 $2 ]     ( y* x* x2* [20 n^] )
+		[ LIT2 &y2 $2 ] SUB2     ( y* x* x2-y2* [20 n^] )
+		OVR2 ADD2 ,&x1 STR2 SWP2 ( x* y* [20 n^] ; x1<-x2-y2+x* )
+		,&x1 LDR2 square         ( x* y* x1^2* [20 n^] )
+		DUP2 ,&x2 STR2           ( x* y* x1^2* [20 n^] ; x2<-x1^2* )
+		,&y1 LDR2 square         ( x* y* x1^2* y1^2* [20 n^] )
+		DUP2 ,&y2 STR2           ( x* y* x1^2* y1^2* [20 n^] ; y2<-y1^2* )
+		ADD2 #4000 GTH2 ?&end    ( x* y* [20 n^] )
+		INCr GTHkr STHr ?&loop   ( x* y* [20 n+1*] )
+	&end                         ( x* y* [20 count^] )
+	POP2 POP2 NIPr STHr JMP2r    ( count^ )
 
-	XMAX XMIN SUB2 WIDTH DIV2 ;&dx STA2
-	YMAX YMIN SUB2 HEIGHT DIV2 ;&dy STA2
-	[ LIT2 01 -Screen/auto ] DEO
-	YMAX YMIN
-	&ver
-		DUP2 ,&y STR2
-		XMAX XMIN
-		&hor
-			DUP2 ,&x STR2
-			#0000
-				DUP2 ,&x1 STR2
-				DUP2 ,&y1 STR2
-				DUP2 ,&x2 STR2
-				,&y2 STR2
-			( pixel )
-			#2000
-			&loop
-				[ LIT2 &x1 $2 ] [ LIT2 &y1 $2 ] smul2 DUP2 ADD2
-					[ LIT2 &y $2 ] ADD2 ,&y1 STR2
-				[ LIT2 &x2 $2 ] [ LIT2 &y2 $2 ] SUB2
-					[ LIT2 &x $2 ] ADD2 ,&x1 STR2
-				,&x1 LDR2 DUP2 smul2
-					DUP2 ,&x2 STR2
-				,&y1 LDR2 DUP2 smul2
-					DUP2 ,&y2 STR2
-				ADD2 #4000 GTH2 ?&end
-				INC GTHk ?&loop
-				&end
-			NIP .Screen/pixel DEO
-			( done. )
-			[ LIT2 &dx $2 ] ADD2 OVR2 #8000 ADD2 OVR2 #8000 ADD2 SWP2 LTH2 ?&hor
-		POP2 POP2
-		#0000 .Screen/x DEO2
-		.Screen/y DEI2k INC2 ROT DEO2
-		[ LIT2 &dy $2 ] ADD2 OVR2 #8000 ADD2 OVR2 #8000 ADD2 SWP2 LTH2 ?&ver
-	POP2 POP2
+( multiply two signed 4.12 fixed point numbers )
+@smul2 ( a* b* -> ab* )
+	LIT2r 0001 DUP2 #8000 LTH2 ?&bpos negate SWPr ( a* |b|* [sign*] )
+	&bpos SWP2 DUP2 #8000 LTH2 ?&apos negate SWPr ( |b|* |a|* [sign*] )
+	&apos smul2-pos STHr ?&abpos negate           ( ab* [scrap^] )
+	&abpos POPr JMP2r                             ( ab* )
 
-JMP2r
+( multiply two non-negative fixed point numbers )
+( )
+( a * b = {a0/16 + a1/4096} * {b0/16 + b1/4096} )
+(       = a0b0/256 + a1b0/65536 + a0b1/65536 + a1b1/16777216 )
+(       = x + y + z + 0 ; the last term is too small to represent, i.e. zero )
+( )
+( x = a0b0 << 4 )
+( y = a1b0 >> 4 )
+( z = a0b1 >> 4 )
+@smul2-pos ( a* b* -> ab* )
+	aerate ROT2 aerate           ( b0* b1* a0* a1* )
+	STH2 ROT2k                   ( b0* b1* a0* b1* a0* b0* [a1*] )
+	STH2 MUL2r                   ( b0* b1* a0* b1* a0* [a1b0*] )
+	MUL2 STH2 ADD2r              ( b0* b1* a0* [a1b0+a0b1*] )
+	NIP2 MUL2 #07ff min #40 SFT2 ( a0b0* [y+z*] )
+	STH2r #04 SFT2 ADD2          ( x* [y+z*] )
+	#7fff !min                   ( ab* )
 
-@smul2 ( a* b* -- c* )
-	LITr 00
-	DUP2 #8000 LTH2 ?&b-positive
-	INCr DUP2k EOR2 SWP2 SUB2
-	&b-positive
-	SWP2
-	DUP2 #8000 LTH2 ?&a-positive
-	INCr DUP2k EOR2 SWP2 SUB2
-	&a-positive
-	( ahi alo bhi blo )
-	LITr 00 STH ( ahi alo bhi / blo* )
-	OVRr STH ( ahi alo / blo* bhi* )
-	OVRr STH ( ahi / blo* bhi* alo* )
-	OVRr STH ( asign / blo* bhi* alo* ahi* )
-	ROT2r MUL2kr STH2r ( asign ahi-bhi* / blo* alo* ahi* bhi* )
-	ROT2r MUL2kr STH2r ( asign ahi-bhi* alo-bhi* / blo* ahi* bhi* alo* )
-	NIP2r ( asign ahi-bhi* alo-bhi* / blo* ahi* alo* )
-	ROT2r MUL2kr STH2r ( asign ahi-bhi* alo-bhi* alo-blo* / ahi* alo* blo* )
-	ROT2r MUL2r STH2r POP2r ( asign ahi-bhi* alo-bhi* alo-blo* ahi-blo* )
-	SWP2 ( asign ahi-bhi* alo-bhi* ahi-blo* alo-blo* )
-	( 32-bit result is [ r3 r2 r1 r0 ] )
-	POP #00 SWP ( asign ahi-bhi* alo-bhi* ahi-blo* r21* )
-	( r21 max is 00fe, ahi-blo max is 7e81, max sum is 7f7f )
-	ADD2 ( asign ahi-bhi* alo-bhi* r21'* )
-	( r21' max is 7f7f, alo-bhi max is 7e81, max sum is fe00 )
-	ADD2 ( asign ahi-bhi* r21"* )
-	( The result we want is bits 27-12 due to the fixed point representation we use. )
-	#04 SFT2 SWP2 #07ff min #40 SFT2 ADD2
-	( saturate to +/-7.fff )
-	#7fff min
-	STHr #01 NEQ ?&result-positive
-	DUP2k EOR2 SWP2 SUB2
-	&result-positive
-JMP2r
+( equivalent to DUP2 smul2 but faster )
+@square ( a* -> aa* )
+	DUP2 #8000 LTH2 ?&pos negate &pos
 
-@min ( x* y* -- min* )
-	GTH2k [ JMP SWP2 NIP2 ] JMP2r
+( >> )
+
+( equivalent to DUP2 smul2-pos but faster )
+@square-pos ( a* -> aa* )
+	aerate                       ( 00 ahi^ 00 alo^ )
+	OVR2 MUL2 #03 SFT2 SWP2      ( yz* ahi* )
+	DUP2 MUL2 #07ff min #40 SFT2 ( x* yz* )
+	ADD2 #7fff !min              ( aa* )
+
+( convert each byte of a a short into a short )
+@aerate ( x* -> 00 xhi^ 00 xlo^ ) SWP #0000 ROT SWP2 SWP JMP2r
+
+( negate a fixed point number. doesn't work for #8000 )
+@negate ( x* -> -x* ) DUP2k EOR2 SWP2 SUB2 JMP2r
+
+( return the minimum of two non-negative numbers. )
+@min ( x* y* ) GTH2k [ JMP SWP2 ] NIP2 JMP2r
