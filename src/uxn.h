@@ -35,9 +35,13 @@ typedef struct Uxn {
 	void (*deo)(struct Uxn *u, Uint8 addr);
 } Uxn;
 
-typedef Uint8 Dei(Uxn *u, Uint8 addr);
-typedef void Deo(Uxn *u, Uint8 addr);
+/* required functions */
 
-int uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
-int uxn_boot(Uxn *u, Uint8 *ram, Dei *dei, Deo *deo);
+extern Uint8 uxn_dei(Uxn *u, Uint8 addr);
+extern void uxn_deo(Uxn *u, Uint8 addr);
+extern int uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
+
+/* built-ins */
+
+int uxn_boot(Uxn *u, Uint8 *ram);
 int uxn_eval(Uxn *u, Uint16 pc);

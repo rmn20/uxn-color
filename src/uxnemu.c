@@ -108,8 +108,8 @@ audio_deo(int instance, Uint8 *d, Uint8 port, Uxn *u)
 	}
 }
 
-static Uint8
-emu_dei(Uxn *u, Uint8 addr)
+Uint8
+uxn_dei(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
@@ -123,8 +123,8 @@ emu_dei(Uxn *u, Uint8 addr)
 	return u->dev[addr];
 }
 
-static void
-emu_deo(Uxn *u, Uint8 addr)
+void
+uxn_deo(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
@@ -263,7 +263,7 @@ static int
 start(Uxn *u, char *rom)
 {
 	free(u->ram);
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), emu_dei, emu_deo))
+	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return error("Boot", "Failed to start uxn.");
 	if(!system_load(u, rom))
 		return error("Boot", "Failed to load rom.");

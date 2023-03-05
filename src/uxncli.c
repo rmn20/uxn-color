@@ -47,8 +47,8 @@ console_deo(Uint8 *d, Uint8 port)
 	}
 }
 
-static Uint8
-emu_dei(Uxn *u, Uint8 addr)
+Uint8
+uxn_dei(Uxn *u, Uint8 addr)
 {
 	switch(addr & 0xf0) {
 	case 0xc0: return datetime_dei(u, addr);
@@ -56,8 +56,8 @@ emu_dei(Uxn *u, Uint8 addr)
 	return u->dev[addr];
 }
 
-static void
-emu_deo(Uxn *u, Uint8 addr)
+void
+uxn_deo(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
@@ -75,7 +75,7 @@ main(int argc, char **argv)
 	int i;
 	if(argc < 2)
 		return emu_error("Usage", "uxncli game.rom args");
-	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), emu_dei, emu_deo))
+	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return emu_error("Boot", "Failed");
 	if(!system_load(&u, argv[1]))
 		return emu_error("Load", "Failed");
