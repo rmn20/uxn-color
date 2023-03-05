@@ -28,12 +28,12 @@ WITH REGARD TO THIS SOFTWARE.
 #define L2 PEEK16(s->dat+s->ptr-6)
 
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
-#define INC(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 255) HALT(2) }
-#define DEC(mul, sub) { if(mul > s->ptr) HALT(1) s->ptr -= !k * mul - sub; if(s->ptr > 255) HALT(2) }
+#define INC(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 254) HALT(2) }
+#define DEC(mul, sub) { if(mul > s->ptr) HALT(1) s->ptr -= !k * mul - sub; if(s->ptr > 254) HALT(2) }
 #define PUT(o, v) { s->dat[s->ptr - o - 1] = (v); }
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
-#define PUSH(stack, v) { stack->dat[stack->ptr++] = (v); }
-#define PUSH2(stack, v) { tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
+#define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
+#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
 #define SEND(a, b) { u->dev[a] = b; if((send_events[(a) >> 4] >> ((a) & 0xf)) & 0x1) u->deo(u, a); }
 #define LISTEN(a, b) { PUT(a, ((receive_events[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? u->dei(u, b) : u->dev[b])  }
 
