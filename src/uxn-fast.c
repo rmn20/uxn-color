@@ -75,8 +75,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x02: /* POP  */                 DEC(1, 0) break;
 			case 0x23: /* NIP2 */ t=T2;           DEC(2, 0) PUT2(0, t) break;
 			case 0x03: /* NIP  */ t=T;            DEC(1, 0) PUT(0, t) break;
-			case 0x24: /* SWP2 */ t=T2;n=N2;      INC(4, 0) PUT2(2, t) PUT2(0, n); break;
-			case 0x04: /* SWP  */ t=T;n=N;        INC(2, 0) PUT(0, n) PUT(1, t); break;
+			case 0x24: /* SWP2 */ t=T2;n=N2;      INC(4, 0) PUT2(2, t) PUT2(0, n) break;
+			case 0x04: /* SWP  */ t=T;n=N;        INC(2, 0) PUT(0, n) PUT(1, t) break;
 			case 0x25: /* ROT2 */ t=T2;n=N2;l=L2; INC(6, 0) PUT2(0, l) PUT2(2, t) PUT2(4, n) break;
 			case 0x05: /* ROT  */ t=T;n=N;l=L;    INC(3, 0) PUT(0, l) PUT(1, t) PUT(2, n) break;
 			case 0x26: /* DUP2 */ t=T2;           INC(2, 2) PUT2(0, t) PUT2(2, t) break;
@@ -97,8 +97,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0d: /* JCN  */ t=T;n=N;        DEC(2, 0) pc += !!n * (Sint8)t; break;
 			case 0x2e: /* JSR2 */ t=T2;           DEC(2, 0) PUSH2(u->rst, pc) pc = t; break;
 			case 0x0e: /* JSR  */ t=T;            DEC(1, 0) PUSH2(u->rst, pc) pc += (Sint8)t; break;
-			case 0x2f: /* STH2 */ t=T2;           if(ins & 0x40) { DEC(2, 0) PUSH2(u->wst, t); } else{ DEC(2, 0) PUSH2(u->rst, t); } break;
-			case 0x0f: /* STH  */ t=T;            if(ins & 0x40) { DEC(1, 0) PUSH(u->wst, t); } else{ DEC(1, 0) PUSH(u->rst, t); } break;
+			case 0x2f: /* STH2 */ t=T2;           if(ins & 0x40) { DEC(2, 0) PUSH2(u->wst, t) } else{ DEC(2, 0) PUSH2(u->rst, t) } break;
+			case 0x0f: /* STH  */ t=T;            if(ins & 0x40) { DEC(1, 0) PUSH(u->wst, t) } else{ DEC(1, 0) PUSH(u->rst, t) } break;
 			case 0x30: /* LDZ2 */ t=T;            INC(1, 1) PUT2(0, PEEK16(u->ram + t)) break;
 			case 0x10: /* LDZ  */ t=T;            INC(1, 0) PUT(0, u->ram[t]) break;
 			case 0x31: /* STZ2 */ t=T;n=H2;       DEC(3, 0) POKE16(u->ram + t, n) break;
