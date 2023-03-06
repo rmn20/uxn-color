@@ -11,14 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-/* Registers
-
-[ . ][ . ][ . ][ L ][ N ][ T ] <
-[ . ][ . ][ . ][   H2   ][ T ] <
-[   L2   ][   N2   ][   T2   ] <
-
-*/
-
 #define T s->dat[s->ptr-1]
 #define N s->dat[s->ptr-2]
 #define L s->dat[s->ptr-3]
@@ -26,6 +18,14 @@ WITH REGARD TO THIS SOFTWARE.
 #define T2 PEEK16(s->dat+s->ptr-2)
 #define N2 PEEK16(s->dat+s->ptr-4)
 #define L2 PEEK16(s->dat+s->ptr-6)
+
+/* Registers
+
+[ . ][ . ][ . ][ L ][ N ][ T ] <
+[ . ][ . ][ . ][   H2   ][ T ] <
+[   L2   ][   N2   ][   T2   ] <
+
+*/
 
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 254) HALT(2) }
@@ -36,14 +36,15 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEO(a, b) { u->dev[a] = b; if((deo_masks[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, a); }
 #define DEI(a, b) { PUT(a, ((dei_masks[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, b) : u->dev[b])  }
 
-static 
+static
 Uint16 deo_masks[] = {
 	0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000,
-	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000 };
+	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
+
 static
 Uint16 dei_masks[] = {
 	0x0000, 0x0000, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x07fd, 0x0000, 0x0000, 0x0000 };
+	0x0000, 0x0000, 0x0000, 0x0000, 0x07fd, 0x0000, 0x0000, 0x0000};
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -96,8 +97,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0d: /* JCN  */ t=T;n=N;        SET(2,-2) pc += !!n * (Sint8)t; break;
 			case 0x2e: /* JSR2 */ t=T2;           SET(2,-2) PUSH2(u->rst, pc) pc = t; break;
 			case 0x0e: /* JSR  */ t=T;            SET(1,-1) PUSH2(u->rst, pc) pc += (Sint8)t; break;
-			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) if(ins & 0x40) { PUSH2(u->wst, t) } else{ PUSH2(u->rst, t) } break;
-			case 0x0f: /* STH  */ t=T;            SET(1,-1) if(ins & 0x40) { PUSH(u->wst, t) } else{ PUSH(u->rst, t) } break;
+			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) PUSH2((ins & 0x40 ? u->wst : u->rst), t) break;
+			case 0x0f: /* STH  */ t=T;            SET(1,-1) PUSH((ins & 0x40 ? u->wst : u->rst), t) break;
 			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) PUT2(0, PEEK16(u->ram + t)) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT(0, u->ram[t]) break;
 			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) POKE16(u->ram + t, n) break;
