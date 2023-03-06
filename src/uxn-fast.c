@@ -33,18 +33,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
 #define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
-#define DEO(a, b) { u->dev[a] = b; if((deo_masks[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, a); }
-#define DEI(a, b) { PUT(a, ((dei_masks[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, b) : u->dev[b])  }
-
-static
-Uint16 deo_masks[] = {
-	0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000,
-	0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
-
-static
-Uint16 dei_masks[] = {
-	0x0000, 0x0000, 0x0014, 0x0014, 0x0014, 0x0014, 0x0014, 0x0000,
-	0x0000, 0x0000, 0x0000, 0x0000, 0x07fd, 0x0000, 0x0000, 0x0000};
+#define DEO(a, b) { u->dev[a] = b; if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, a); }
+#define DEI(a, b) { PUT(a, ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, b) : u->dev[b])  }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
