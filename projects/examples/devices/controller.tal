@@ -20,7 +20,7 @@
 	#0f0f .System/b DEO2
 	( find center )
 	.Screen/width DEI2 #01 SFT2 .center/x STZ2
-	.Screen/height DEI2 #01 SFT2 .center/y STZ2
+	.Screen/height DEI2 #01 SFT2 #0020 ADD2 .center/y STZ2
 	( place controller )
 	#0068 .frame/w STZ2
 	#0030 .frame/h STZ2
@@ -33,15 +33,15 @@
 	( frame )
 	.frame/x0 LDZ2 .frame/y0 LDZ2
 	.frame/x1 LDZ2 .frame/y1 LDZ2
-		#03 ;line-rect JSR2
+		#03 line-rect
 
-	,draw-controller JSR
+	draw-controller
 
 BRK
 
 @on-button ( -> )
 
-	,draw-controller JSR
+	draw-controller
 
 	( print stack on start button )
 	.Controller/button DEI #08 EQU [ JMP BRK ] #010e DEO
@@ -55,52 +55,52 @@ BRK
 	( d-pad )
 	.frame/x0 LDZ2 #0010 ADD2 .Screen/x DEO2
 	.frame/y0 LDZ2 #0010 ADD2 .Screen/y DEO2
-	;controller-icn/dpad-up .Screen/addr DEO2
+	;ctrl-icns/dpad-up .Screen/addr DEO2
 	#03 STHkr #04 SFT #01 AND SUB .Screen/sprite DEO
 	.Screen/y DEI2 #0010 ADD2 .Screen/y DEO2
-	;controller-icn/dpad-down .Screen/addr DEO2
+	;ctrl-icns/dpad-down .Screen/addr DEO2
 	#03 STHkr #05 SFT #01 AND SUB .Screen/sprite DEO
 	.Screen/y DEI2 #0008 SUB2 .Screen/y DEO2
 	.Screen/x DEI2 #0008 SUB2 .Screen/x DEO2
-	;controller-icn/dpad-left .Screen/addr DEO2
+	;ctrl-icns/dpad-left .Screen/addr DEO2
 	#03 STHkr #06 SFT #01 AND SUB .Screen/sprite DEO
 	.Screen/x DEI2 #0010 ADD2 .Screen/x DEO2
-	;controller-icn/dpad-right .Screen/addr DEO2
+	;ctrl-icns/dpad-right .Screen/addr DEO2
 	#03 STHkr #07 SFT #01 AND SUB .Screen/sprite DEO
 	.Screen/x DEI2 #0008 SUB2 .Screen/x DEO2
-	;controller-icn/dpad .Screen/addr DEO2
-	#03 .Screen/sprite DEO
+	;ctrl-icns/dpad .Screen/addr DEO2
+	[ LIT2 03 -Screen/sprite ] DEO
 
 	( options )
 	.center/y LDZ2 #0009 ADD2 .Screen/y DEO2
 	.center/x LDZ2 #0009 SUB2 .Screen/x DEO2
-	;controller-icn/option .Screen/addr DEO2
+	;ctrl-icns/option .Screen/addr DEO2
 	#03 STHkr #03 SFT #01 AND SUB .Screen/sprite DEO
 	.center/x LDZ2 #0004 ADD2 .Screen/x DEO2
-	;controller-icn/option .Screen/addr DEO2
+	;ctrl-icns/option .Screen/addr DEO2
 	#03 STHkr #02 SFT #01 AND SUB .Screen/sprite DEO
 
 	( buttons )
 	.center/y LDZ2 .Screen/y DEO2
 	.center/x LDZ2 #0018 ADD2 .Screen/x DEO2
-	;controller-icn/button .Screen/addr DEO2
+	;ctrl-icns/button .Screen/addr DEO2
 	#03 STHkr #01 SFT #01 AND SUB .Screen/sprite DEO
 		.Screen/y DEI2 #000a ADD2 .Screen/y DEO2
 		;font-hex/b .Screen/addr DEO2
-		#03 .Screen/sprite DEO
+		[ LIT2 03 -Screen/sprite ] DEO
 
 	.center/y LDZ2 .Screen/y DEO2
 	.center/x LDZ2 #0024 ADD2 .Screen/x DEO2
-	;controller-icn/button .Screen/addr DEO2
+	;ctrl-icns/button .Screen/addr DEO2
 	#03 STHr #01 AND SUB .Screen/sprite DEO
 		.Screen/y DEI2 #000a ADD2 .Screen/y DEO2
 		;font-hex/a .Screen/addr DEO2
-		#03 .Screen/sprite DEO
+		[ LIT2 03 -Screen/sprite ] DEO
 
 	.center/x LDZ2 #0010 SUB2 .Screen/x DEO2
 	.center/y LDZ2 #0010 SUB2 .Screen/y DEO2
 	#01 .Screen/auto DEO
-	.Controller/button DEI2 ,draw-short JSR
+	.Controller/button DEI2 draw-short
 	#00 .Screen/auto DEO
 
 JMP2r
@@ -109,16 +109,16 @@ JMP2r
 
 @draw-short ( short* -- )
 
-	SWP ,draw-byte JSR
+	SWP draw-byte
 
 @draw-byte ( byte -- )
 
-	DUP #04 SFT ,draw-hex JSR 
+	DUP #04 SFT draw-hex 
 
 @draw-hex ( char -- )
 
 	#00 SWP #0f AND #30 SFT2 ;font-hex ADD2 .Screen/addr DEO2
-	#03 .Screen/sprite DEO
+	[ LIT2 03 -Screen/sprite ] DEO
 
 JMP2r
 
@@ -135,7 +135,7 @@ JMP2r
 		DUP2 .Screen/x DEO2
 		[ LIT2 &hor-y1 $2 ] .Screen/y DEO2 STHkr .Screen/pixel DEOk
 		[ LIT2 &hor-y2 $2 ] .Screen/y DEO2 DEO
-		INC2 GTH2k ,&hor JCN
+		INC2 GTH2k ?&hor
 	POP2 POP2
 	( vertical )
 	[ LIT2 &ver-y2 $2 ] [ LIT2 &ver-y1 $2 ]
@@ -143,20 +143,20 @@ JMP2r
 		DUP2 .Screen/y DEO2
 		[ LIT2 &ver-x1 $2 ] .Screen/x DEO2 STHkr .Screen/pixel DEOk
 		[ LIT2 &ver-x2 $2 ] .Screen/x DEO2 DEO
-		INC2 GTH2k ,&ver JCN
+		INC2 GTH2k ?&ver
 	POP2 POP2
 	POPr
 
 JMP2r
 
-@controller-icn
+@ctrl-icns [
 	&dpad       ffff ffff ffff ffff
 	&dpad-up    7eff e7c3 ffff ffff
 	&dpad-down  ffff ffff c3e7 ff7e
 	&dpad-left  7fff efcf cfef ff7f
 	&dpad-right feff f7f3 f3f7 fffe
 	&option     0000 7eff ff7e 0000
-	&button     3c7e ffff ffff 7e3c
+	&button     3c7e ffff ffff 7e3c ]
 
 @font-hex
 	007c 8282 8282 827c 0030 1010 1010 1010
