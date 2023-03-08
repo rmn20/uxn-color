@@ -119,8 +119,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x1d: /* ORA  */ t=T;n=N;        SET(2,-1) PUT(0, n | t) break;
 			case 0x3e: /* EOR2 */ t=T2;n=N2;      SET(4,-2) PUT2(0, n ^ t) break;
 			case 0x1e: /* EOR  */ t=T;n=N;        SET(2,-1) PUT(0, n ^ t) break;
-			case 0x3f: /* SFT2 */ t=T;n=H2;       SET(3,-1) PUT2(0, n >> (t & 0x0f) << ((t & 0xf0) >> 4)) break;
-			case 0x1f: /* SFT  */ t=T;n=N;        SET(2,-1) PUT(0, n >> (t & 0x0f) << ((t & 0xf0) >> 4)) break;
+			case 0x3f: /* SFT2 */ t=T;n=H2;       SET(3,-1) PUT2(0, n >> (t & 0x0f) << (t >> 4)) break;
+			case 0x1f: /* SFT  */ t=T;n=N;        SET(2,-1) PUT(0, n >> (t & 0x0f) << (t >> 4)) break;
 		}
 	}		
 }
