@@ -62,7 +62,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x01: /* INC  */ t=T;         SET(1, 0) PUT(0, t + 1) break;                           case 0x21: t=T2;           SET(2, 0) PUT2(0, t + 1) break;
 			case 0x02: /* POP  */              SET(1,-1) break;                                         case 0x22:                 SET(2,-2) break;
 			case 0x03: /* NIP  */ t=T;         SET(1,-1) PUT(0, t) break;                               case 0x23: t=T2;           SET(2,-2) PUT2(0, t) break;
-			case 0x04: /* SWP  */ t=T;n=N;     SET(2, 0) PUT(0, n) PUT(1, t) break;                     case 0x24: t=T2;n=N2;      SET(4, 0) PUT2(2, t) PUT2(0, n) break;
+			case 0x04: /* SWP  */ t=T;n=N;     SET(2, 0) PUT(0, n) PUT(1, t) break;                     case 0x24: t=T2;n=N2;      SET(4, 0) PUT2(0, n) PUT2(2, t) break;
 			case 0x05: /* ROT  */ t=T;n=N;l=L; SET(3, 0) PUT(0, l) PUT(1, t) PUT(2, n) break;           case 0x25: t=T2;n=N2;l=L2; SET(6, 0) PUT2(0, l) PUT2(2, t) PUT2(4, n) break;
 			case 0x06: /* DUP  */ t=T;         SET(1, 1) PUT(0, t) PUT(1, t) break;                     case 0x26: t=T2;           SET(2, 2) PUT2(0, t) PUT2(2, t) break;
 			case 0x07: /* OVR  */ t=T;n=N;     SET(2, 1) PUT(0, n) PUT(1, t) PUT(2, n) break;           case 0x27: t=T2;n=N2;      SET(4, 2) PUT2(0, n) PUT2(2, t) PUT2(4, n) break;
@@ -89,7 +89,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x1c: /* AND  */ t=T;n=N;     SET(2,-1) PUT(0, n & t) break;                           case 0x3c: t=T2;n=N2;      SET(4,-2) PUT2(0, n & t) break;
 			case 0x1d: /* ORA  */ t=T;n=N;     SET(2,-1) PUT(0, n | t) break;                           case 0x3d: t=T2;n=N2;      SET(4,-2) PUT2(0, n | t) break;
 			case 0x1e: /* EOR  */ t=T;n=N;     SET(2,-1) PUT(0, n ^ t) break;                           case 0x3e: t=T2;n=N2;      SET(4,-2) PUT2(0, n ^ t) break;
-			case 0x1f: /* SFT  */ t=T;n=N;     SET(2,-1) PUT(0, n >> (t & 0x0f) << (t >> 4)) break;     case 0x3f: t=T;n=H2;       SET(3,-1) PUT2(0, n >> (t & 0x0f) << (t >> 4)) break;
+			case 0x1f: /* SFT  */ t=T;n=N;     SET(2,-1) PUT(0, n >> (t & 0xf) << (t >> 4)) break;      case 0x3f: t=T;n=H2;       SET(3,-1) PUT2(0, n >> (t & 0xf) << (t >> 4)) break;
 		}
 	}		
 }
