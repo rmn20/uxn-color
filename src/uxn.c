@@ -128,13 +128,12 @@ uxn_eval(Uxn *u, Uint16 pc)
 int
 uxn_boot(Uxn *u, Uint8 *ram)
 {
-	Uint32 i;
+	int i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
-		cptr[i] = 0x00;
+		cptr[i] = 0;
 	u->wst = (Stack *)(ram + 0xf0000);
 	u->rst = (Stack *)(ram + 0xf0100);
-	u->dev = (Uint8 *)(ram + 0xf0200);
 	u->ram = ram;
 	return 1;
 }
