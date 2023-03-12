@@ -13,6 +13,6 @@
 *theme
 
 *.rom
-*.rom.sym
+*.sym
 
 *.[o0125678vqki]

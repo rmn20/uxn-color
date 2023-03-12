@@ -91,16 +91,14 @@ if [ $debug = 1 ];
 then
 	echo "[debug]"
 	CFLAGS="${CFLAGS} -DDEBUG -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla -g -Og -fsanitize=address -fsanitize=undefined"
-	CORE='src/uxn-fast.c'
 else
 	CFLAGS="${CFLAGS} -DNDEBUG -O2 -g0 -s"
-	CORE='src/uxn-fast.c'
 fi
 
 echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
-${CC} ${CFLAGS} ${CORE} src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
+${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
 
 if [ $install = 1 ]
 then
