@@ -13,8 +13,8 @@ WITH REGARD TO THIS SOFTWARE.
 
 /* clang-format off */
 
-#define POKE16(d, v) { (d)[0] = (v) >> 8; (d)[1] = (v); }
-#define PEEK16(d) ((d)[0] << 8 | (d)[1])
+#define POKE2(d, v) { (d)[0] = (v) >> 8; (d)[1] = (v); }
+#define PEEK2(d) ((d)[0] << 8 | (d)[1])
 
 /* clang-format on */
 

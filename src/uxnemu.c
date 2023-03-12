@@ -70,7 +70,7 @@ console_input(Uxn *u, char c)
 {
 	Uint8 *d = &u->dev[0x10];
 	d[0x02] = c;
-	return uxn_eval(u, PEEK16(d));
+	return uxn_eval(u, PEEK2(d));
 }
 
 static void
@@ -94,7 +94,7 @@ audio_dei(int instance, Uint8 *d, Uint8 port)
 	if(!audio_id) return d[port];
 	switch(port) {
 	case 0x4: return audio_get_vu(instance);
-	case 0x2: POKE16(d + 0x2, audio_get_position(instance)); /* fall through */
+	case 0x2: POKE2(d + 0x2, audio_get_position(instance)); /* fall through */
 	default: return d[port];
 	}
 }
@@ -392,7 +392,7 @@ handle_events(Uxn *u)
 		}
 		/* Audio */
 		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			uxn_eval(u, PEEK16(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
+			uxn_eval(u, PEEK2(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
@@ -442,7 +442,7 @@ run(Uxn *u)
 {
 	Uint64 now = SDL_GetPerformanceCounter(), frame_end, frame_interval = SDL_GetPerformanceFrequency() / 60;
 	for(;;) {
-		Uint16 screen_vector = PEEK16(&u->dev[0x20]);
+		Uint16 screen_vector = PEEK2(&u->dev[0x20]);
 		/* .System/halt */
 		if(u->dev[0x0f])
 			return error("Run", "Ended.");

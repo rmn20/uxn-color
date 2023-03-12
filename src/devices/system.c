@@ -36,9 +36,9 @@ static void
 system_cmd(Uint8 *ram, Uint16 addr)
 {
 	if(ram[addr] == 0x01) {
-		Uint16 i, length = PEEK16(ram + addr + 1);
-		Uint16 a_page = PEEK16(ram + addr + 1 + 2), a_addr = PEEK16(ram + addr + 1 + 4);
-		Uint16 b_page = PEEK16(ram + addr + 1 + 6), b_addr = PEEK16(ram + addr + 1 + 8);
+		Uint16 i, length = PEEK2(ram + addr + 1);
+		Uint16 a_page = PEEK2(ram + addr + 1 + 2), a_addr = PEEK2(ram + addr + 1 + 4);
+		Uint16 b_page = PEEK2(ram + addr + 1 + 6), b_addr = PEEK2(ram + addr + 1 + 8);
 		int src = (a_page % RAM_PAGES) * 0x10000, dst = (b_page % RAM_PAGES) * 0x10000;
 		for(i = 0; i < length; i++)
 			ram[dst + (Uint16)(b_addr + i)] = ram[src + (Uint16)(a_addr + i)];
@@ -73,7 +73,7 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x3:
-		system_cmd(u->ram, PEEK16(d + 2));
+		system_cmd(u->ram, PEEK2(d + 2));
 		break;
 	case 0xe:
 		if(u->wst->ptr || u->rst->ptr) system_inspect(u);
@@ -87,7 +87,7 @@ int
 uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 {
 	Uint8 *d = &u->dev[0x00];
-	Uint16 handler = PEEK16(d);
+	Uint16 handler = PEEK2(d);
 	if(handler) {
 		u->wst->ptr = 4;
 		u->wst->dat[0] = addr >> 0x8;

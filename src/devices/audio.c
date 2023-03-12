@@ -76,8 +76,8 @@ audio_start(int instance, Uint8 *d, Uxn *u)
 {
 	UxnAudio *c = &uxn_audio[instance];
 	Uint8 pitch = d[0xf] & 0x7f;
-	Uint16 addr = PEEK16(d + 0xc), adsr = PEEK16(d + 0x8);
-	c->len = PEEK16(d + 0xa);
+	Uint16 addr = PEEK2(d + 0xc), adsr = PEEK2(d + 0x8);
+	c->len = PEEK2(d + 0xa);
 	if(c->len > 0x10000 - addr)
 		c->len = 0x10000 - addr;
 	c->addr = &u->ram[addr];

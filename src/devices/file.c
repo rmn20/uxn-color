@@ -237,37 +237,37 @@ file_deo(Uint8 id, Uint8 *ram, Uint8 *d, Uint8 port)
 	Uint16 addr, len, res;
 	switch(port) {
 	case 0x5:
-		addr = PEEK16(d + 0x4);
-		len = PEEK16(d + 0xa);
+		addr = PEEK2(d + 0x4);
+		len = PEEK2(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_stat(c, &ram[addr], len);
-		POKE16(d + 0x2, res);
+		POKE2(d + 0x2, res);
 		break;
 	case 0x6:
 		res = file_delete(c);
-		POKE16(d + 0x2, res);
+		POKE2(d + 0x2, res);
 		break;
 	case 0x9:
-		addr = PEEK16(d + 0x8);
+		addr = PEEK2(d + 0x8);
 		res = file_init(c, (char *)&ram[addr], 0x10000 - addr, 0);
-		POKE16(d + 0x2, res);
+		POKE2(d + 0x2, res);
 		break;
 	case 0xd:
-		addr = PEEK16(d + 0xc);
-		len = PEEK16(d + 0xa);
+		addr = PEEK2(d + 0xc);
+		len = PEEK2(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_read(c, &ram[addr], len);
-		POKE16(d + 0x2, res);
+		POKE2(d + 0x2, res);
 		break;
 	case 0xf:
-		addr = PEEK16(d + 0xe);
-		len = PEEK16(d + 0xa);
+		addr = PEEK2(d + 0xe);
+		len = PEEK2(d + 0xa);
 		if(len > 0x10000 - addr)
 			len = 0x10000 - addr;
 		res = file_write(c, &ram[addr], len, d[0x7]);
-		POKE16(d + 0x2, res);
+		POKE2(d + 0x2, res);
 		break;
 	}
 }

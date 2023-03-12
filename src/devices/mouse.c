@@ -16,30 +16,30 @@ void
 mouse_down(Uxn *u, Uint8 *d, Uint8 mask)
 {
 	d[6] |= mask;
-	uxn_eval(u, PEEK16(d));
+	uxn_eval(u, PEEK2(d));
 }
 
 void
 mouse_up(Uxn *u, Uint8 *d, Uint8 mask)
 {
 	d[6] &= (~mask);
-	uxn_eval(u, PEEK16(d));
+	uxn_eval(u, PEEK2(d));
 }
 
 void
 mouse_pos(Uxn *u, Uint8 *d, Uint16 x, Uint16 y)
 {
-	POKE16(d + 0x2, x);
-	POKE16(d + 0x4, y);
-	uxn_eval(u, PEEK16(d));
+	POKE2(d + 0x2, x);
+	POKE2(d + 0x4, y);
+	uxn_eval(u, PEEK2(d));
 }
 
 void
 mouse_scroll(Uxn *u, Uint8 *d, Uint16 x, Uint16 y)
 {
-	POKE16(d + 0xa, x);
-	POKE16(d + 0xc, -y);
-	uxn_eval(u, PEEK16(d));
-	POKE16(d + 0xa, 0);
-	POKE16(d + 0xc, 0);
+	POKE2(d + 0xa, x);
+	POKE2(d + 0xc, -y);
+	uxn_eval(u, PEEK2(d));
+	POKE2(d + 0xa, 0);
+	POKE2(d + 0xc, 0);
 }
