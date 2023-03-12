@@ -11,13 +11,13 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define T s->dat[s->ptr-1]
-#define N s->dat[s->ptr-2]
-#define L s->dat[s->ptr-3]
-#define H2 PEEK2(s->dat+s->ptr-3)
-#define T2 PEEK2(s->dat+s->ptr-2)
-#define N2 PEEK2(s->dat+s->ptr-4)
-#define L2 PEEK2(s->dat+s->ptr-6)
+#define T s->dat[s->ptr - 1]
+#define N s->dat[s->ptr - 2]
+#define L s->dat[s->ptr - 3]
+#define H2 PEEK2(s->dat + s->ptr - 3)
+#define T2 PEEK2(s->dat + s->ptr - 2)
+#define N2 PEEK2(s->dat + s->ptr - 4)
+#define L2 PEEK2(s->dat + s->ptr - 6)
 
 /* Registers
 
@@ -29,12 +29,12 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 254) HALT(2) }
-#define PUT(o, v) { s->dat[s->ptr - o - 1] = (v); }
-#define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
+#define PUT(o, v) { s->dat[s->ptr - 1 - (o)] = (v); }
+#define PUT2(o, v) { tmp = (v); POKE2(s->dat + s->ptr - 2 - (o), tmp) }
 #define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
-#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); stack->dat[stack->ptr] = (v) >> 8; stack->dat[stack->ptr + 1] = (v); stack->ptr += 2; }
-#define DEO(a, b) { u->dev[a] = b; if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, a); }
-#define DEI(a, b) { PUT(a, ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, b) : u->dev[b])  }
+#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); POKE2(stack->dat + stack->ptr, tmp) stack->ptr += 2; }
+#define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
+#define DEI(a, b) { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)])  }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
