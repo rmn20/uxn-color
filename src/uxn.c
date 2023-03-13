@@ -28,7 +28,7 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
-#define SET(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 254) HALT(2) }
+#define SET(mul, add) { if(mul > s->ptr) HALT(1) tmp = s->ptr + k * mul + add; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v) { s->dat[s->ptr - 1 - (o)] = (v); }
 #define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
