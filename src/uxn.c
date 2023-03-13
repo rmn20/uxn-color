@@ -30,9 +30,9 @@ WITH REGARD TO THIS SOFTWARE.
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) s->ptr += k * mul + add; if(s->ptr > 254) HALT(2) }
 #define PUT(o, v) { s->dat[s->ptr - 1 - (o)] = (v); }
-#define PUT2(o, v) { tmp = (v); POKE2(s->dat + s->ptr - 2 - (o), tmp) }
+#define PUT2(o, v) { tmp = (v); s->dat[s->ptr - o - 2] = tmp >> 8; s->dat[s->ptr - o - 1] = tmp; }
 #define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
-#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); POKE2(stack->dat + stack->ptr, tmp) stack->ptr += 2; }
+#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); stack->dat[stack->ptr] = tmp >> 8; stack->dat[stack->ptr + 1] = tmp; stack->ptr += 2; }
 #define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
 #define DEI(a, b) { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)])  }
 
@@ -97,7 +97,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 int
 uxn_boot(Uxn *u, Uint8 *ram)
 {
-	int i;
+	Uint32 i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0;
