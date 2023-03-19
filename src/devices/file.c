@@ -11,6 +11,15 @@
 #ifdef _WIN32
 #include <libiberty/libiberty.h>
 #define realpath(s, dummy) lrealpath(s)
+#define DIR_SEP_CHAR '\\'
+#define DIR_SEP_STR "\\"
+#define pathcmp(path1,path2,length) strncasecmp(path1,path2,length) /* strncasecmp provided by libiberty */
+#define notdriveroot(file_name) (file_name[0] != DIR_SEP_CHAR && ((strlen(file_name)>2 && file_name[1] != ':') || strlen(file_name)<=2))
+#else
+#define DIR_SEP_CHAR '/'
+#define DIR_SEP_STR "/"
+#define pathcmp(path1,path2,length) strncmp(path1,path2,length)
+#define notdriveroot(file_name) (file_name[0] != DIR_SEP_CHAR)
 #endif
 
 #ifndef PATH_MAX
@@ -124,17 +133,17 @@ retry_realpath(const char *file_name)
 		errno = ENAMETOOLONG;
 		return NULL;
 	}
-	if(file_name[0] != '/') {
+	if(notdriveroot(file_name)) {
 		/* TODO: use a macro instead of '/' for absolute path first character so that other systems can work */
 		/* if a relative path, prepend cwd */
 		getcwd(p, sizeof(p));
-		strcat(p, "/"); /* TODO: use a macro instead of '/' for the path delimiter */
+		strcat(p, DIR_SEP_STR); /* TODO: use a macro instead of '/' for the path delimiter */
 	}
 	strcat(p, file_name);
 	while((r = realpath(p, NULL)) == NULL) {
 		if(errno != ENOENT)
 			return NULL;
-		x = strrchr(p, '/'); /* TODO: path delimiter macro */
+		x = strrchr(p, DIR_SEP_CHAR); /* TODO: path delimiter macro */
 		if(x)
 			*x = '\0';
 		else
@@ -149,7 +158,7 @@ file_check_sandbox(UxnFile *c)
 	char *x, *rp, cwd[PATH_MAX] = {'\0'};
 	x = getcwd(cwd, sizeof(cwd));
 	rp = retry_realpath(c->current_filename);
-	if(rp == NULL || (x && strncmp(cwd, rp, strlen(cwd)) != 0)) {
+	if(rp == NULL || (x && pathcmp(cwd, rp, strlen(cwd)) != 0)) {
 		c->outside_sandbox = 1;
 		fprintf(stderr, "file warning: blocked attempt to access %s outside of sandbox\n", c->current_filename);
 	}
@@ -213,7 +222,7 @@ file_write(UxnFile *c, void *src, Uint16 len, Uint8 flags)
 static Uint16
 file_stat(UxnFile *c, void *dest, Uint16 len)
 {
-	char *basename = strrchr(c->current_filename, '/');
+	char *basename = strrchr(c->current_filename, DIR_SEP_CHAR);
 	if(c->outside_sandbox) return 0;
 	if(basename != NULL)
 		basename++;

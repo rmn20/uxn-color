@@ -16,8 +16,11 @@
 #include "devices/controller.h"
 #include "devices/mouse.h"
 #include "devices/datetime.h"
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_WIN32_WINNT) && _WIN32_WINNT > 0x0602
 #include <processthreadsapi.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#include <string.h>
 #endif
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
