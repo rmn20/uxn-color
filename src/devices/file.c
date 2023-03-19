@@ -13,12 +13,12 @@
 #define realpath(s, dummy) lrealpath(s)
 #define DIR_SEP_CHAR '\\'
 #define DIR_SEP_STR "\\"
-#define pathcmp(path1,path2,length) strncasecmp(path1,path2,length) /* strncasecmp provided by libiberty */
-#define notdriveroot(file_name) (file_name[0] != DIR_SEP_CHAR && ((strlen(file_name)>2 && file_name[1] != ':') || strlen(file_name)<=2))
+#define pathcmp(path1, path2, length) strncasecmp(path1, path2, length) /* strncasecmp provided by libiberty */
+#define notdriveroot(file_name) (file_name[0] != DIR_SEP_CHAR && ((strlen(file_name) > 2 && file_name[1] != ':') || strlen(file_name) <= 2))
 #else
 #define DIR_SEP_CHAR '/'
 #define DIR_SEP_STR "/"
-#define pathcmp(path1,path2,length) strncmp(path1,path2,length)
+#define pathcmp(path1, path2, length) strncmp(path1, path2, length)
 #define notdriveroot(file_name) (file_name[0] != DIR_SEP_CHAR)
 #endif
 
