@@ -22,6 +22,9 @@
 #include <windows.h>
 #include <string.h>
 #endif
+#ifndef __plan9__
+#define USED(x) (void)(x)
+#endif
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
@@ -157,12 +160,12 @@ audio_callback(void *u, Uint8 *stream, int len)
 {
 	int instance, running = 0;
 	Sint16 *samples = (Sint16 *)stream;
+	USED(u);
 	SDL_memset(stream, 0, len);
 	for(instance = 0; instance < POLYPHONY; instance++)
 		running += audio_render(instance, samples, samples + len / 2);
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
-	(void)u;
 }
 
 void
@@ -177,11 +180,11 @@ static int
 stdin_handler(void *p)
 {
 	SDL_Event event;
+	USED(p);
 	event.type = stdin_event;
 	while(read(0, &event.cbutton.button, 1) > 0 && SDL_PushEvent(&event) >= 0)
 		;
 	return 0;
-	(void)p;
 }
 
 static void
@@ -465,7 +468,6 @@ run(Uxn *u)
 		} else
 			SDL_WaitEvent(NULL);
 	}
-	return error("SDL_WaitEvent", SDL_GetError());
 }
 
 int
