@@ -77,13 +77,13 @@ get_entry(char *p, Uint16 len, const char *pathname, const char *basename, int f
 	if(len < strlen(basename) + 8)
 		return 0;
 	if(stat(pathname, &st))
-		return fail_nonzero ? sprintf(p, "!!!! %s\n", basename) : 0;
+		return fail_nonzero ? snprintf(p, len, "!!!! %s\n", basename) : 0;
 	else if(S_ISDIR(st.st_mode))
-		return sprintf(p, "---- %s/\n", basename);
+		return snprintf(p, len, "---- %s/\n", basename);
 	else if(st.st_size < 0x10000)
-		return sprintf(p, "%04x %s\n", (unsigned int)st.st_size, basename);
+		return snprintf(p, len, "%04x %s\n", (unsigned int)st.st_size, basename);
 	else
-		return sprintf(p, "???? %s\n", basename);
+		return snprintf(p, len, "???? %s\n", basename);
 }
 
 static Uint16
@@ -111,7 +111,7 @@ file_read_dir(UxnFile *c, char *dest, Uint16 len)
 			free(t);
 		}
 		if(strlen(c->current_filename) + 1 + strlen(c->de->d_name) < sizeof(pathname))
-			sprintf(pathname, "%s/%s", c->current_filename, c->de->d_name);
+			snprintf(pathname, sizeof(pathname), "%s/%s", c->current_filename, c->de->d_name);
 		else
 			pathname[0] = '\0';
 		n = get_entry(p, len, pathname, c->de->d_name, 1);
