@@ -220,7 +220,7 @@ static void
 redraw(void)
 {
 	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height) set_size();
-	screen_redraw(&uxn_screen, uxn_screen.pixels);
+	screen_redraw(&uxn_screen);
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
@@ -376,7 +376,7 @@ do_shortcut(Uxn *u, SDL_Event *event)
 	else if(event->key.keysym.sym == SDLK_F4)
 		restart(u);
 	else if(event->key.keysym.sym == SDLK_F5) {
-		screen_mono(&uxn_screen, uxn_screen.pixels);
+		screen_mono(&uxn_screen);
 		redraw();
 	}
 }

@@ -108,17 +108,17 @@ screen_clear(UxnScreen *p, Layer *layer)
 }
 
 void
-screen_redraw(UxnScreen *p, Uint32 *pixels)
+screen_redraw(UxnScreen *p)
 {
 	Uint32 i, size = p->width * p->height, palette[16];
 	for(i = 0; i < 16; i++)
 		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
 	if(p->mono) {
 		for(i = 0; i < size; i++)
-			pixels[i] = palette_mono[(p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]) & 0x1];
+			p->pixels[i] = palette_mono[(p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]) & 0x1];
 	} else {
 		for(i = 0; i < size; i++)
-			pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
+			p->pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
 	}
 	p->fg.changed = p->bg.changed = 0;
 }
@@ -130,10 +130,10 @@ clamp(int val, int min, int max)
 }
 
 void
-screen_mono(UxnScreen *p, Uint32 *pixels)
+screen_mono(UxnScreen *p)
 {
 	p->mono = !p->mono;
-	screen_redraw(p, pixels);
+	screen_redraw(p);
 }
 
 /* IO */
