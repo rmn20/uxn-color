@@ -448,7 +448,7 @@ run(Uxn *u)
 {
 	Uint64 now = SDL_GetPerformanceCounter(), frame_end, frame_interval = SDL_GetPerformanceFrequency() / 60;
 	for(;;) {
-		Uint16 screen_vector = PEEK2(&u->dev[0x20]);
+		Uint16 screen_vector;
 		/* .System/halt */
 		if(u->dev[0x0f])
 			return error("Run", "Ended.");
@@ -456,6 +456,7 @@ run(Uxn *u)
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
+		screen_vector = PEEK2(&u->dev[0x20]);
 		uxn_eval(u, screen_vector);
 		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
 			redraw();
