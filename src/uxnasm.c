@@ -253,6 +253,7 @@ parse(char *w, FILE *f)
 {
 	int i;
 	char word[0x40], subw[0x40], c;
+	Label *l;
 	Macro *m;
 	if(slen(w) >= 63)
 		return error("Invalid token", w);
@@ -278,14 +279,30 @@ parse(char *w, FILE *f)
 			return error("Invalid macro", w);
 		break;
 	case '|': /* pad-absolute */
-		if(!sihx(w + 1))
-			return error("Invalid padding", w);
-		p.ptr = shex(w + 1);
+		if(sihx(w + 1))
+			p.ptr = shex(w + 1);
+		else if(w[1] == '&') {
+			if(!sublabel(subw, p.scope, w + 2) || !(l = findlabel(subw)))
+				return error("Invalid sublabel", w);
+			p.ptr = l->addr;
+		} else {
+			if(!(l = findlabel(w + 1)))
+				return error("Invalid label", w);
+			p.ptr = l->addr;
+		}
 		break;
 	case '$': /* pad-relative */
-		if(!sihx(w + 1))
-			return error("Invalid padding", w);
-		p.ptr += shex(w + 1);
+		if(sihx(w + 1))
+			p.ptr += shex(w + 1);
+		else if(w[1] == '&') {
+			if(!sublabel(subw, p.scope, w + 2) || !(l = findlabel(subw)))
+				return error("Invalid sublabel", w);
+			p.ptr += l->addr;
+		} else {
+			if(!(l = findlabel(w + 1)))
+				return error("Invalid label", w);
+			p.ptr += l->addr;
+		}
 		break;
 	case '@': /* label */
 		if(!makelabel(w + 1))
