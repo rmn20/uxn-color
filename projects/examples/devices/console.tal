@@ -3,24 +3,38 @@
 
 |10 @Console &vector $2 &read $1 &pad $5 &write $1 &error $1
 
+|00
+
+	@buf
+
 |0100 ( -> )
 
 	( set vector )
 	;on-console .Console/vector DEO2
 	( print hello )
-	;hello-txt 
-	&while
-		LDAk .Console/write DEO
-		INC2 LDAk ,&while JCN
-	POP2
+	;hello-txt print-str
 
 BRK
 
 @on-console ( -> )
 
-	;yousaid-txt ,print-str JSR
-	.Console/read DEI .Console/write DEO
-	#0a .Console/write DEO
+	.Console/read DEI .buf skey ?eval
+
+BRK
+
+@eval ( -> )
+
+	;buf
+		DUP2 ;quit-txt scmp ?quit
+	;yousaid-txt print-str
+		DUP2 print-str #0a18 DEO
+		sclr
+
+BRK
+
+@quit ( buf* -> )
+
+	POP2 #010f DEO
 
 BRK
 
@@ -28,10 +42,18 @@ BRK
 
 	&while
 		LDAk #18 DEO
-		INC2 LDAk ,&while JCN
+		INC2 LDAk ?&while
 	POP2
 
 JMP2r
 
-@hello-txt "Hello 20 "Uxn! $1
+@skey ( key buf -- proc ) OVR #21 LTH ?&eval #00 SWP sput #00 JMP2r &eval POP2 #01 JMP2r
+@sclr ( str* -- ) LDAk ?&w POP2 JMP2r &w STH2k #00 STH2r STA INC2 LDAk ?&w POP2 JMP2r
+@scap ( str* -- end* ) LDAk ?&w JMP2r &w INC2 LDAk ?&w JMP2r
+@sput ( chr str* -- ) scap INC2k #00 ROT ROT STA STA JMP2r
+@scmp ( a* b* -- f ) STH2 &l LDAk LDAkr STHr ANDk #00 EQU ?&e NEQk ?&e POP2 INC2 INC2r !&l &e NIP2 POP2r EQU JMP2r
+
+@hello-txt "Welcome 20 "to 20 "Uxn! 0a $1
 @yousaid-txt "You 20 "said: 20 $1
+@quit-txt "quit $1
+
