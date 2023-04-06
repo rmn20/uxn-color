@@ -26,8 +26,11 @@ BRK
 
 	;buf
 		DUP2 ;quit-txt scmp ?quit
+
 	;yousaid-txt print-str
-		DUP2 print-str #0a18 DEO
+		LIT "" #18 DEO
+		DUP2 print-str 
+		LIT "" #18 DEO #0a18 DEO
 		sclr
 
 BRK
@@ -47,7 +50,7 @@ BRK
 
 JMP2r
 
-@skey ( key buf -- proc ) OVR #21 LTH ?&eval #00 SWP sput #00 JMP2r &eval POP2 #01 JMP2r
+@skey ( key buf -- proc ) OVR #20 LTH ?&eval #00 SWP sput #00 JMP2r &eval POP2 #01 JMP2r
 @sclr ( str* -- ) LDAk ?&w POP2 JMP2r &w STH2k #00 STH2r STA INC2 LDAk ?&w POP2 JMP2r
 @scap ( str* -- end* ) LDAk ?&w JMP2r &w INC2 LDAk ?&w JMP2r
 @sput ( chr str* -- ) scap INC2k #00 ROT ROT STA STA JMP2r
