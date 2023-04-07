@@ -76,7 +76,7 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 		system_cmd(u->ram, PEEK2(d + 2));
 		break;
 	case 0xe:
-		if(u->wst->ptr || u->rst->ptr) system_inspect(u);
+		system_inspect(u);
 		break;
 	}
 }
