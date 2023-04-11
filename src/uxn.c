@@ -31,8 +31,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) tmp = s->ptr + k * mul + add; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v) { s->dat[(Uint8)(s->ptr - 1 - (o))] = (v); }
 #define PUT2(o, v) { tmp = (v); s->dat[(Uint8)(s->ptr - o - 2)] = tmp >> 8; s->dat[(Uint8)(s->ptr - o - 1)] = tmp; }
-#define PUSH(stack, v) { if(s->ptr > 254) HALT(2) stack->dat[stack->ptr++] = (v); }
-#define PUSH2(stack, v) { if(s->ptr > 253) HALT(2) tmp = (v); stack->dat[stack->ptr] = tmp >> 8; stack->dat[stack->ptr + 1] = tmp; stack->ptr += 2; }
+#define PUSH(stack, v) { if((stack)->ptr > 254) HALT(2) (stack)->dat[(stack)->ptr++] = (v); }
+#define PUSH2(stack, v) { if((stack)->ptr > 253) HALT(2) tmp = (v); (stack)->dat[(stack)->ptr] = tmp >> 8; (stack)->dat[(stack)->ptr + 1] = tmp; (stack)->ptr += 2; }
 #define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
 #define DEI(a, b) { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)])  }
 
@@ -46,14 +46,14 @@ uxn_eval(Uxn *u, Uint16 pc)
 	for(;;) {
 		ins = u->ram[pc++];
 		k = !!(ins & 0x80);
-		s = ins & 0x40 ? u->rst : u->wst;
+		s = ins & 0x40 ? &u->rst : &u->wst;
 		opc = !(ins & 0x1f) ? 0 - (ins >> 5) : ins & 0x3f;
 		switch(opc) {
 			/* IMM */
 			case 0x00: /* BRK   */ return 1;
 			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(u->ram + pc) + 2; break;
 			case 0xfe: /* JMI   */ pc += PEEK2(u->ram + pc) + 2; break;
-			case 0xfd: /* JSI   */ PUSH2(u->rst, pc + 2) pc += PEEK2(u->ram + pc) + 2; break;
+			case 0xfd: /* JSI   */ PUSH2(&u->rst, pc + 2) pc += PEEK2(u->ram + pc) + 2; break;
 			case 0xfc: /* LIT   */ PUSH(s, u->ram[pc++]) break;
 			case 0xfb: /* LIT2  */ PUSH2(s, PEEK2(u->ram + pc)) pc += 2; break;
 			case 0xfa: /* LITr  */ PUSH(s, u->ram[pc++]) break;
@@ -72,8 +72,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0b: /* LTH  */ t=T;n=N;     SET(2,-1) PUT(0, n < t) break;                           case 0x2b: t=T2;n=N2;      SET(4,-3) PUT(0, n < t) break;
 			case 0x0c: /* JMP  */ t=T;         SET(1,-1) pc += (Sint8)t; break;                         case 0x2c: t=T2;           SET(2,-2) pc = t; break;
 			case 0x0d: /* JCN  */ t=T;n=N;     SET(2,-2) pc += !!n * (Sint8)t; break;                   case 0x2d: t=T2;n=L;       SET(3,-3) if(n) pc = t; break;
-			case 0x0e: /* JSR  */ t=T;         SET(1,-1) PUSH2(u->rst, pc) pc += (Sint8)t; break;       case 0x2e: t=T2;           SET(2,-2) PUSH2(u->rst, pc) pc = t; break;
-			case 0x0f: /* STH  */ t=T;         SET(1,-1) PUSH((ins & 0x40 ? u->wst : u->rst), t) break; case 0x2f: t=T2;           SET(2,-2) PUSH2((ins & 0x40 ? u->wst : u->rst), t) break;
+			case 0x0e: /* JSR  */ t=T;         SET(1,-1) PUSH2(&u->rst, pc) pc += (Sint8)t; break;       case 0x2e: t=T2;           SET(2,-2) PUSH2(&u->rst, pc) pc = t; break;
+			case 0x0f: /* STH  */ t=T;         SET(1,-1) PUSH((ins & 0x40 ? &u->wst : &u->rst), t) break; case 0x2f: t=T2;           SET(2,-2) PUSH2((ins & 0x40 ? &u->wst : &u->rst), t) break;
 			case 0x10: /* LDZ  */ t=T;         SET(1, 0) PUT(0, u->ram[t]) break;                       case 0x30: t=T;            SET(1, 1) PUT2(0, PEEK2(u->ram + t)) break;
 			case 0x11: /* STZ  */ t=T;n=N;     SET(2,-2) u->ram[t] = n; break;                          case 0x31: t=T;n=H2;       SET(3,-3) POKE2(u->ram + t, n) break;
 			case 0x12: /* LDR  */ t=T;         SET(1, 0) PUT(0, u->ram[pc + (Sint8)t]) break;           case 0x32: t=T;            SET(1, 1) PUT2(0, PEEK2(u->ram + pc + (Sint8)t)) break;
@@ -101,8 +101,6 @@ uxn_boot(Uxn *u, Uint8 *ram)
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
 		cptr[i] = 0;
-	u->wst = (Stack *)(ram + 0xf0000);
-	u->rst = (Stack *)(ram + 0xf0100);
 	u->ram = ram;
 	return 1;
 }
