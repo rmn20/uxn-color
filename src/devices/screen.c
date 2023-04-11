@@ -93,17 +93,17 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 	if(bg && fg && pixels) {
 		p->width = width;
 		p->height = height;
-		screen_clear(p, &p->bg);
-		screen_clear(p, &p->fg);
+		screen_fill(p, &p->bg, 0);
+		screen_fill(p, &p->fg, 0);
 	}
 }
 
 void
-screen_clear(UxnScreen *p, Layer *layer)
+screen_fill(UxnScreen *p, Layer *layer, Uint8 color)
 {
 	Uint32 i, size = p->width * p->height;
 	for(i = 0; i < size; i++)
-		layer->pixels[i] = 0x00;
+		layer->pixels[i] = color;
 	layer->changed = 1;
 }
 
