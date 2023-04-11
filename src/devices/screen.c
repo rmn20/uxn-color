@@ -163,9 +163,9 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
 		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		if(d[0xe] & 0x80) {
-			screen_fill(&uxn_screen, layer, x, y, uxn_screen.width, uxn_screen.height, d[0xe] & 0x3);
-		} else {
+		if(d[0xe] & 0x80)
+			screen_fill(&uxn_screen, layer, (d[0xe] & 0x10) ? 0 : x, (d[0xe] & 0x20) ? 0 : y, (d[0xe] & 0x10) ? x : uxn_screen.width, (d[0xe] & 0x20) ? y : uxn_screen.height, d[0xe] & 0x3);
+		else {
 			screen_write(&uxn_screen, layer, x, y, d[0xe] & 0x3);
 			if(d[0x6] & 0x01) POKE2(d + 0x8, x + 1); /* auto x+1 */
 			if(d[0x6] & 0x02) POKE2(d + 0xa, y + 1); /* auto y+1 */
