@@ -27,7 +27,6 @@ extern UxnScreen uxn_screen;
 
 void screen_palette(UxnScreen *p, Uint8 *addr);
 void screen_resize(UxnScreen *p, Uint16 width, Uint16 height);
-void screen_fill(UxnScreen *p, Layer *layer, Uint8 color);
 void screen_redraw(UxnScreen *p);
 void screen_mono(UxnScreen *p);
 

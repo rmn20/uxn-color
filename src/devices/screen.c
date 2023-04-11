@@ -38,12 +38,19 @@ screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 }
 
 static void
-screen_wipe(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y)
+screen_fill(UxnScreen *p, Layer *layer, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, Uint8 color)
 {
 	int v, h;
-	for(v = 0; v < 8; v++)
-		for(h = 0; h < 8; h++)
-			screen_write(p, layer, x + h, y + v, 0);
+	for(v = y1; v < y2; v++)
+		for(h = x1; h < x2; h++)
+			screen_write(p, layer, h, v, color);
+	layer->changed = 1;
+}
+
+static void
+screen_wipe(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y)
+{
+	screen_fill(p, layer, x, y, x + 8, y + 8, 0);
 }
 
 static void
@@ -93,18 +100,9 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 	if(bg && fg && pixels) {
 		p->width = width;
 		p->height = height;
-		screen_fill(p, &p->bg, 0);
-		screen_fill(p, &p->fg, 0);
+		screen_fill(p, &p->bg, 0, 0, p->width, p->height, 0);
+		screen_fill(p, &p->fg, 0, 0, p->width, p->height, 0);
 	}
-}
-
-void
-screen_fill(UxnScreen *p, Layer *layer, Uint8 color)
-{
-	Uint32 i, size = p->width * p->height;
-	for(i = 0; i < size; i++)
-		layer->pixels[i] = color;
-	layer->changed = 1;
 }
 
 void
@@ -164,10 +162,14 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		break;
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
-		Uint8 layer = d[0xe] & 0x40;
-		screen_write(&uxn_screen, layer ? &uxn_screen.fg : &uxn_screen.bg, x, y, d[0xe] & 0x3);
-		if(d[0x6] & 0x01) POKE2(d + 0x8, x + 1); /* auto x+1 */
-		if(d[0x6] & 0x02) POKE2(d + 0xa, y + 1); /* auto y+1 */
+		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
+		if(d[0xe] & 0x80) {
+			screen_fill(&uxn_screen, layer, x, y, uxn_screen.width, uxn_screen.height, d[0xe] & 0x3);
+		} else {
+			screen_write(&uxn_screen, layer, x, y, d[0xe] & 0x3);
+			if(d[0x6] & 0x01) POKE2(d + 0x8, x + 1); /* auto x+1 */
+			if(d[0x6] & 0x02) POKE2(d + 0xa, y + 1); /* auto y+1 */
+		}
 		break;
 	}
 	case 0xf: {
