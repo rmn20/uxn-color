@@ -31,8 +31,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) tmp = s->ptr + k * mul + add; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v) { s->dat[(Uint8)(s->ptr - 1 - (o))] = (v); }
 #define PUT2(o, v) { tmp = (v); s->dat[(Uint8)(s->ptr - o - 2)] = tmp >> 8; s->dat[(Uint8)(s->ptr - o - 1)] = tmp; }
-#define PUSH(stack, v) { if((stack)->ptr > 254) HALT(2) (stack)->dat[(stack)->ptr++] = (v); }
-#define PUSH2(stack, v) { if((stack)->ptr > 253) HALT(2) tmp = (v); (stack)->dat[(stack)->ptr] = tmp >> 8; (stack)->dat[(stack)->ptr + 1] = tmp; (stack)->ptr += 2; }
+#define PUSH(x, v) { z = (x); if(z->ptr > 254) HALT(2) z->dat[z->ptr++] = (v); }
+#define PUSH2(x, v) { z = (x); if(z->ptr > 253) HALT(2) tmp = (v); z->dat[z->ptr] = tmp >> 8; z->dat[z->ptr + 1] = tmp; z->ptr += 2; }
 #define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
 #define DEI(a, b) { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)]) }
 
@@ -41,7 +41,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 {
 	Uint8 ins, opc, k;
 	Uint16 t, n, l, tmp;
-	Stack *s;
+	Stack *s, *z;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
 		ins = u->ram[pc++];
