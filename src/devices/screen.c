@@ -22,8 +22,11 @@ static Uint8 blending[4][16] = {
 	{1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1},
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2}};
 
-static Uint32 palette_mono[] = {
-	0x0f000000, 0x0fffffff};
+static int
+clamp(int val, int min, int max)
+{
+	return (val >= min) ? (val <= max) ? val : max : min;
+}
 
 static void
 screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
@@ -44,7 +47,6 @@ screen_fill(UxnScreen *p, Layer *layer, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 
 	for(v = y1; v < y2; v++)
 		for(h = x1; h < x2; h++)
 			screen_write(p, layer, h, v, color);
-	layer->changed = 1;
 }
 
 static void
@@ -111,30 +113,10 @@ screen_redraw(UxnScreen *p)
 	Uint32 i, size = p->width * p->height, palette[16];
 	for(i = 0; i < 16; i++)
 		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
-	if(p->mono) {
-		for(i = 0; i < size; i++)
-			p->pixels[i] = palette_mono[(p->fg.pixels[i] ? p->fg.pixels[i] : p->bg.pixels[i]) & 0x1];
-	} else {
-		for(i = 0; i < size; i++)
-			p->pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
-	}
+	for(i = 0; i < size; i++)
+		p->pixels[i] = palette[p->fg.pixels[i] << 2 | p->bg.pixels[i]];
 	p->fg.changed = p->bg.changed = 0;
 }
-
-int
-clamp(int val, int min, int max)
-{
-	return (val >= min) ? (val <= max) ? val : max : min;
-}
-
-void
-screen_mono(UxnScreen *p)
-{
-	p->mono = !p->mono;
-	screen_redraw(p);
-}
-
-/* IO */
 
 Uint8
 screen_dei(Uxn *u, Uint8 addr)

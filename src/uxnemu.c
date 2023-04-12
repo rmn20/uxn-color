@@ -79,6 +79,12 @@ console_input(Uxn *u, char c)
 	return uxn_eval(u, PEEK2(d));
 }
 
+static int
+clamp(int val, int min, int max)
+{
+	return (val >= min) ? (val <= max) ? val : max : min;
+}
+
 static void
 console_deo(Uint8 *d, Uint8 port)
 {
@@ -286,7 +292,7 @@ start(Uxn *u, char *rom)
 static void
 set_zoom(Uint8 scale)
 {
-	zoom = clamp(scale, 1, 3);
+	zoom = zoom > 2 ? 1 : zoom + 1;
 	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 }
 
@@ -368,17 +374,13 @@ static void
 do_shortcut(Uxn *u, SDL_Event *event)
 {
 	if(event->key.keysym.sym == SDLK_F1)
-		set_zoom(zoom > 2 ? 1 : zoom + 1);
+		set_zoom(zoom);
 	else if(event->key.keysym.sym == SDLK_F2)
 		system_inspect(u);
 	else if(event->key.keysym.sym == SDLK_F3)
 		capture_screen();
 	else if(event->key.keysym.sym == SDLK_F4)
 		restart(u);
-	else if(event->key.keysym.sym == SDLK_F5) {
-		screen_mono(&uxn_screen);
-		redraw();
-	}
 }
 
 static int
