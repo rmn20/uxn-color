@@ -135,12 +135,10 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x3:
-		if(!FIXED_SIZE)
-			screen_resize(&uxn_screen, clamp(PEEK2(d + 2), 1, 1024), uxn_screen.height);
+		screen_resize(&uxn_screen, clamp(PEEK2(d + 2), 1, 1024), uxn_screen.height);
 		break;
 	case 0x5:
-		if(!FIXED_SIZE)
-			screen_resize(&uxn_screen, uxn_screen.width, clamp(PEEK2(d + 4), 1, 1024));
+		screen_resize(&uxn_screen, uxn_screen.width, clamp(PEEK2(d + 4), 1, 1024));
 		break;
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
@@ -149,8 +147,8 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			screen_fill(&uxn_screen, layer, (d[0xe] & 0x10) ? 0 : x, (d[0xe] & 0x20) ? 0 : y, (d[0xe] & 0x10) ? x : uxn_screen.width, (d[0xe] & 0x20) ? y : uxn_screen.height, d[0xe] & 0x3);
 		else {
 			screen_write(&uxn_screen, layer, x, y, d[0xe] & 0x3);
-			if(d[0x6] & 0x01) POKE2(d + 0x8, x + 1); /* auto x+1 */
-			if(d[0x6] & 0x02) POKE2(d + 0xa, y + 1); /* auto y+1 */
+			if(d[0x6] & 0x1) POKE2(d + 0x8, x + 1); /* auto x+1 */
+			if(d[0x6] & 0x2) POKE2(d + 0xa, y + 1); /* auto y+1 */
 		}
 		break;
 	}
@@ -171,9 +169,9 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 				addr += (d[0x6] & 0x04) << (1 + twobpp);
 			}
 		}
-		POKE2(d + 0xc, addr);   /* auto addr+length */
-		POKE2(d + 0x8, x + dx); /* auto x+8 */
-		POKE2(d + 0xa, y + dy); /* auto y+8 */
+		if(d[0x6] & 0x1) POKE2(d + 0x8, x + dx); /* auto x+8 */
+		if(d[0x6] & 0x2) POKE2(d + 0xa, y + dy); /* auto y+8 */
+		if(d[0x6] & 0x4) POKE2(d + 0xc, addr);   /* auto addr+length */
 		break;
 	}
 	}
