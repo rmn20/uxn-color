@@ -436,6 +436,42 @@ handle_events(Uxn *u)
 			controller_down(u, &u->dev[0x80], get_button_joystick(&event));
 		else if(event.type == SDL_JOYBUTTONUP)
 			controller_up(u, &u->dev[0x80], get_button_joystick(&event));
+		else if(event.type == SDL_JOYHATMOTION) {
+			/* NOTE: Assuming there is only one joyhat in the controller */
+			switch(event.jhat.value) {
+			case SDL_HAT_UP:
+				controller_down(u, &u->dev[0x80], 0x10);
+				break;
+			case SDL_HAT_DOWN:
+				controller_down(u, &u->dev[0x80], 0x20);
+				break;
+			case SDL_HAT_LEFT:
+				controller_down(u, &u->dev[0x80], 0x40);
+				break;
+			case SDL_HAT_RIGHT:
+				controller_down(u, &u->dev[0x80], 0x80);
+				break;
+			case SDL_HAT_LEFTDOWN:
+				controller_down(u, &u->dev[0x80], 0x40 | 0x20);
+				break;
+			case SDL_HAT_LEFTUP:
+				controller_down(u, &u->dev[0x80], 0x40 | 0x10);
+				break;
+			case SDL_HAT_RIGHTDOWN:
+				controller_down(u, &u->dev[0x80], 0x80 | 0x20);
+				break;
+			case SDL_HAT_RIGHTUP:
+				controller_down(u, &u->dev[0x80], 0x80 | 0x10);
+				break;
+			case SDL_HAT_CENTERED:
+				/* Set all directions to down */
+				controller_up(u, &u->dev[0x80], 0x10 | 0x20 | 0x40 | 0x80);
+				break;
+			default:
+				/* Ignore */
+				break;
+			}
+		}
 		/* Console */
 		else if(event.type == stdin_event)
 			console_input(u, event.cbutton.button);
