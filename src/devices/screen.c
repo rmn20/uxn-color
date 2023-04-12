@@ -31,6 +31,7 @@ clamp(int val, int min, int max)
 static void
 screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
+
 	if(x < p->width && y < p->height) {
 		Uint32 i = x + y * p->width;
 		if(color != layer->pixels[i]) {
@@ -47,12 +48,6 @@ screen_fill(UxnScreen *p, Layer *layer, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 
 	for(v = y1; v < y2; v++)
 		for(h = x1; h < x2; h++)
 			screen_write(p, layer, h, v, color);
-}
-
-static void
-screen_wipe(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y)
-{
-	screen_fill(p, layer, x, y, x + 8, y + 8, 0);
 }
 
 static void
@@ -79,9 +74,9 @@ screen_palette(UxnScreen *p, Uint8 *addr)
 	int i, shift;
 	for(i = 0, shift = 4; i < 4; ++i, shift ^= 4) {
 		Uint8
-			r = (addr[0 + i / 2] >> shift) & 0x0f,
-			g = (addr[2 + i / 2] >> shift) & 0x0f,
-			b = (addr[4 + i / 2] >> shift) & 0x0f;
+			r = (addr[0 + i / 2] >> shift) & 0xf,
+			g = (addr[2 + i / 2] >> shift) & 0xf,
+			b = (addr[4 + i / 2] >> shift) & 0xf;
 		p->palette[i] = 0x0f000000 | r << 16 | g << 8 | b;
 		p->palette[i] |= p->palette[i] << 4;
 	}
@@ -143,9 +138,10 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
 		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		if(d[0xe] & 0x80)
-			screen_fill(&uxn_screen, layer, (d[0xe] & 0x10) ? 0 : x, (d[0xe] & 0x20) ? 0 : y, (d[0xe] & 0x10) ? x : uxn_screen.width, (d[0xe] & 0x20) ? y : uxn_screen.height, d[0xe] & 0x3);
-		else {
+		if(d[0xe] & 0x80) {
+			Uint8 xflip = d[0xe] & 0x10, yflip = d[0xe] & 0x20;
+			screen_fill(&uxn_screen, layer, xflip ? 0 : x, yflip ? 0 : y, xflip ? x : uxn_screen.width, yflip ? y : uxn_screen.height, d[0xe] & 0x3);
+		} else {
 			screen_write(&uxn_screen, layer, x, y, d[0xe] & 0x3);
 			if(d[0x6] & 0x1) POKE2(d + 0x8, x + 1); /* auto x+1 */
 			if(d[0x6] & 0x2) POKE2(d + 0xa, y + 1); /* auto y+1 */
@@ -154,17 +150,17 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 	}
 	case 0xf: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa), dx, dy, addr = PEEK2(d + 0xc);
-		Uint8 i, n, twobpp = !!(d[0xf] & 0x80);
+		Uint8 i, n = d[0x6] >> 4, twobpp = !!(d[0xf] & 0x80);
 		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		n = d[0x6] >> 4;
 		dx = (d[0x6] & 0x01) << 3;
 		dy = (d[0x6] & 0x02) << 2;
 		if(addr > 0x10000 - ((n + 1) << (3 + twobpp)))
 			return;
 		for(i = 0; i <= n; i++) {
-			if(!(d[0xf] & 0xf))
-				screen_wipe(&uxn_screen, layer, x + dy * i, y + dx * i);
-			else {
+			if(!(d[0xf] & 0xf)) {
+				Uint16 ex = x + dy * i, ey = y + dx * i;
+				screen_fill(&uxn_screen, layer, ex, ey, ex + 8, ey + 8, 0);
+			} else {
 				screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, &ram[addr], d[0xf] & 0xf, d[0xf] & 0x10, d[0xf] & 0x20, twobpp);
 				addr += (d[0x6] & 0x04) << (1 + twobpp);
 			}
