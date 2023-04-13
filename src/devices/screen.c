@@ -86,15 +86,15 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 	bg = realloc(p->bg.pixels, width * height),
 	fg = realloc(p->fg.pixels, width * height);
 	pixels = realloc(p->pixels, width * height * sizeof(Uint32));
-	if(bg) p->bg.pixels = bg;
-	if(fg) p->fg.pixels = fg;
-	if(pixels) p->pixels = pixels;
-	if(bg && fg && pixels) {
-		p->width = width;
-		p->height = height;
-		screen_fill(p, &p->bg, 0, 0, p->width, p->height, 0);
-		screen_fill(p, &p->fg, 0, 0, p->width, p->height, 0);
-	}
+	if(!bg || !fg || !pixels)
+		return;
+	p->bg.pixels = bg;
+	p->fg.pixels = fg;
+	p->pixels = pixels;
+	p->width = width;
+	p->height = height;
+	screen_fill(p, &p->bg, 0, 0, p->width, p->height, 0);
+	screen_fill(p, &p->fg, 0, 0, p->width, p->height, 0);
 }
 
 void

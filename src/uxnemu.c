@@ -399,9 +399,8 @@ handle_events(Uxn *u)
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
-		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
+		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
 			uxn_eval(u, PEEK2(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
-		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
 			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
