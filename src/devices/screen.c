@@ -22,16 +22,9 @@ static Uint8 blending[4][16] = {
 	{1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1, 1, 2, 3, 1},
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2}};
 
-static int
-clamp(int val, int min, int max)
-{
-	return (val >= min) ? (val <= max) ? val : max : min;
-}
-
 static void
 screen_write(UxnScreen *p, Layer *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-
 	if(x < p->width && y < p->height) {
 		Uint32 i = x + y * p->width;
 		if(color != layer->pixels[i]) {
@@ -86,11 +79,13 @@ screen_palette(UxnScreen *p, Uint8 *addr)
 void
 screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 {
-	Uint8
-		*bg = realloc(p->bg.pixels, width * height),
-		*fg = realloc(p->fg.pixels, width * height);
-	Uint32
-		*pixels = realloc(p->pixels, width * height * sizeof(Uint32));
+	Uint8 *bg, *fg;
+	Uint32 *pixels;
+	if(width < 0x20 || height < 0x20 || width >= 0x400 || height >= 0x400)
+		return;
+	bg = realloc(p->bg.pixels, width * height),
+	fg = realloc(p->fg.pixels, width * height);
+	pixels = realloc(p->pixels, width * height * sizeof(Uint32));
 	if(bg) p->bg.pixels = bg;
 	if(fg) p->fg.pixels = fg;
 	if(pixels) p->pixels = pixels;
@@ -130,10 +125,10 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x3:
-		screen_resize(&uxn_screen, clamp(PEEK2(d + 2), 1, 1024), uxn_screen.height);
+		screen_resize(&uxn_screen, PEEK2(d + 2), uxn_screen.height);
 		break;
 	case 0x5:
-		screen_resize(&uxn_screen, uxn_screen.width, clamp(PEEK2(d + 4), 1, 1024));
+		screen_resize(&uxn_screen, uxn_screen.width, PEEK2(d + 4));
 		break;
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
