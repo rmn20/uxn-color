@@ -136,7 +136,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		break;
 	case 0xe: {
 		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
-		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
+		Layer *layer = (d[0xe] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
 		if(d[0xe] & 0x80) {
 			Uint8 xflip = d[0xe] & 0x10, yflip = d[0xe] & 0x20;
 			screen_fill(&uxn_screen, layer, xflip ? 0 : x, yflip ? 0 : y, xflip ? x : uxn_screen.width, yflip ? y : uxn_screen.height, d[0xe] & 0x3);
