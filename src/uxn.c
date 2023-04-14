@@ -39,25 +39,25 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint8 ins, opc, k;
-	Uint16 t, n, l, tmp;
+	int t, n, l, k, tmp, opc, ins;
+	Uint8 *ram = u->ram;
 	Stack *s, *z;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
-		ins = u->ram[pc++];
+		ins = ram[pc++] & 0xff;
 		k = !!(ins & 0x80);
 		s = ins & 0x40 ? &u->rst : &u->wst;
-		opc = !(ins & 0x1f) ? 0 - (ins >> 5) : ins & 0x3f;
+		opc = !(ins & 0x1f) ? (0 - (ins >> 5)) & 0xff : ins & 0x3f;
 		switch(opc) {
 			/* IMM */
 			case 0x00: /* BRK   */ return 1;
-			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(u->ram + pc) + 2; break;
-			case 0xfe: /* JMI   */ pc += PEEK2(u->ram + pc) + 2; break;
-			case 0xfd: /* JSI   */ PUSH2(&u->rst, pc + 2) pc += PEEK2(u->ram + pc) + 2; break;
-			case 0xfc: /* LIT   */ PUSH(s, u->ram[pc++]) break;
-			case 0xfb: /* LIT2  */ PUSH2(s, PEEK2(u->ram + pc)) pc += 2; break;
-			case 0xfa: /* LITr  */ PUSH(s, u->ram[pc++]) break;
-			case 0xf9: /* LIT2r */ PUSH2(s, PEEK2(u->ram + pc)) pc += 2; break;
+			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(ram + pc) + 2; break;
+			case 0xfe: /* JMI   */ pc += PEEK2(ram + pc) + 2; break;
+			case 0xfd: /* JSI   */ PUSH2(&u->rst, pc + 2) pc += PEEK2(ram + pc) + 2; break;
+			case 0xfc: /* LIT   */ PUSH(s, ram[pc++]) break;
+			case 0xfb: /* LIT2  */ PUSH2(s, PEEK2(ram + pc)) pc += 2; break;
+			case 0xfa: /* LITr  */ PUSH(s, ram[pc++]) break;
+			case 0xf9: /* LIT2r */ PUSH2(s, PEEK2(ram + pc)) pc += 2; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) PUT(0, t + 1) break;
 			case 0x21:            t=T2;           SET(2, 0) PUT2(0, t + 1) break;
@@ -89,18 +89,18 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x2e:            t=T2;           SET(2,-2) PUSH2(&u->rst, pc) pc = t; break;
 			case 0x0f: /* STH  */ t=T;            SET(1,-1) PUSH((ins & 0x40 ? &u->wst : &u->rst), t) break;
 			case 0x2f:            t=T2;           SET(2,-2) PUSH2((ins & 0x40 ? &u->wst : &u->rst), t) break;
-			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT(0, u->ram[t]) break;
-			case 0x30:            t=T;            SET(1, 1) PUT2(0, PEEK2(u->ram + t)) break;
-			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) u->ram[t] = n; break;
-			case 0x31:            t=T;n=H2;       SET(3,-3) POKE2(u->ram + t, n) break;
-			case 0x12: /* LDR  */ t=T;            SET(1, 0) PUT(0, u->ram[pc + (Sint8)t]) break;
-			case 0x32:            t=T;            SET(1, 1) PUT2(0, PEEK2(u->ram + pc + (Sint8)t)) break;
-			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) u->ram[pc + (Sint8)t] = n; break;
-			case 0x33:            t=T;n=H2;       SET(3,-3) POKE2(u->ram + pc + (Sint8)t, n) break;
-			case 0x14: /* LDA  */ t=T2;           SET(2,-1) PUT(0, u->ram[t]) break;
-			case 0x34:            t=T2;           SET(2, 0) PUT2(0, PEEK2(u->ram + t)) break;
-			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) u->ram[t] = n; break;
-			case 0x35:            t=T2;n=N2;      SET(4,-4) POKE2(u->ram + t, n) break;
+			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT(0, ram[t]) break;
+			case 0x30:            t=T;            SET(1, 1) PUT2(0, PEEK2(ram + t)) break;
+			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
+			case 0x31:            t=T;n=H2;       SET(3,-3) POKE2(ram + t, n) break;
+			case 0x12: /* LDR  */ t=T;            SET(1, 0) PUT(0, ram[pc + (Sint8)t]) break;
+			case 0x32:            t=T;            SET(1, 1) PUT2(0, PEEK2(ram + pc + (Sint8)t)) break;
+			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) ram[pc + (Sint8)t] = n; break;
+			case 0x33:            t=T;n=H2;       SET(3,-3) POKE2(ram + pc + (Sint8)t, n) break;
+			case 0x14: /* LDA  */ t=T2;           SET(2,-1) PUT(0, ram[t]) break;
+			case 0x34:            t=T2;           SET(2, 0) PUT2(0, PEEK2(ram + t)) break;
+			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
+			case 0x35:            t=T2;n=N2;      SET(4,-4) POKE2(ram + t, n) break;
 			case 0x16: /* DEI  */ t=T;            SET(1, 0) DEI(0, t) break;
 			case 0x36:            t=T;            SET(1, 1) DEI(1, t) DEI(0, t + 1) break;
 			case 0x17: /* DEO  */ t=T;n=N;        SET(2,-2) DEO(t, n) break;
