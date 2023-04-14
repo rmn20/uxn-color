@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../uxn.h"
 #include "screen.h"
@@ -36,14 +37,9 @@ static void
 screen_fill(UxnScreen *p, Layer *layer, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, Uint8 color)
 {
 	int x, y;
-	if(x2 >= p->width) x2 = p->width;
-	if(y2 >= p->height) y2 = p->height;
-	if(x1 >= x2 || y1 >= y2)
-		return;
-	for(y = y1; y < y2; y++)
-		for(x = x1; x < x2; x++)
+	for(y = y1; y < y2 && y < p->height; y++)
+		for(x = x1; x < x2 && x < p->width; x++)
 			layer->pixels[x + y * p->width] = color;
-	layer->changed = 1;
 }
 
 static void
@@ -135,13 +131,26 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		screen_resize(&uxn_screen, uxn_screen.width, PEEK2(d + 4));
 		break;
 	case 0xe: {
-		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa);
-		Layer *layer = (d[0xe] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		if(d[0xe] & 0x80) {
-			Uint8 xflip = d[0xe] & 0x10, yflip = d[0xe] & 0x20;
-			screen_fill(&uxn_screen, layer, xflip ? 0 : x, yflip ? 0 : y, xflip ? x : uxn_screen.width, yflip ? y : uxn_screen.height, d[0xe] & 0x3);
-		} else {
-			screen_pixel(&uxn_screen, layer, x, y, d[0xe] & 0x3);
+		Uint8 ctrl = d[0xe];
+		Uint8 color = ctrl & 0x3;
+		Uint16 x = PEEK2(d + 0x8);
+		Uint16 y = PEEK2(d + 0xa);
+		Layer *layer = (ctrl & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
+		/* fill mode */
+		if(ctrl & 0x80) {
+			Uint16 x2 = uxn_screen.width;
+			Uint16 y2 = uxn_screen.height;
+			if(ctrl & 0x10) x2 = x, x = 0;
+			if(ctrl & 0x20) y2 = y, y = 0;
+			screen_fill(&uxn_screen, layer, x, y, x2, y2, color);
+			layer->changed = 1;
+		}
+		/* pixel mode */
+		else {
+			Uint16 width = uxn_screen.width;
+			Uint16 height = uxn_screen.height;
+			if(x < width && y < height)
+				layer->pixels[x + y * width] = color;
 			layer->changed = 1;
 			if(d[0x6] & 0x1) POKE2(d + 0x8, x + 1); /* auto x+1 */
 			if(d[0x6] & 0x2) POKE2(d + 0xa, y + 1); /* auto y+1 */
@@ -149,11 +158,15 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		break;
 	}
 	case 0xf: {
-		Uint16 x = PEEK2(d + 0x8), y = PEEK2(d + 0xa), dx, dy, addr = PEEK2(d + 0xc);
-		Uint8 i, n = d[0x6] >> 4, twobpp = !!(d[0xf] & 0x80);
 		Layer *layer = (d[0xf] & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		dx = (d[0x6] & 0x01) << 3;
-		dy = (d[0x6] & 0x02) << 2;
+		Uint16 x = PEEK2(d + 0x8);
+		Uint16 y = PEEK2(d + 0xa);
+		Uint16 addr = PEEK2(d + 0xc);
+		Uint16 dx = (d[0x6] & 0x01) << 3;
+		Uint16 dy = (d[0x6] & 0x02) << 2;
+		Uint8 n = d[0x6] >> 4;
+		Uint8 twobpp = !!(d[0xf] & 0x80);
+		Uint8 i;
 		if(addr > 0x10000 - ((n + 1) << (3 + twobpp)))
 			return;
 		for(i = 0; i <= n; i++) {
