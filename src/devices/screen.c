@@ -34,11 +34,11 @@ screen_fill(UxnScreen *s, Uint8 *pixels, Uint16 x1, Uint16 y1, Uint16 x2, Uint16
 }
 
 static void
-screen_blit(UxnScreen *p, Uint8 *pixels, Uint16 x1, Uint16 y1, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
+screen_blit(UxnScreen *p, Uint8 *pixels, Uint16 x1, Uint16 y1, Uint8 *ram, Uint16 addr, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
 {
 	int v, h, width = p->width, height = p->height, opaque = (color % 5) || !color;
 	for(v = 0; v < 8; v++) {
-		Uint16 c = sprite[v] | (twobpp ? (sprite[v + 8] << 8) : 0);
+		Uint16 c = ram[(addr + v) & 0xffff] | (twobpp ? (ram[(addr + v + 8) & 0xffff] << 8) : 0);
 		Uint16 y = y1 + (flipy ? 7 - v : v);
 		for(h = 7; h >= 0; --h, c >>= 1) {
 			Uint8 ch = (c & 1) | ((c >> 7) & 2);
@@ -160,14 +160,12 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		Uint16 dx = (move & 0x1) << 3;
 		Uint16 dy = (move & 0x2) << 2;
 		Layer *layer = (ctrl & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
-		if(addr > 0x10000 - ((length + 1) << (3 + twobpp)))
-			return;
 		for(i = 0; i <= length; i++) {
 			if(!(ctrl & 0xf)) {
 				Uint16 ex = x + dy * i, ey = y + dx * i;
 				screen_fill(&uxn_screen, layer->pixels, ex, ey, ex + 8, ey + 8, 0);
 			} else {
-				screen_blit(&uxn_screen, layer->pixels, x + dy * i, y + dx * i, &ram[addr], ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
+				screen_blit(&uxn_screen, layer->pixels, x + dy * i, y + dx * i, ram, addr, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
 				addr += (move & 0x04) << (1 + twobpp);
 			}
 		}
