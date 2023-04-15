@@ -111,8 +111,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x39:            t=T2;n=N2;      SET(4,-2) PUT2(0, n - t) break;
 			case 0x1a: /* MUL  */ t=T;n=N;        SET(2,-1) PUT(0, n * t) break;
 			case 0x3a:            t=T2;n=N2;      SET(4,-2) PUT2(0, n * t) break;
-			case 0x1b: /* DIV  */ t=T;n=N;        SET(2,-1) PUT(0, n / t) break;
-			case 0x3b:            t=T2;n=N2;      SET(4,-2) PUT2(0, n / t) break;
+			case 0x1b: /* DIV  */ t=T;n=N;        SET(2,-1) if(!t) HALT(3) PUT(0, n / t) break;
+			case 0x3b:            t=T2;n=N2;      SET(4,-2) if(!t) HALT(3) PUT2(0, n / t) break;
 			case 0x1c: /* AND  */ t=T;n=N;        SET(2,-1) PUT(0, n & t) break;
 			case 0x3c:            t=T2;n=N2;      SET(4,-2) PUT2(0, n & t) break;
 			case 0x1d: /* ORA  */ t=T;n=N;        SET(2,-1) PUT(0, n | t) break;

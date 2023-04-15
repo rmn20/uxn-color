@@ -4,10 +4,10 @@
 
 	;on-halt .System/vector DEO2
 
+	( divzero ) #02 #00 DIV
 	( underflow ) POP
 	( overflow ) #00 &l #ffff ROT INC DUP ?&l POP
-	( divzero ) #02 #00 DIV
-
+	
 	#80 .System/halt DEO
 
 BRK
