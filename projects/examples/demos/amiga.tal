@@ -137,6 +137,7 @@ JMP2r
 		POP2
 		INC GTHk ?&horver
 	POP2
+
 	( ver lines )
 	[ LIT2 02 -Screen/auto ] DEO
 	;ver-icn .Screen/addr DEO2
