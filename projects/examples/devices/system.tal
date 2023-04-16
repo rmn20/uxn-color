@@ -1,16 +1,30 @@
 |00 @System &vector $2 &wst $1 &rst $1 &pad $4 &r $2 &g $2 &b $2 &debug $1 &halt $1
+|10 @Console &vector $2 &read $1 &pad $5 &write $1
 
 |0100
 
 	;on-halt .System/vector DEO2
-
-	( divzero ) #02 #00 DIV
-	( underflow ) POP
-	( overflow ) #00 &l #ffff ROT INC DUP ?&l POP
-	
-	#80 .System/halt DEO
+	;on-console .Console/vector DEO2
+	;dict/instruction pstr
 
 BRK
+
+@on-console ( -> )
+
+	[ LIT2 &id =tests ] INC2k INC2 ,&id STR2 LDA2 JSR2
+
+BRK
+
+@tests
+	=try-divzero
+	=try-underflow
+	=try-overflow
+	=exit
+
+@try-divzero ( -- ) #02 #00 DIV JMP2r
+@try-underflow ( -- ) POP JMP2r
+@try-overflow ( -- ) #00 &l #ffff ROT INC DUP ?&l POP JMP2r
+@exit ( -- ) #0000 .Console/vector DEO2 #800f DEO BRK
 
 @on-halt ( addr* inst code -> )
 
@@ -18,8 +32,7 @@ BRK
 	;dict/error pstr
 	print-opcode
 	;dict/at pstr
-	phex LIT2 0a ". #18 DEO #18 DEO
-	#01 .System/halt DEO
+	phex LIT ". #18 DEO
 
 BRK
 
@@ -51,10 +64,12 @@ JMP2r
 JMP2r
 
 @pstr ( str* -- )
+
 	&w
 		LDAk #18 DEO
-		INC2 LDAk ,&w JCN
+		INC2 LDAk ?&w
 	POP2
+
 JMP2r
 
 @err
@@ -64,12 +79,13 @@ JMP2r
 	=dict/divzero
 
 @dict
-	&error "Error, 20 "during 20 $1
+	&error "error, 20 "during 20 $1
 	&unknown "Unkown 20 $1
 	&underflow "Underflow 20 $1
 	&overflow "Overflow 20 $1
 	&divzero "Division 20 "by 20 "zero 20 $1
 	&at ", 20 "at 20 "# $1
+	&instruction "Press 20 "enter 20 "to 20 "test 20 "each 20 "error. 0a $1
 
 @opcodes
 	"LIT $1 "INC $1 "POP $1 "NIP $1 "SWP $1 "ROT $1 "DUP $1 "OVR $1
