@@ -22,6 +22,10 @@
 	[ LIT2 00 -DateTime/second ] DEI pdec-pad
 	#0a18 DEO
 
+	( doty )
+	;dict/doty pstr
+	.DateTime/doty DEI2 pdec
+	[ LIT2 0a ". ] #18 DEO #18 DEO
 	#800f DEO
 
 BRK
@@ -82,4 +86,5 @@ JMP2r
 @dict
 	&date "The 20 "date 20 "is: 20 $1
 	&time "The 20 "time 20 "is: 20 $1
+	&doty "The 20 "day 20 "of 20 "the 20 "year 20 "is: 20 $1
 
