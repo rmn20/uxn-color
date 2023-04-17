@@ -496,13 +496,15 @@ main(int argc, char **argv)
 	/* default resolution */
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
 	/* default zoom */
-	if(strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
+	if(argc > 1 && (strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0))
 		set_zoom(argv[i++][1] - '0');
 	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);
+	if(i == argc)
+		return error("usage", "uxnemu [-2x][-3x] file.rom");
 	/* load rom */
 	if(!start(&u, argv[i]))
-		return error("usage", "uxnemu [-2x][-3x] file.rom");
+		return error("Start", "Failed");
 	rom_path = argv[i++];
 	/* read arguments */
 	for(; i < argc; i++) {

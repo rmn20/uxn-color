@@ -59,6 +59,8 @@ main(int argc, char **argv)
 		return emu_error("Boot", "Failed");
 	if(!system_load(&u, argv[i++]))
 		return emu_error("Load", "Failed");
+	if(i == argc)
+		u.dev[0x17] = CONSOLE_END;
 	if(!uxn_eval(&u, PAGE_PROGRAM))
 		return u.dev[0x0f] & 0x7f;
 	for(; i < argc; i++) {
