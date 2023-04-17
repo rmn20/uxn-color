@@ -13,6 +13,10 @@
 	;on-argument .Console/vector DEO2
 	( print hello )
 	;hello-txt pstr
+	( when arguments are queued )
+	.Console/type DEI #04 EQU ?&no-queue
+		;queue-txt pstr
+		&no-queue
 
 BRK
 
@@ -105,4 +109,5 @@ JMP2r
 @arg-txt "(arg) $1
 @quit-txt "quit $1
 @argend-txt "(argend) 0a $1
+@queue-txt "(queue) 0a $1
 
