@@ -490,29 +490,29 @@ main(int argc, char **argv)
 {
 	SDL_DisplayMode DM;
 	Uxn u = {0};
-	int i = 1, loaded = 0;
+	int i = 1;
 	if(!init())
 		return error("Init", "Failed to initialize emulator.");
+	/* default resolution */
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
-	/* set default zoom */
+	/* default zoom */
 	if(strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0');
 	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);
-	for(; i < argc; i++) {
-		if(!loaded++) {
-			if(!start(&u, argv[i]))
-				return error("Boot", "Failed to boot.");
-			rom_path = argv[i];
-		} else {
-			char *p = argv[i];
-			while(*p) console_input(&u, *p++, CONSOLE_ARG);
-			console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
-		}
-	}
-	if(!loaded && !start(&u, "launcher.rom"))
+	/* load rom */
+	if(!start(&u, argv[i]))
 		return error("usage", "uxnemu [-s scale] file.rom");
+	rom_path = argv[i++];
+	/* read arguments */
+	for(; i < argc; i++) {
+		char *p = argv[i];
+		while(*p) console_input(&u, *p++, CONSOLE_ARG);
+		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
+	}
+	/* start rom */
 	run(&u);
+	/* finished */
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
