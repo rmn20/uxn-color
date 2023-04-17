@@ -14,7 +14,7 @@
 	( print hello )
 	;hello-txt pstr
 	( when arguments are queued )
-	.Console/type DEI #04 EQU ?&no-queue
+	.Console/type DEI #01 EQU ?&no-queue
 		;queue-txt pstr
 		&no-queue
 
