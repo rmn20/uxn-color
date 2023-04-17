@@ -502,7 +502,7 @@ main(int argc, char **argv)
 		set_zoom(DM.w / 1280);
 	/* load rom */
 	if(!start(&u, argv[i]))
-		return error("usage", "uxnemu [-s scale] file.rom");
+		return error("usage", "uxnemu [-2x][-3x] file.rom");
 	rom_path = argv[i++];
 	/* read arguments */
 	for(; i < argc; i++) {
