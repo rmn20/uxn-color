@@ -102,6 +102,8 @@ uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
 	return 0;
 }
 
+/* Console */
+
 int
 console_input(Uxn *u, char c, int type)
 {

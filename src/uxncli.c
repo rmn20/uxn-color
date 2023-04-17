@@ -53,7 +53,7 @@ main(int argc, char **argv)
 {
 	Uxn u;
 	int i = 1;
-	if(argc < 2)
+	if(i == argc)
 		return emu_error("Usage", "uxncli game.rom args");
 	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return emu_error("Boot", "Failed");

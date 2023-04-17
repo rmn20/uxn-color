@@ -500,9 +500,11 @@ main(int argc, char **argv)
 		set_zoom(argv[i++][1] - '0');
 	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);
+	/* load rom */
 	if(i == argc)
 		return error("usage", "uxnemu [-2x][-3x] file.rom");
-	/* load rom */
+	if(i == argc - 1)
+		u.dev[0x17] = CONSOLE_END;
 	if(!start(&u, argv[i]))
 		return error("Start", "Failed");
 	rom_path = argv[i++];
