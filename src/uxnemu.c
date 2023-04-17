@@ -72,32 +72,9 @@ error(char *msg, const char *err)
 }
 
 static int
-console_input(Uxn *u, char c)
-{
-	Uint8 *d = &u->dev[0x10];
-	d[0x02] = c;
-	return uxn_eval(u, PEEK2(d));
-}
-
-static int
 clamp(int val, int min, int max)
 {
 	return (val >= min) ? (val <= max) ? val : max : min;
-}
-
-static void
-console_deo(Uint8 *d, Uint8 port)
-{
-	switch(port) {
-	case 0x8:
-		fputc(d[port], stdout);
-		fflush(stdout);
-		return;
-	case 0x9:
-		fputc(d[port], stderr);
-		fflush(stderr);
-		return;
-	}
 }
 
 static Uint8
@@ -475,7 +452,7 @@ handle_events(Uxn *u)
 		}
 		/* Console */
 		else if(event.type == stdin_event)
-			console_input(u, event.cbutton.button);
+			console_input(u, event.cbutton.button, CONSOLE_STD);
 	}
 	return 1;
 }
@@ -533,8 +510,8 @@ main(int argc, char **argv)
 			rom_path = argv[i];
 		} else {
 			char *p = argv[i];
-			while(*p) console_input(&u, *p++);
-			console_input(&u, '\n');
+			while(*p) console_input(&u, *p++, CONSOLE_ARG);
+			console_input(&u, '\n', i == argc ? CONSOLE_END : CONSOLE_EOA);
 		}
 	}
 	if(!loaded && !start(&u, "launcher.rom"))

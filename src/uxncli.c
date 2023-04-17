@@ -27,29 +27,6 @@ emu_error(char *msg, const char *err)
 	return 1;
 }
 
-static int
-console_input(Uxn *u, char c)
-{
-	Uint8 *d = &u->dev[0x10];
-	d[0x02] = c;
-	return uxn_eval(u, PEEK2(d));
-}
-
-static void
-console_deo(Uint8 *d, Uint8 port)
-{
-	switch(port) {
-	case 0x8:
-		fputc(d[port], stdout);
-		fflush(stdout);
-		return;
-	case 0x9:
-		fputc(d[port], stderr);
-		fflush(stderr);
-		return;
-	}
-}
-
 Uint8
 uxn_dei(Uxn *u, Uint8 addr)
 {
@@ -86,13 +63,12 @@ main(int argc, char **argv)
 		return u.dev[0x0f] & 0x7f;
 	for(i = 2; i < argc; i++) {
 		char *p = argv[i];
-		while(*p) console_input(&u, *p++);
-		console_input(&u, '\n');
+		while(*p) console_input(&u, *p++, CONSOLE_ARG);
+		console_input(&u, '\n', CONSOLE_EOA);
 	}
 	while(!u.dev[0x0f]) {
 		int c = fgetc(stdin);
-		if(c != EOF)
-			console_input(&u, (Uint8)c);
+		if(c != EOF) console_input(&u, (Uint8)c, CONSOLE_STD);
 	}
 	return u.dev[0x0f] & 0x7f;
 }
