@@ -117,6 +117,6 @@ echo "Assembling(piano).."
 ./bin/uxnasm projects/software/piano.tal bin/piano.rom
 
 echo "Running.."
-./bin/uxnemu bin/piano.rom
+./bin/uxnemu -2x bin/piano.rom
 
 echo "Done."

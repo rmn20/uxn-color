@@ -267,9 +267,9 @@ start(Uxn *u, char *rom)
 }
 
 static void
-set_zoom(Uint8 scale)
+set_zoom(Uint8 z)
 {
-	zoom = zoom > 2 ? 1 : zoom + 1;
+	zoom = z;
 	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 }
 
@@ -351,7 +351,7 @@ static void
 do_shortcut(Uxn *u, SDL_Event *event)
 {
 	if(event->key.keysym.sym == SDLK_F1)
-		set_zoom(zoom);
+		set_zoom(zoom == 3 ? 1 : zoom + 1);
 	else if(event->key.keysym.sym == SDLK_F2)
 		system_inspect(u);
 	else if(event->key.keysym.sym == SDLK_F3)
@@ -490,28 +490,24 @@ main(int argc, char **argv)
 {
 	SDL_DisplayMode DM;
 	Uxn u = {0};
-	int i, loaded = 0;
+	int i = 1, loaded = 0;
 	if(!init())
 		return error("Init", "Failed to initialize emulator.");
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
 	/* set default zoom */
-	if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
+	if(strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
+		set_zoom(argv[i++][1] - '0');
+	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
 		set_zoom(DM.w / 1280);
-	for(i = 1; i < argc; i++) {
-		/* get default zoom from flags */
-		if(strcmp(argv[i], "-s") == 0) {
-			if(i < argc - 1)
-				set_zoom(atoi(argv[++i]));
-			else
-				return error("Opt", "-s No scale provided.");
-		} else if(!loaded++) {
+	for(; i < argc; i++) {
+		if(!loaded++) {
 			if(!start(&u, argv[i]))
 				return error("Boot", "Failed to boot.");
 			rom_path = argv[i];
 		} else {
 			char *p = argv[i];
 			while(*p) console_input(&u, *p++, CONSOLE_ARG);
-			console_input(&u, '\n', i == argc ? CONSOLE_END : CONSOLE_EOA);
+			console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 		}
 	}
 	if(!loaded && !start(&u, "launcher.rom"))

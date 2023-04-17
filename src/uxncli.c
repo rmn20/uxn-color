@@ -64,7 +64,7 @@ main(int argc, char **argv)
 	for(i = 2; i < argc; i++) {
 		char *p = argv[i];
 		while(*p) console_input(&u, *p++, CONSOLE_ARG);
-		console_input(&u, '\n', i == argc-1 ? CONSOLE_END : CONSOLE_EOA);
+		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 	}
 	while(!u.dev[0x0f]) {
 		int c = fgetc(stdin);
