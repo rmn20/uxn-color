@@ -64,14 +64,6 @@ static Uint64 exec_deadline, deadline_interval, ms_interval;
 char *rom_path;
 
 static int
-error(char *msg, const char *err)
-{
-	fprintf(stderr, "%s: %s\n", msg, err);
-	fflush(stderr);
-	return 0;
-}
-
-static int
 clamp(int val, int min, int max)
 {
 	return (val >= min) ? (val <= max) ? val : max : min;
@@ -192,9 +184,9 @@ set_size(void)
 	SDL_RenderSetLogicalSize(gRenderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
-		return error("gTexture", SDL_GetError());
+		return system_error("gTexture", SDL_GetError());
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
-		return error("SDL_UpdateTexture", SDL_GetError());
+		return system_error("SDL_UpdateTexture", SDL_GetError());
 	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	return 1;
 }
@@ -205,7 +197,7 @@ redraw(void)
 	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height) set_size();
 	screen_redraw(&uxn_screen);
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
-		error("SDL_UpdateTexture", SDL_GetError());
+		system_error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, &gRect);
 	SDL_RenderPresent(gRenderer);
@@ -223,19 +215,19 @@ init(void)
 	as.samples = 512;
 	as.userdata = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
-		return error("sdl", SDL_GetError());
+		return system_error("sdl", SDL_GetError());
 	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(gWindow == NULL)
-		return error("sdl_window", SDL_GetError());
+		return system_error("sdl_window", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
-		return error("sdl_renderer", SDL_GetError());
+		return system_error("sdl_renderer", SDL_GetError());
 	SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xff);
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
-		error("sdl_audio", SDL_GetError());
+		system_error("sdl_audio", SDL_GetError());
 	if(SDL_NumJoysticks() > 0 && SDL_JoystickOpen(0) == NULL)
-		error("sdl_joystick", SDL_GetError());
+		system_error("sdl_joystick", SDL_GetError());
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_DetachThread(stdin_thread = SDL_CreateThread(stdin_handler, "stdin", NULL));
@@ -256,12 +248,12 @@ start(Uxn *u, char *rom)
 {
 	free(u->ram);
 	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
-		return error("Boot", "Failed to start uxn.");
+		return system_error("Boot", "Failed to start uxn.");
 	if(!system_load(u, rom))
-		return error("Boot", "Failed to load rom.");
+		return system_error("Boot", "Failed to load rom.");
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))
-		return error("Boot", "Failed to eval rom.");
+		return system_error("Boot", "Failed to eval rom.");
 	SDL_SetWindowTitle(gWindow, rom);
 	return 1;
 }
@@ -367,7 +359,7 @@ handle_events(Uxn *u)
 	while(SDL_PollEvent(&event)) {
 		/* Window */
 		if(event.type == SDL_QUIT)
-			return error("Run", "Quit.");
+			return system_error("Run", "Quit.");
 		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
 			redraw();
 		else if(event.type == SDL_DROPFILE) {
@@ -465,7 +457,7 @@ run(Uxn *u)
 		Uint16 screen_vector;
 		/* .System/halt */
 		if(u->dev[0x0f])
-			return error("Run", "Ended.");
+			return system_error("Run", "Ended.");
 		frame_end = now + frame_interval;
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
@@ -492,7 +484,7 @@ main(int argc, char **argv)
 	Uxn u = {0};
 	int i = 1;
 	if(!init())
-		return error("Init", "Failed to initialize emulator.");
+		return system_error("Init", "Failed to initialize emulator.");
 	/* default resolution */
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
 	/* default zoom */
@@ -502,11 +494,11 @@ main(int argc, char **argv)
 		set_zoom(DM.w / 1280);
 	/* load rom */
 	if(i == argc)
-		return error("usage", "uxnemu [-2x][-3x] file.rom");
+		return system_error("usage", "uxnemu [-2x][-3x] file.rom");
 	if(i == argc - 1)
 		u.dev[0x17] = CONSOLE_END;
 	if(!start(&u, argv[i]))
-		return error("Start", "Failed");
+		return system_error("Start", "Failed");
 	rom_path = argv[i++];
 	/* read arguments */
 	for(; i < argc; i++) {

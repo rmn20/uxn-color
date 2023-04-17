@@ -20,13 +20,6 @@ WITH REGARD TO THIS SOFTWARE.
 Uint16 deo_mask[] = {0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000, 0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
 Uint16 dei_mask[] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x07ff, 0x0000, 0x0000, 0x0000};
 
-static int
-emu_error(char *msg, const char *err)
-{
-	fprintf(stderr, "Error %s: %s\n", msg, err);
-	return 1;
-}
-
 Uint8
 uxn_dei(Uxn *u, Uint8 addr)
 {
@@ -54,11 +47,11 @@ main(int argc, char **argv)
 	Uxn u;
 	int i = 1;
 	if(i == argc)
-		return emu_error("Usage", "uxncli game.rom args");
+		return system_error("usage", "uxncli game.rom args");
 	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
-		return emu_error("Boot", "Failed");
+		return system_error("Boot", "Failed");
 	if(!system_load(&u, argv[i++]))
-		return emu_error("Load", "Failed");
+		return system_error("Load", "Failed");
 	if(i == argc)
 		u.dev[0x17] = CONSOLE_END;
 	if(!uxn_eval(&u, PAGE_PROGRAM))

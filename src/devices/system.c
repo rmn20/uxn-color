@@ -45,11 +45,12 @@ system_cmd(Uint8 *ram, Uint16 addr)
 	}
 }
 
-void
-system_inspect(Uxn *u)
+int
+system_error(char *msg, const char *err)
 {
-	system_print(&u->wst, "wst");
-	system_print(&u->rst, "rst");
+	fprintf(stderr, "%s: %s\n", msg, err);
+	fflush(stderr);
+	return 0;
 }
 
 int
@@ -64,6 +65,13 @@ system_load(Uxn *u, char *filename)
 		l = fread(u->ram + 0x10000 * i, 0x10000, 1, f);
 	fclose(f);
 	return 1;
+}
+
+void
+system_inspect(Uxn *u)
+{
+	system_print(&u->wst, "wst");
+	system_print(&u->rst, "rst");
 }
 
 /* IO */
@@ -81,7 +89,7 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 	}
 }
 
-/* Error */
+/* Errors */
 
 int
 uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
