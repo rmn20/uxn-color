@@ -51,7 +51,7 @@ BRK
 &eval ( -> )
 
 	print-type
-	;buf ;quit-txt scmp ?quit
+	;buf ;quit-txt scmp ?&quit
 	;yousaid-txt pstr
 		LIT "" #18 DEO
 		;buf pstr
@@ -60,17 +60,17 @@ BRK
 
 BRK
 
-@print-type ( -- )
+&quit ( buf* -> )
 
-	[ LIT2 00 -Console/type ] DEI #01 GTH DUP ADD ;types ADD2 LDA2 
-
-!pstr
-
-@quit ( buf* -> )
-
-	POP2 #010f DEO
+	#010f DEO
 
 BRK
+
+@print-type ( -- )
+
+	[ LIT2 00 -Console/type ] DEI #01 GTH DUP ADD ;types ADD2 LDA2
+
+!pstr
 
 (
 @|stdlib )
