@@ -244,13 +244,14 @@ init(void)
 /* Boot */
 
 static int
-start(Uxn *u, char *rom)
+start(Uxn *u, char *rom, int queue)
 {
 	free(u->ram);
 	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return system_error("Boot", "Failed to start uxn.");
 	if(!system_load(u, rom))
 		return system_error("Boot", "Failed to load rom.");
+	u->dev[0x17] = queue;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return system_error("Boot", "Failed to eval rom.");
@@ -287,8 +288,8 @@ static void
 restart(Uxn *u)
 {
 	screen_resize(&uxn_screen, WIDTH, HEIGHT);
-	if(!start(u, "launcher.rom"))
-		start(u, rom_path);
+	if(!start(u, "launcher.rom", 0))
+		start(u, rom_path, 0);
 }
 
 static Uint8
@@ -364,7 +365,7 @@ handle_events(Uxn *u)
 			redraw();
 		else if(event.type == SDL_DROPFILE) {
 			screen_resize(&uxn_screen, WIDTH, HEIGHT);
-			start(u, event.drop.file);
+			start(u, event.drop.file, 0);
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
@@ -495,8 +496,8 @@ main(int argc, char **argv)
 	/* load rom */
 	if(i == argc)
 		return system_error("usage", "uxnemu [-2x][-3x] file.rom");
-	u.dev[0x17] = i != argc - 1;
-	if(!start(&u, argv[i]))
+	printf("%d/%d -> %d\n", i, argc, argc - i);
+	if(!start(&u, argv[i], argc - i))
 		return system_error("Start", "Failed");
 	rom_path = argv[i++];
 	/* read arguments */
