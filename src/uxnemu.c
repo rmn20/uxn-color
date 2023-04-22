@@ -496,7 +496,6 @@ main(int argc, char **argv)
 	/* load rom */
 	if(i == argc)
 		return system_error("usage", "uxnemu [-2x][-3x] file.rom");
-	printf("%d/%d -> %d\n", i, argc, argc - i);
 	if(!start(&u, argv[i], argc - i))
 		return system_error("Start", "Failed");
 	rom_path = argv[i++];
