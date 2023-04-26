@@ -169,7 +169,7 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_GetWindowPosition(window, &win.x, &win.y);
 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
 	if(w == win_old.x && h == win_old.y) return;
-	SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2);
+	/* SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2); */
 	SDL_SetWindowSize(window, w, h);
 }
 
