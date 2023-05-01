@@ -26,6 +26,10 @@
 #define PATH_MAX 4096
 #endif
 
+#ifdef __APPLE__
+int snprintf(char *, unsigned long, const char *, ...);
+#endif
+
 #include "../uxn.h"
 #include "file.h"
 
