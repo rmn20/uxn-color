@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-Uint16 deo_mask[] = {0x6a08, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000, 0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
+Uint16 deo_mask[] = {0xc028, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000, 0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
 Uint16 dei_mask[] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x07ff, 0x0000, 0x0000, 0x0000};
 
 Uint8
@@ -53,16 +53,17 @@ main(int argc, char **argv)
 	if(!system_load(&u, argv[i++]))
 		return system_error("Load", "Failed");
 	u.dev[0x17] = argc - i;
-	if(!uxn_eval(&u, PAGE_PROGRAM))
-		return u.dev[0x0f] & 0x7f;
-	for(; i < argc; i++) {
-		char *p = argv[i];
-		while(*p) console_input(&u, *p++, CONSOLE_ARG);
-		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
+	if(uxn_eval(&u, PAGE_PROGRAM)) {
+		for(; i < argc; i++) {
+			char *p = argv[i];
+			while(*p) console_input(&u, *p++, CONSOLE_ARG);
+			console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
+		}
+		while(!u.dev[0x0f]) {
+			int c = fgetc(stdin);
+			if(c != EOF) console_input(&u, (Uint8)c, CONSOLE_STD);
+		}
 	}
-	while(!u.dev[0x0f]) {
-		int c = fgetc(stdin);
-		if(c != EOF) console_input(&u, (Uint8)c, CONSOLE_STD);
-	}
+	free(u.ram);
 	return u.dev[0x0f] & 0x7f;
 }
