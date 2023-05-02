@@ -36,10 +36,10 @@ cc src/devices/datetime.c src/devices/system.c src/devices/file.c src/uxn.c -DND
 
 ### Plan 9 
 
-To build the Uxn emulator on [9front](http://9front.org/), via [npe](https://git.sr.ht/~ft/npe):
+To build and install the Uxn emulator on [9front](http://9front.org/), via [npe](https://git.sr.ht/~ft/npe):
 
 ```rc
-mk
+mk install
 ```
 
 If the build fails on 9front because of missing headers or functions, try again after `rm -r /sys/include/npe`.

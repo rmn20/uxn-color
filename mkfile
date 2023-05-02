@@ -1,5 +1,6 @@
 </$objtype/mkfile
 
+BIN=/$objtype/bin/games
 TARG=bin/uxncli bin/uxnasm bin/uxnemu
 USM=`{walk -f projects/ | grep '\.tal$' | grep -v blank.tal | grep -v /assets/ | grep -v /library/}
 ROM=${USM:%.tal=%.rom}
@@ -56,7 +57,7 @@ clean:V:
 %.clean:V:
 	rm -f $stem.[$OS] [$OS].$stem $stem
 
-install:QV: all
-	exit 'Sorry, there is no install rule yet'
+install:V: all
+	cp $TARG $BIN/
 
 #LDFLAGS=-p
