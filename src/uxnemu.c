@@ -262,8 +262,10 @@ start(Uxn *u, char *rom, int queue)
 static void
 set_zoom(Uint8 z)
 {
-	zoom = z;
-	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+	if (z >= 1) {
+		zoom = z;
+		set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+	}
 }
 
 static void
