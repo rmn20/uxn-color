@@ -10,14 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-typedef struct Layer {
-	Uint8 *pixels;
-} Layer;
-
 typedef struct UxnScreen {
 	Uint32 palette[4], *pixels;
 	Uint16 width, height, x1, y1, x2, y2;
-	Layer fg, bg;
+	Uint8 *fg, *bg;
 } UxnScreen;
 
 extern UxnScreen uxn_screen;

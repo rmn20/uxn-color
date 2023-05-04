@@ -82,25 +82,25 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 	Uint32 *pixels;
 	if(width < 0x8 || height < 0x8 || width >= 0x400 || height >= 0x400)
 		return;
-	bg = realloc(p->bg.pixels, width * height),
-	fg = realloc(p->fg.pixels, width * height);
+	bg = realloc(p->bg, width * height),
+	fg = realloc(p->fg, width * height);
 	pixels = realloc(p->pixels, width * height * sizeof(Uint32));
 	if(!bg || !fg || !pixels)
 		return;
-	p->bg.pixels = bg;
-	p->fg.pixels = fg;
+	p->bg = bg;
+	p->fg = fg;
 	p->pixels = pixels;
 	p->width = width;
 	p->height = height;
-	screen_fill(p, p->bg.pixels, 0, 0, p->width, p->height, 0);
-	screen_fill(p, p->fg.pixels, 0, 0, p->width, p->height, 0);
+	screen_fill(p, p->bg, 0, 0, p->width, p->height, 0);
+	screen_fill(p, p->fg, 0, 0, p->width, p->height, 0);
 }
 
 void
 screen_redraw(UxnScreen *p)
 {
 	Uint32 i, x, y, w = p->width, palette[16], *pixels = p->pixels;
-	Uint8 *fg = p->fg.pixels, *bg = p->bg.pixels;
+	Uint8 *fg = p->fg, *bg = p->bg;
 	int x1 = p->x1, y1 = p->y1;
 	int x2 = p->x2 > p->width ? p->width : p->x2, y2 = p->y2 > p->height ? p->height : p->y2;
 	for(i = 0; i < 16; i++)
@@ -141,14 +141,14 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		Uint8 color = ctrl & 0x3;
 		Uint16 x = PEEK2(d + 0x8);
 		Uint16 y = PEEK2(d + 0xa);
-		Layer *layer = (ctrl & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
+		Uint8 *layer = (ctrl & 0x40) ? uxn_screen.fg : uxn_screen.bg;
 		/* fill mode */
 		if(ctrl & 0x80) {
 			Uint16 x2 = uxn_screen.width;
 			Uint16 y2 = uxn_screen.height;
 			if(ctrl & 0x10) x2 = x, x = 0;
 			if(ctrl & 0x20) y2 = y, y = 0;
-			screen_fill(&uxn_screen, layer->pixels, x, y, x2, y2, color);
+			screen_fill(&uxn_screen, layer, x, y, x2, y2, color);
 			screen_change(&uxn_screen, x, y, x2, y2);
 		}
 		/* pixel mode */
@@ -156,7 +156,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			Uint16 width = uxn_screen.width;
 			Uint16 height = uxn_screen.height;
 			if(x < width && y < height)
-				layer->pixels[x + y * width] = color;
+				layer[x + y * width] = color;
 			screen_change(&uxn_screen, x, y, x + 1, y + 1);
 			if(d[0x6] & 0x1) POKE2(d + 0x8, x + 1); /* auto x+1 */
 			if(d[0x6] & 0x2) POKE2(d + 0xa, y + 1); /* auto y+1 */
@@ -174,9 +174,9 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		Uint16 addr = PEEK2(d + 0xc);
 		Uint16 dx = (move & 0x1) << 3;
 		Uint16 dy = (move & 0x2) << 2;
-		Layer *layer = (ctrl & 0x40) ? &uxn_screen.fg : &uxn_screen.bg;
+		Uint8 *layer = (ctrl & 0x40) ? uxn_screen.fg : uxn_screen.bg;
 		for(i = 0; i <= length; i++) {
-			screen_blit(&uxn_screen, layer->pixels, x + dy * i, y + dx * i, ram, addr, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
+			screen_blit(&uxn_screen, layer, x + dy * i, y + dx * i, ram, addr, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
 			addr += (move & 0x04) << (1 + twobpp);
 		}
 		screen_change(&uxn_screen, x, y, x + dy * length + 8, y + dx * length + 8);
