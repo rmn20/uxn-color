@@ -11,12 +11,12 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 typedef struct Layer {
-	Uint8 *pixels, changed;
+	Uint8 *pixels;
 } Layer;
 
 typedef struct UxnScreen {
 	Uint32 palette[4], *pixels;
-	Uint16 width, height;
+	Uint16 width, height, x1, y1, x2, y2;
 	Layer fg, bg;
 } UxnScreen;
 

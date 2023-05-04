@@ -84,7 +84,7 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 		system_cmd(u->ram, PEEK2(d + 2));
 		break;
 	case 0x5:
-		if(PEEK2(d + 4)){
+		if(PEEK2(d + 4)) {
 			Uxn friend;
 			uxn_boot(&friend, u->ram);
 			uxn_eval(&friend, PEEK2(d + 4));

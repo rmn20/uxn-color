@@ -25,6 +25,15 @@ static Uint8 blending[4][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2}};
 
 static void
+screen_change(UxnScreen *s, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2)
+{
+	if(x1 < s->x1) s->x1 = x1;
+	if(y1 < s->y1) s->y1 = y1;
+	if(x2 > s->x2) s->x2 = x2;
+	if(y2 > s->y2) s->y2 = y2;
+}
+
+static void
 screen_fill(UxnScreen *s, Uint8 *pixels, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, Uint8 color)
 {
 	int x, y, width = s->width, height = s->height;
@@ -63,7 +72,7 @@ screen_palette(UxnScreen *p, Uint8 *addr)
 		p->palette[i] = 0x0f000000 | r << 16 | g << 8 | b;
 		p->palette[i] |= p->palette[i] << 4;
 	}
-	p->fg.changed = p->bg.changed = 1;
+	screen_change(&uxn_screen, 0, 0, p->width, p->height);
 }
 
 void
@@ -90,13 +99,19 @@ screen_resize(UxnScreen *p, Uint16 width, Uint16 height)
 void
 screen_redraw(UxnScreen *p)
 {
-	Uint32 i, size = p->width * p->height, palette[16], *pixels = p->pixels;
+	Uint32 i, x, y, w = p->width, palette[16], *pixels = p->pixels;
 	Uint8 *fg = p->fg.pixels, *bg = p->bg.pixels;
+	int x1 = p->x1, y1 = p->y1;
+	int x2 = p->x2 > p->width ? p->width : p->x2, y2 = p->y2 > p->height ? p->height : p->y2;
 	for(i = 0; i < 16; i++)
 		palette[i] = p->palette[(i >> 2) ? (i >> 2) : (i & 3)];
-	for(i = 0; i < size; i++)
-		pixels[i] = palette[fg[i] << 2 | bg[i]];
-	p->fg.changed = p->bg.changed = 0;
+	for(y = y1; y < y2; y++)
+		for(x = x1; x < x2; x++) {
+			i = x + y * w;
+			pixels[i] = palette[fg[i] << 2 | bg[i]];
+		}
+	p->x1 = p->y1 = 0xffff;
+	p->x2 = p->y2 = 0;
 }
 
 Uint8
@@ -134,7 +149,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			if(ctrl & 0x10) x2 = x, x = 0;
 			if(ctrl & 0x20) y2 = y, y = 0;
 			screen_fill(&uxn_screen, layer->pixels, x, y, x2, y2, color);
-			layer->changed = 1;
+			screen_change(&uxn_screen, x, y, x2, y2);
 		}
 		/* pixel mode */
 		else {
@@ -142,7 +157,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			Uint16 height = uxn_screen.height;
 			if(x < width && y < height)
 				layer->pixels[x + y * width] = color;
-			layer->changed = 1;
+			screen_change(&uxn_screen, x, y, x + 1, y + 1);
 			if(d[0x6] & 0x1) POKE2(d + 0x8, x + 1); /* auto x+1 */
 			if(d[0x6] & 0x2) POKE2(d + 0xa, y + 1); /* auto y+1 */
 		}
@@ -164,7 +179,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			screen_blit(&uxn_screen, layer->pixels, x + dy * i, y + dx * i, ram, addr, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
 			addr += (move & 0x04) << (1 + twobpp);
 		}
-		layer->changed = 1;
+		screen_change(&uxn_screen, x, y, x + dy * length + 8, y + dx * length + 8);
 		if(move & 0x1) POKE2(d + 0x8, x + dx); /* auto x+8 */
 		if(move & 0x2) POKE2(d + 0xa, y + dy); /* auto y+8 */
 		if(move & 0x4) POKE2(d + 0xc, addr);   /* auto addr+length */

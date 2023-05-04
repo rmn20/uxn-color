@@ -262,7 +262,7 @@ start(Uxn *u, char *rom, int queue)
 static void
 set_zoom(Uint8 z)
 {
-	if (z >= 1) {
+	if(z >= 1) {
 		zoom = z;
 		set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	}
@@ -467,7 +467,7 @@ run(Uxn *u)
 			return 0;
 		screen_vector = PEEK2(&u->dev[0x20]);
 		uxn_eval(u, screen_vector);
-		if(uxn_screen.fg.changed || uxn_screen.bg.changed)
+		if(uxn_screen.x2)
 			redraw();
 		now = SDL_GetPerformanceCounter();
 		if(screen_vector) {
