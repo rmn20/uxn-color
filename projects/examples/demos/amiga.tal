@@ -8,12 +8,14 @@
 	@ball &x $2 &y $2 &vx $2 &vy $2
 	@timer $1
 	@frame $1
+	@direction $1
 
 (
 @|vectors )
 
 |0100
-
+	( variables )
+	#01 .direction STZ
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	( theme )
@@ -42,7 +44,7 @@ BRK
 	( reset timer )
 	[ LIT2 00 -timer ] STZ
 	( 12 frames animation )
-	.frame LDZ INC DUP #0c NEQ MUL .frame STZ
+	.frame LDZk .direction LDZ ADD #0c DIVk MUL SUB SWP STZ
 	move-ball
 
 BRK
@@ -50,11 +52,18 @@ BRK
 (
 @|core )
 
+@flip-direction ( zp^ -- )
+
+	LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
+	.direction LDZk #0a EOR SWP STZ
+
+JMP2r
+
 @check-flip-vx ( x -- x )
 
-	( left ) DUP2 #0010 LTH2 ?&flip 
+	( left ) DUP2 #0010 LTH2 ?&flip
 	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip !&else
-	&flip .ball/vx LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
+	&flip .ball/vx !flip-direction
 	&else
 
 JMP2r
@@ -62,7 +71,7 @@ JMP2r
 @check-flip-vy ( y -- y )
 
 	( bottom ) DUP2 .Screen/height DEI2 #0050 SUB2 GTH2 ?&flip !&else
-	&flip .ball/vy LDZ2k #ffff EOR2 ( INC2 ) ROT STZ2
+	&flip .ball/vy !flip-direction
 	&else
 
 JMP2r
