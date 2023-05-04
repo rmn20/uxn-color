@@ -50,19 +50,18 @@ BRK
 @flip-direction ( zp^ -- )
 
 	LDZ2k #ffff EOR2 INC2 ROT STZ2
-	.direction LDZk #0a EOR SWP STZ
 
 JMP2r
-
 
 @check-flip-vx ( x -- x )
 
 	( left ) DUP2 #0010 LTH2 ?&flip
-	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip !&else
-	&flip .ball/vx !flip-direction
-	&else
+	( right ) DUP2 .Screen/width DEI2 #0050 SUB2 GTH2 ?&flip
 
 JMP2r
+	&flip
+		.direction LDZk #0a EOR SWP STZ
+		.ball/vx !flip-direction
 
 @check-flip-vy ( y -- y )
 
@@ -91,7 +90,6 @@ JMP2r
 
 	&pull #00 .timer STZ .ball/vy LDZ2k INC2 STH2k ROT STZ2 !&end
 	&pass .ball/vy LDZ2k STH2k ROT STZ2 !&end
-
 	&end .ball/y LDZ2k STH2r ADD2 check-flip-vy ROT STZ2
 
 @draw-ball ( -- )
