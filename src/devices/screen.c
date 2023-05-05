@@ -34,16 +34,16 @@ screen_change(int x1, int y1, int x2, int y2)
 }
 
 static void
-screen_fill(Uint8 *pixels, int x1, int y1, int x2, int y2, int color)
+screen_fill(Uint8 *layer, int x1, int y1, int x2, int y2, int color)
 {
 	int x, y, width = uxn_screen.width, height = uxn_screen.height;
 	for(y = y1; y < y2 && y < height; y++)
 		for(x = x1; x < x2 && x < width; x++)
-			pixels[x + y * width] = color;
+			layer[x + y * width] = color;
 }
 
 static void
-screen_blit(Uint8 *pixels, Uint8 *ram, Uint16 addr, int x1, int y1, int color, int flipx, int flipy, int twobpp)
+screen_blit(Uint8 *layer, Uint8 *ram, Uint16 addr, int x1, int y1, int color, int flipx, int flipy, int twobpp)
 {
 	int v, h, width = uxn_screen.width, height = uxn_screen.height, opaque = (color % 5) || !color;
 	for(v = 0; v < 8; v++) {
@@ -54,7 +54,7 @@ screen_blit(Uint8 *pixels, Uint8 *ram, Uint16 addr, int x1, int y1, int color, i
 			if(opaque || ch) {
 				Uint16 x = x1 + (flipx ? 7 - h : h);
 				if(x < width && y < height)
-					pixels[x + y * width] = blending[ch][color];
+					layer[x + y * width] = blending[ch][color];
 			}
 		}
 	}
