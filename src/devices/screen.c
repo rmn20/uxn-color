@@ -25,7 +25,7 @@ static Uint8 blending[4][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2}};
 
 static void
-screen_change(Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2)
+screen_change(int x1, int y1, int x2, int y2)
 {
 	if(x1 < uxn_screen.x1) uxn_screen.x1 = x1;
 	if(y1 < uxn_screen.y1) uxn_screen.y1 = y1;
@@ -34,7 +34,7 @@ screen_change(Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2)
 }
 
 static void
-screen_fill(Uint8 *pixels, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, Uint8 color)
+screen_fill(Uint8 *pixels, int x1, int y1, int x2, int y2, int color)
 {
 	int x, y, width = uxn_screen.width, height = uxn_screen.height;
 	for(y = y1; y < y2 && y < height; y++)
@@ -43,7 +43,7 @@ screen_fill(Uint8 *pixels, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, Uint8 col
 }
 
 static void
-screen_blit(Uint8 *pixels, Uint16 x1, Uint16 y1, Uint8 *ram, Uint16 addr, Uint8 color, Uint8 flipx, Uint8 flipy, Uint8 twobpp)
+screen_blit(Uint8 *pixels, Uint8 *ram, Uint16 addr, int x1, int y1, int color, int flipx, int flipy, int twobpp)
 {
 	int v, h, width = uxn_screen.width, height = uxn_screen.height, opaque = (color % 5) || !color;
 	for(v = 0; v < 8; v++) {
@@ -99,12 +99,13 @@ screen_resize(Uint16 width, Uint16 height)
 void
 screen_redraw(void)
 {
-	Uint32 i, x, y, w = uxn_screen.width, palette[16], *pixels = uxn_screen.pixels;
 	Uint8 *fg = uxn_screen.fg, *bg = uxn_screen.bg;
+	Uint32 palette[16], *pixels = uxn_screen.pixels;
+	int i, x, y, w = uxn_screen.width, h = uxn_screen.height;
 	int x1 = uxn_screen.x1;
 	int y1 = uxn_screen.y1;
-	int x2 = uxn_screen.x2 > uxn_screen.width ? uxn_screen.width : uxn_screen.x2;
-	int y2 = uxn_screen.y2 > uxn_screen.height ? uxn_screen.height : uxn_screen.y2;
+	int x2 = uxn_screen.x2 > w ? w : uxn_screen.x2;
+	int y2 = uxn_screen.y2 > h ? h : uxn_screen.y2;
 	for(i = 0; i < 16; i++)
 		palette[i] = uxn_screen.palette[(i >> 2) ? (i >> 2) : (i & 3)];
 	for(y = y1; y < y2; y++)
@@ -178,7 +179,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		Uint16 dy = (move & 0x2) << 2;
 		Uint8 *layer = (ctrl & 0x40) ? uxn_screen.fg : uxn_screen.bg;
 		for(i = 0; i <= length; i++) {
-			screen_blit(layer, x + dy * i, y + dx * i, ram, addr, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
+			screen_blit(layer, ram, addr, x + dy * i, y + dx * i, ctrl & 0xf, ctrl & 0x10, ctrl & 0x20, twobpp);
 			addr += (move & 0x04) << (1 + twobpp);
 		}
 		screen_change(x, y, x + dy * length + 8, y + dx * length + 8);
