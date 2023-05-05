@@ -115,7 +115,7 @@ uxn_deo(Uxn *u, Uint8 addr)
 	case 0x00:
 		system_deo(u, &u->dev[d], p);
 		if(p > 0x7 && p < 0xe)
-			screen_palette(&uxn_screen, &u->dev[0x8]);
+			screen_palette(&u->dev[0x8]);
 		break;
 	case 0x10: console_deo(&u->dev[d], p); break;
 	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
@@ -194,8 +194,9 @@ set_size(void)
 static void
 redraw(void)
 {
-	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height) set_size();
-	screen_redraw(&uxn_screen);
+	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height)
+		set_size();
+	screen_redraw();
 	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(gRenderer);
@@ -289,7 +290,7 @@ capture_screen(void)
 static void
 restart(Uxn *u)
 {
-	screen_resize(&uxn_screen, WIDTH, HEIGHT);
+	screen_resize(WIDTH, HEIGHT);
 	if(!start(u, "launcher.rom", 0))
 		start(u, rom_path, 0);
 }
@@ -366,7 +367,7 @@ handle_events(Uxn *u)
 		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
 			redraw();
 		else if(event.type == SDL_DROPFILE) {
-			screen_resize(&uxn_screen, WIDTH, HEIGHT);
+			screen_resize(WIDTH, HEIGHT);
 			start(u, event.drop.file, 0);
 			SDL_free(event.drop.file);
 		}
@@ -489,7 +490,7 @@ main(int argc, char **argv)
 	if(!init())
 		return system_error("Init", "Failed to initialize emulator.");
 	/* default resolution */
-	screen_resize(&uxn_screen, WIDTH, HEIGHT);
+	screen_resize(WIDTH, HEIGHT);
 	/* default zoom */
 	if(argc > 1 && (strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0))
 		set_zoom(argv[i++][1] - '0');
