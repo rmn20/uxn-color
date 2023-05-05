@@ -84,10 +84,9 @@ JMP2r
 	POP
 	.ball/vx LDZ2k STH2k ROT STZ2
 	.ball/x LDZ2k STH2r ADD2 check-flip-vx ROT STZ2
+	.timer LDZk INC DUP ROT STZ #06 EQU ?&pull
 
-	.timer LDZ INC .timer STZ
-	.timer LDZ #05 EQU ?&pull !&pass
-
+!&pass
 	&pull #00 .timer STZ .ball/vy LDZ2k INC2 STH2k ROT STZ2 !&end
 	&pass .ball/vy LDZ2k STH2k ROT STZ2 !&end
 	&end .ball/y LDZ2k STH2r ADD2 check-flip-vy ROT STZ2
