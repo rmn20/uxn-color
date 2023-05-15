@@ -210,7 +210,7 @@ init(void)
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
-	as.format = AUDIO_S16;
+	as.format = AUDIO_S16SYS;
 	as.channels = 2;
 	as.callback = audio_callback;
 	as.samples = 512;
