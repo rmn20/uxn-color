@@ -79,7 +79,7 @@ MSYS_NT*|MINGW*) # MSYS2 on Windows
 	fi
 	;;
 Darwin) # macOS
-	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"
+	CFLAGS="${CFLAGS} -Wno-typedef-redefinition -D_C99_SOURCE"
 	UXNEMU_LDFLAGS="$(brew --prefix)/lib/libSDL2.a $(sdl2-config --cflags --static-libs | sed -e 's/-lSDL2 //')"
 	;;
 Linux|*)
