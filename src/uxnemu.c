@@ -273,12 +273,23 @@ static void
 capture_screen(void)
 {
 	const Uint32 format = SDL_PIXELFORMAT_RGB24;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        /* SDL_PIXELFORMAT_RGB24 */
+        Uint32 Rmask = 0x000000FF;
+        Uint32 Gmask = 0x0000FF00;
+        Uint32 Bmask = 0x00FF0000;
+#else
+        /* SDL_PIXELFORMAT_BGR24 */
+        Uint32 Rmask = 0x00FF0000;
+        Uint32 Gmask = 0x0000FF00;
+        Uint32 Bmask = 0x000000FF;
+#endif
 	time_t t = time(NULL);
 	char fname[64];
 	int w, h;
 	SDL_Surface *surface;
 	SDL_GetRendererOutputSize(gRenderer, &w, &h);
-	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
+	surface = SDL_CreateRGBSurface(0, w, h, 24, Rmask, Gmask, Bmask, 0);
 	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
 	SDL_SaveBMP(surface, fname);
