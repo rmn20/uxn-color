@@ -1,5 +1,5 @@
 ( Fibonacci:
-	A series of numbers where the next number 
+	A series of numbers where the next number
 	is made of the two numbers before it )
 
 |100
@@ -7,12 +7,15 @@
 	#0019 #0000
 	&l
 		DUP2 pdec #2018 DEO
-		DUP2 fib pdec #0a18 DEO
+		DUP2 fib pdec #2018 DEO
+		DUP2 #0000 #0001 ROT2 fibr pdec #0a18 DEO POP2 POP2
 		INC2 GTH2k ?&l
 	POP2 POP2
 	#010f DEO
 
 BRK
+
+( recursive )
 
 @fib ( num -- numfib* )
 	#0001 GTH2k ?&ok
@@ -21,6 +24,19 @@ BRK
 	SUB2 fib STH2r
 		ADD2
 JMP2r
+
+( tail-recursive )
+
+@fibr ( a* b* num* -- a* b* num* )
+	ORAk ?&no-0
+		POP2 OVR2 JMP2r &no-0
+	DUP2 #0001 NEQ2 ?&no-1
+		POP2 DUP2 JMP2r &no-1
+	#0001 SUB2 STH2
+	SWP2 ADD2k NIP2 STH2r
+!fibr
+
+( print routine )
 
 @pdec ( short* -- )
 
