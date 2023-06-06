@@ -37,7 +37,7 @@
 
 	&run
 	;asma-heap LIT2 &output-file $2 ;asma-assemble-file JSR2
-	#01 .System/halt DEO
+	#80 .System/halt DEO
 	BRK
 
 ~projects/library/asma.tal
