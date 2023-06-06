@@ -2,7 +2,7 @@
 	A series of numbers where the next number
 	is made of the two numbers before it )
 
-|100
+|0100 @on-reset
 
 	#0019 #0000
 	&l
@@ -11,13 +11,13 @@
 		DUP2 #0000 #0001 ROT2 fibr pdec #0a18 DEO POP2 POP2
 		INC2 GTH2k ?&l
 	POP2 POP2
-	#010f DEO
+	#800f DEO
 
 BRK
 
 ( recursive )
 
-@fib ( num -- numfib* )
+@fib ( num* -- numfib* )
 	#0001 GTH2k ?&ok
 		POP2 JMP2r &ok
 	SUB2k fib STH2 INC2
@@ -27,7 +27,7 @@ JMP2r
 
 ( tail-recursive )
 
-@fibr ( a* b* num* -- a* b* num* )
+@fibr ( a* b* num* -- a* b* numfib* )
 	ORAk ?&no-0
 		POP2 OVR2 JMP2r &no-0
 	DUP2 #0001 NEQ2 ?&no-1
