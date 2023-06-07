@@ -23,18 +23,18 @@
 
 |0000
 
-@color $1
-@pointer &x $2 &y $2
-@timer &frame $1 &play $1
+	@color $1
+	@pointer &x $2 &y $2
+	@timer &frame $1 &play $1
 
 ( program )
 
 |0100 ( -> )
 
 	( theme )
-	#07fe .System/r DEO2
-	#07b6 .System/g DEO2
-	#0fc6 .System/b DEO2
+	#0ff2 .System/r DEO2
+	#0d46 .System/g DEO2
+	#006f .System/b DEO2
 	( size )
 	#0100 .Screen/width DEO2
 	#0100 .Screen/height DEO2
@@ -44,21 +44,21 @@
 	;on-button .Controller/vector DEO2
 	( setup )
 	#01 .timer/play STZ
-	#01 .color STZ
+	#01 set-color
 	( start )
 	;world ;get-addr/current STA2
 	#1000 ;run/future STA2
-	;redraw JSR2
+	redraw
 
 BRK
 
 @on-frame ( -> )
 
-	.timer/play LDZ JMP BRK
+	.timer/play LDZ [ JMP BRK ]
 	( every 4th )
 	.timer/frame LDZk
-		#03 AND ,&no-run JCN
-			;run JSR2
+		#03 AND ?&no-run
+			run
 			&no-run
 		LDZk INC SWP STZ
 
@@ -76,7 +76,7 @@ BRK
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 	#40 .color LDZ ADD .Screen/sprite DEO
 	( paint )
-	.Mouse/state DEI ,on-mouse-down JCN
+	.Mouse/state DEI ?on-mouse-down
 
 BRK
 
@@ -84,56 +84,142 @@ BRK
 
 	.Mouse/x DEI2 #03 SFT2 NIP
 	.Mouse/y DEI2 #03 SFT2 NIP
-	#0202 NEQ2k NIP2 ,&no-color1 JCN
-		#01 .color STZ
-		#00 .Mouse/state DEO
+	#0202 NEQ2k NIP2 ?&no-color1
+		#01 set-color
 		POP2 BRK
 		&no-color1
-	#0302 NEQ2k NIP2 ,&no-color2 JCN
-		#02 .color STZ
-		#00 .Mouse/state DEO
+	#0302 NEQ2k NIP2 ?&no-color2
+		#02 set-color
 		POP2 BRK
 		&no-color2
-	#0402 NEQ2k NIP2 ,&no-color3 JCN
-		#03 .color STZ
-		#00 .Mouse/state DEO
+	#0402 NEQ2k NIP2 ?&no-color3
+		#03 set-color
 		POP2 BRK
 		&no-color3
-	#0602 NEQ2k NIP2 ,&no-toggle JCN
+	#0602 NEQ2k NIP2 ?&no-toggle
 		.timer/play LDZk #00 EQU SWP STZ
 		#00 .Mouse/state DEO
-		;draw-ui JSR2
+		draw-ui
 		POP2 BRK
 		&no-toggle
 	POP2
 
 	( color ) .color LDZ .Mouse/state DEI #01 GTH #00 EQU MUL
 	( cell* ) .Mouse/x DEI2 #02 SFT2 NIP .Mouse/y DEI2 #02 SFT2 NIP
-		;get-addr JSR2 STA
-	;redraw JSR2
+		get-addr STA
+	redraw
 
 BRK
-
-@print ( short* -- )
-
-	SWP ,&byte JSR
-	&byte ( byte -- ) DUP #04 SFT ,&char JSR
-	&char ( char -- ) #0f AND DUP #09 GTH #27 MUL ADD #30 ADD #18 DEO
-
-JMP2r
 
 @on-button ( -> )
 
 	.Controller/button DEI
-	[ #01 ] NEQk NIP ,&no-a JCN #01 .color STZ &no-a
-	[ #02 ] NEQk NIP ,&no-b JCN #02 .color STZ &no-b
-	[ #04 ] NEQk NIP ,&no-select JCN #03 .color STZ &no-select
-	[ #08 ] NEQk NIP ,&no-start JCN ;world #2000 ;mclr JSR2 ;redraw JSR2 &no-start
+	[ #01 ] NEQk NIP ?&no-a #01 set-color &no-a
+	[ #02 ] NEQk NIP ?&no-b #02 set-color &no-b
+	[ #04 ] NEQk NIP ?&no-select #03 set-color &no-select
+	[ #08 ] NEQk NIP ?&no-start ;world #2000 mclr redraw &no-start
 	POP
 	( space )
-	.Controller/key DEI #20 NEQ ,&no-space JCN .timer/play LDZk #00 EQU SWP STZ &no-space
+	.Controller/key DEI #20 NEQ ?&no-space .timer/play LDZk #00 EQU SWP STZ &no-space
 
 BRK
+
+(
+@|core )
+
+@set-color ( color -- )
+
+	.color STZ
+	.pointer/x LDZ2 .Screen/x DEO2
+	.pointer/y LDZ2 .Screen/y DEO2
+	;pointer-icn .Screen/addr DEO2
+	#40 .color LDZ ADD .Screen/sprite DEO
+	#00 .Mouse/state DEO
+
+JMP2r
+
+@run ( -- )
+
+	#40 #00
+	&ver
+		STHk
+		#40 #00
+		&hor
+			( x,y ) DUP STHkr
+			( cell ) DUP2 get-addr STH2k LDA
+			( transform ) transform STH2r [ LIT2 &future $2 ] ADD2 STA
+			INC GTHk ?&hor
+		POP2
+		POPr
+		INC GTHk ?&ver
+	POP2
+	( Swap worlds )
+	;get-addr/current LDA2k ;run/future LDA2 STH2k ADD2 SWP2 STA2
+	#0000 STH2r SUB2 ;run/future STA2
+
+!redraw
+
+@get-addr ( x y -- addr* )
+
+	#00 SWP #60 SFT2 ROT #00 SWP ADD2 [ LIT2 &current $2 ] ADD2
+
+JMP2r
+
+@transform ( xy cell -- cell )
+
+	DUP ?&no-null NIP NIP JMP2r &no-null
+	DUP #03 NEQ ?&no-head POP POP2 #02 JMP2r &no-head
+	DUP #02 NEQ ?&no-tail POP POP2 #01 JMP2r &no-tail
+	DUP #01 NEQ ?&no-cond POP
+		LITr 00
+		DUP2 #01 SUB get-addr
+			( tl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
+			( tc ) INC2 LDAk #03 NEQ JMP INCr
+			( tr ) INC2 LDA #03 NEQ JMP INCr
+		DUP2 get-addr
+			( ml ) #0001 SUB2 LDAk #03 NEQ JMP INCr
+			( mr ) INC2 INC2 LDA #03 NEQ JMP INCr
+		INC get-addr
+			( bl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
+			( bc ) INC2 LDAk #03 NEQ JMP INCr
+			( br ) INC2 LDA #03 NEQ JMP INCr
+		STHkr #02 EQU STHr #01 EQU ORA
+		DUP ADD INC JMP2r
+		&no-cond
+	( unknown )
+	NIP NIP
+
+JMP2r
+
+@mclr ( addr* len* -- )
+
+	OVR2 ADD2 SWP2
+	&loop
+		STH2k #00 STH2r STA
+		INC2 GTH2k ?&loop
+	POP2 POP2
+
+JMP2r
+
+(
+@|drawing )
+
+@redraw ( -- )
+
+	;cell-icn .Screen/addr DEO2
+	#4000
+	&ver
+		#00 OVR #20 SFT2 .Screen/y DEO2
+		STHk
+		#4000
+		&hor
+			#00 OVR #20 SFT2 .Screen/x DEO2
+			DUP STHkr get-addr LDA .Screen/sprite DEO
+			INC GTHk ?&hor
+		POP2
+		POPr
+		INC GTHk ?&ver
+	POP2
 
 @draw-ui ( -- )
 
@@ -151,100 +237,18 @@ BRK
 
 JMP2r
 
-@redraw ( -- )
+(
+@|assets )
 
-	;cell-icn .Screen/addr DEO2
-	#4000
-	&ver
-		#00 OVR #20 SFT2 .Screen/y DEO2
-		STHk
-		#4000
-		&hor
-			#00 OVR #20 SFT2 .Screen/x DEO2
-			DUP STHkr ,get-addr JSR LDA .Screen/sprite DEO
-			INC GTHk ,&hor JCN
-		POP2
-		POPr
-		INC GTHk ,&ver JCN
-	POP2
-	;draw-ui JSR2
-
-JMP2r
-
-@run ( -- )
-
-	#40 #00
-	&ver
-		STHk
-		#40 #00
-		&hor
-			( x,y ) DUP STHkr
-			( cell ) DUP2 ,get-addr JSR STH2k LDA
-			( transform ) ,transform JSR STH2r [ LIT2 &future $2 ] ADD2 STA
-			INC GTHk ,&hor JCN
-		POP2
-		POPr
-		INC GTHk ,&ver JCN
-	POP2
-	( Swap worlds )
-	;get-addr/current LDA2k ;run/future LDA2 STH2k ADD2 SWP2 STA2
-	#0000 STH2r SUB2 ;run/future STA2
-	,redraw JSR
-
-JMP2r
-
-@get-addr ( x y -- addr* )
-
-	#00 SWP #60 SFT2 ROT #00 SWP ADD2 [ LIT2 &current $2 ] ADD2
-
-JMP2r
-
-@transform ( xy cell -- cell )
-
-	DUP ,&no-null JCN NIP NIP JMP2r &no-null
-	DUP #03 NEQ ,&no-head JCN POP POP2 #02 JMP2r &no-head
-	DUP #02 NEQ ,&no-tail JCN POP POP2 #01 JMP2r &no-tail
-	DUP #01 NEQ ,&no-cond JCN POP
-		LITr 00
-		DUP2 #01 SUB ,get-addr JSR
-			( tl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
-			( tc ) INC2 LDAk #03 NEQ JMP INCr
-			( tr ) INC2 LDA #03 NEQ JMP INCr
-		DUP2 ,get-addr JSR
-			( ml ) #0001 SUB2 LDAk #03 NEQ JMP INCr
-			( mr ) INC2 INC2 LDA #03 NEQ JMP INCr
-		INC ,get-addr JSR
-			( bl ) #0001 SUB2 LDAk #03 NEQ JMP INCr
-			( bc ) INC2 LDAk #03 NEQ JMP INCr
-			( br ) INC2 LDA #03 NEQ JMP INCr
-		STHkr #02 EQU STHr #01 EQU ORA
-		DUP ADD INC JMP2r
-		&no-cond
-	( unknown )
-	NIP NIP
-
-JMP2r
-
-@mclr ( addr* len* -- )
-
-	OVR2 ADD2 SWP2
-	&loop
-		STH2k #00 STH2r STA
-		INC2 GTH2k ,&loop JCN
-	POP2 POP2
-
-JMP2r
-
-@pointer-icn
-	80c0 e0f0 f8e0 1000
-@cell-icn
-	e0e0 e000 0000 0000
-@color-icn
-	7cfe fefe fefe 7c00
-@toggle-icn
-	( pause ) 6666 6666 6666 6600
-	( play ) 4666 767e 7666 4600
-
+@pointer-icn [
+	80c0 e0f0 f8e0 1000 ]
+@cell-icn [
+	e0e0 e000 0000 0000 ]
+@color-icn [
+	7cfe fefe fefe 7c00 ]
+@toggle-icn [
+	6666 6666 6666 6600
+	4666 767e 7666 4600 ]
 
 (
 	I live in the atom with the happy protons and neutrons.
@@ -253,3 +257,4 @@ JMP2r
 	How do I find peace? )
 
 @world
+
