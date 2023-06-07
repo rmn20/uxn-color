@@ -122,7 +122,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x1f: /* SFT  */ t=T;n=N;        SET(2,-1) PUT(0, n >> (t & 0xf) << (t >> 4)) break;
 			case 0x3f:            t=T;n=H2;       SET(3,-1) PUT2(0, n >> (t & 0xf) << (t >> 4)) break;
 		}
-	}		
+	}
 }
 
 int

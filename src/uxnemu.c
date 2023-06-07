@@ -45,9 +45,9 @@ WITH REGARD TO THIS SOFTWARE.
 #define TIMEOUT_MS 334
 #define BENCH 0
 
-static SDL_Window *gWindow;
-static SDL_Texture *gTexture;
-static SDL_Renderer *gRenderer;
+static SDL_Window *emu_window;
+static SDL_Texture *emu_texture;
+static SDL_Renderer *emu_renderer;
 static SDL_AudioDeviceID audio_id;
 static SDL_Rect gRect;
 static SDL_Thread *stdin_thread;
@@ -57,8 +57,7 @@ Uint16 dei_mask[] = {0x0000, 0x0000, 0x003c, 0x0014, 0x0014, 0x0014, 0x0014, 0x0
 
 /* devices */
 
-static Uint8 zoom = 1;
-static Uint32 stdin_event, audio0_event;
+static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
 char *rom_path;
@@ -180,14 +179,15 @@ set_size(void)
 	gRect.y = PAD;
 	gRect.w = uxn_screen.width;
 	gRect.h = uxn_screen.height;
-	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
-	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
-		return system_error("gTexture", SDL_GetError());
-	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
+	if(emu_texture != NULL)
+		SDL_DestroyTexture(emu_texture);
+	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
+	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
+	if(emu_texture == NULL || SDL_SetTextureBlendMode(emu_texture, SDL_BLENDMODE_NONE))
+		return system_error("emu_texture", SDL_GetError());
+	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return system_error("SDL_UpdateTexture", SDL_GetError());
-	set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+	set_window_size(emu_window, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	return 1;
 }
 
@@ -197,11 +197,11 @@ redraw(void)
 	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height)
 		set_size();
 	screen_redraw();
-	if(SDL_UpdateTexture(gTexture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
+	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
-	SDL_RenderClear(gRenderer);
-	SDL_RenderCopy(gRenderer, gTexture, NULL, &gRect);
-	SDL_RenderPresent(gRenderer);
+	SDL_RenderClear(emu_renderer);
+	SDL_RenderCopy(emu_renderer, emu_texture, NULL, &gRect);
+	SDL_RenderPresent(emu_renderer);
 }
 
 static int
@@ -217,13 +217,13 @@ init(void)
 	as.userdata = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
-	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-	if(gWindow == NULL)
+	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
-	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
-	if(gRenderer == NULL)
+	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
+	if(emu_renderer == NULL)
 		return system_error("sdl_renderer", SDL_GetError());
-	SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xff);
+	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
 		system_error("sdl_audio", SDL_GetError());
@@ -256,7 +256,7 @@ start(Uxn *u, char *rom, int queue)
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return system_error("Boot", "Failed to eval rom.");
-	SDL_SetWindowTitle(gWindow, rom);
+	SDL_SetWindowTitle(emu_window, rom);
 	return 1;
 }
 
@@ -265,7 +265,7 @@ set_zoom(Uint8 z)
 {
 	if(z >= 1) {
 		zoom = z;
-		set_window_size(gWindow, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+		set_window_size(emu_window, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
 	}
 }
 
@@ -274,23 +274,23 @@ capture_screen(void)
 {
 	const Uint32 format = SDL_PIXELFORMAT_RGB24;
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-        /* SDL_PIXELFORMAT_RGB24 */
-        Uint32 Rmask = 0x000000FF;
-        Uint32 Gmask = 0x0000FF00;
-        Uint32 Bmask = 0x00FF0000;
+	/* SDL_PIXELFORMAT_RGB24 */
+	Uint32 Rmask = 0x000000FF;
+	Uint32 Gmask = 0x0000FF00;
+	Uint32 Bmask = 0x00FF0000;
 #else
-        /* SDL_PIXELFORMAT_BGR24 */
-        Uint32 Rmask = 0x00FF0000;
-        Uint32 Gmask = 0x0000FF00;
-        Uint32 Bmask = 0x000000FF;
+	/* SDL_PIXELFORMAT_BGR24 */
+	Uint32 Rmask = 0x00FF0000;
+	Uint32 Gmask = 0x0000FF00;
+	Uint32 Bmask = 0x000000FF;
 #endif
 	time_t t = time(NULL);
 	char fname[64];
 	int w, h;
 	SDL_Surface *surface;
-	SDL_GetRendererOutputSize(gRenderer, &w, &h);
+	SDL_GetRendererOutputSize(emu_renderer, &w, &h);
 	surface = SDL_CreateRGBSurface(0, w, h, 24, Rmask, Gmask, Bmask, 0);
-	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
+	SDL_RenderReadPixels(emu_renderer, NULL, format, surface->pixels, surface->pitch);
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
 	SDL_SaveBMP(surface, fname);
 	SDL_FreeSurface(surface);
@@ -487,11 +487,13 @@ run(Uxn *u)
 			if(uxn_screen.x2)
 				redraw();
 		}
-		if(BENCH);
+		if(BENCH)
+			;
 		else if(screen_vector || uxn_screen.x2) {
 			Uint64 delay_ms = (next_refresh - now) / ms_interval;
 			if(delay_ms > 0) SDL_Delay(delay_ms);
-		} else SDL_WaitEvent(NULL);
+		} else
+			SDL_WaitEvent(NULL);
 	}
 }
 
