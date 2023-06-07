@@ -82,27 +82,24 @@ BRK
 
 @on-mouse-down ( -> )
 
+	.Mouse/y DEI2 #03 SFT2 NIP #02 NEQ ?&no-menu
 	.Mouse/x DEI2 #03 SFT2 NIP
-	.Mouse/y DEI2 #03 SFT2 NIP
-	#0202 NEQ2k NIP2 ?&no-color1
+	DUP #02 NEQ ?&no-color1
 		#01 set-color
-		POP2 BRK
 		&no-color1
-	#0302 NEQ2k NIP2 ?&no-color2
+	DUP #03 NEQ ?&no-color2
 		#02 set-color
-		POP2 BRK
 		&no-color2
-	#0402 NEQ2k NIP2 ?&no-color3
+	DUP #04 NEQ ?&no-color3
 		#03 set-color
-		POP2 BRK
 		&no-color3
-	#0602 NEQ2k NIP2 ?&no-toggle
+	DUP #06 NEQ ?&no-toggle
 		.timer/play LDZk #00 EQU SWP STZ
 		#00 .Mouse/state DEO
 		draw-ui
-		POP2 BRK
 		&no-toggle
-	POP2
+	POP
+	&no-menu
 
 	( color ) .color LDZ .Mouse/state DEI #01 GTH #00 EQU MUL
 	( cell* ) .Mouse/x DEI2 #02 SFT2 NIP .Mouse/y DEI2 #02 SFT2 NIP
