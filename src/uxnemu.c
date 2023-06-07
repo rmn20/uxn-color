@@ -49,7 +49,7 @@ static SDL_Window *emu_window;
 static SDL_Texture *emu_texture;
 static SDL_Renderer *emu_renderer;
 static SDL_AudioDeviceID audio_id;
-static SDL_Rect gRect;
+static SDL_Rect emu_frame;
 static SDL_Thread *stdin_thread;
 
 Uint16 deo_mask[] = {0xff28, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000, 0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
@@ -168,6 +168,7 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_GetWindowPosition(window, &win.x, &win.y);
 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
 	if(w == win_old.x && h == win_old.y) return;
+	SDL_RenderClear(emu_renderer);
 	/* SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2); */
 	SDL_SetWindowSize(window, w, h);
 }
@@ -175,16 +176,16 @@ set_window_size(SDL_Window *window, int w, int h)
 static int
 set_size(void)
 {
-	gRect.x = PAD;
-	gRect.y = PAD;
-	gRect.w = uxn_screen.width;
-	gRect.h = uxn_screen.height;
+	emu_frame.x = PAD;
+	emu_frame.y = PAD;
+	emu_frame.w = uxn_screen.width;
+	emu_frame.h = uxn_screen.height;
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
 	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
 	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
 	if(emu_texture == NULL || SDL_SetTextureBlendMode(emu_texture, SDL_BLENDMODE_NONE))
-		return system_error("emu_texture", SDL_GetError());
+		return system_error("SDL_SetTextureBlendMode", SDL_GetError());
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return system_error("SDL_UpdateTexture", SDL_GetError());
 	set_window_size(emu_window, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
@@ -194,13 +195,12 @@ set_size(void)
 static void
 redraw(void)
 {
-	if(gRect.w != uxn_screen.width || gRect.h != uxn_screen.height)
+	if(emu_frame.w != uxn_screen.width || emu_frame.h != uxn_screen.height)
 		set_size();
 	screen_redraw();
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
-	SDL_RenderClear(emu_renderer);
-	SDL_RenderCopy(emu_renderer, emu_texture, NULL, &gRect);
+	SDL_RenderCopy(emu_renderer, emu_texture, NULL, &emu_frame);
 	SDL_RenderPresent(emu_renderer);
 }
 
