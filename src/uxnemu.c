@@ -514,7 +514,7 @@ main(int argc, char **argv)
 		set_zoom(DM.w / 1280);
 	/* load rom */
 	if(i == argc)
-		return system_error("usage", "uxnemu [-2x][-3x] file.rom");
+		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
 	if(!start(&u, argv[i], argc - i))
 		return system_error("Start", "Failed");
 	rom_path = argv[i++];
