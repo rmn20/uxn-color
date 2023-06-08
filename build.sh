@@ -38,31 +38,16 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-echo "Cleaning.."
 rm -f ./bin/*
 
 # When clang-format is present
 
 if [ $format = 1 ];
 then
-	echo "Formatting.."
-	clang-format -i src/devices/system.h
-	clang-format -i src/devices/system.c
-	clang-format -i src/devices/screen.h
-	clang-format -i src/devices/screen.c
-	clang-format -i src/devices/audio.h
-	clang-format -i src/devices/audio.c
-	clang-format -i src/devices/file.h
-	clang-format -i src/devices/file.c
-	clang-format -i src/devices/mouse.h
-	clang-format -i src/devices/mouse.c
-	clang-format -i src/devices/controller.h
-	clang-format -i src/devices/controller.c
-	clang-format -i src/devices/datetime.h
-	clang-format -i src/devices/datetime.c
 	clang-format -i src/uxnasm.c
-	clang-format -i src/uxnemu.c
 	clang-format -i src/uxncli.c
+	clang-format -i src/uxnemu.c
+	clang-format -i src/devices/*
 fi
 
 mkdir -p bin
@@ -95,28 +80,21 @@ else
 	CFLAGS="${CFLAGS} -DNDEBUG -O2 -g0 -s"
 fi
 
-echo "Building.."
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
 ${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
 ${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
 
 if [ $install = 1 ]
 then
-	echo "Installing in $HOME/bin"
 	cp bin/uxnemu bin/uxnasm bin/uxncli $HOME/bin/
 fi
 
-echo "Assembling(launcher).."
 ./bin/uxnasm projects/software/launcher.tal bin/launcher.rom
-echo "Assembling(asma).."
 ./bin/uxnasm projects/software/asma.tal bin/asma.rom
 
 if [ $norun = 1 ]; then exit; fi
 
-echo "Assembling(piano).."
 ./bin/uxnasm projects/software/piano.tal bin/piano.rom
 
-echo "Running.."
 ./bin/uxnemu -2x bin/piano.rom
 
-echo "Done."
