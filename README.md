@@ -4,7 +4,7 @@ An assembler and emulator for the [Uxn stack-machine](https://wiki.xxiivv.com/si
 
 ## Download binaries
 
-Binaries are available for 64-bit x86 computers running [Linux](https://rabbits.srht.site/uxn/uxn-essentials-lin64.tar.gz), [Windows](https://rabbits.srht.site/uxn/uxn-essentials-win64.zip) and [macOS](https://rabbits.srht.site/uxn/uxn-essentials-mac64.tar.gz).
+Binaries are available for 64-bit x86 computers running [Linux](https://drive.100r.co/uxn/uxn-essentials-lin64.tar.gz), [Windows](https://drive.100r.co/uxn/uxn-essentials-win64.zip) and [macOS](https://drive.100r.co/uxn/uxn-essentials-mac64.tar.gz).
 
 ## Build
 
