@@ -23,16 +23,10 @@ clamp(int val, int min, int max)
 }
 
 int
-cinu(char c)
-{
-	return c >= '0' && c <= '9';
-}
-
-int
 sint(char *s)
 {
 	int i = 0, num = 0;
-	while(s[i] && cinu(s[i]))
+	while(s[i] && s[i] >= '0' && s[i] <= '9')
 		num = num * 10 + (s[i++] - '0');
 	return num;
 }
@@ -41,17 +35,17 @@ int
 main(int argc, char *argv[])
 {
 	int seg, offset, i;
-	double segf;
+	double segf, cx = 128, cy = 128, r;
 	if(argc < 2) {
-		printf("usage: circle128 length\n", argc);
+		printf("usage: circle128 length [radius]\n", argc);
 		return 1;
 	}
 	seg = sint(argv[1]);
 	segf = (double)seg;
 	offset = seg / 4;
-	printf("%d points on a circle128:\n\n", seg);
+	r = argc < 3 ? 128 : (double)sint(argv[2]);
+	printf("%d points on a circle%d:\n\n", seg, (int)r);
 	for(i = 0; i < seg; ++i) {
-		double cx = 128, cy = 128, r = 128;
 		double pos = (i - offset) % seg;
 		double deg = (pos / segf) * 360.0;
 		double rad = deg * (PI / 180);
