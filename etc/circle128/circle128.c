@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <math.h>
 
-/* 
-Copyright (c) 2020 Devine Lu Linvega
+/*
+Copyright (c) 2020-2023 Devine Lu Linvega
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -23,10 +23,30 @@ clamp(int val, int min, int max)
 }
 
 int
-main()
+cinu(char c)
 {
-	int seg = 1024, offset = seg / 4, i;
-	double segf = 1024.0;
+	return c >= '0' && c <= '9';
+}
+
+int
+sint(char *s)
+{
+	int i = 0, num = 0;
+	while(s[i] && cinu(s[i]))
+		num = num * 10 + (s[i++] - '0');
+	return num;
+}
+
+int
+main(int argc, char *argv[])
+{
+	int seg = 12, offset = seg / 4, i;
+	double segf = (double)seg;
+	if(argc < 2) {
+		printf("usage: circle128 length\n", argc);
+		return 1;
+	}
+	seg = sint(argv[1]);
 	printf("%d points on a circle128:\n\n", seg);
 	for(i = 0; i < seg; ++i) {
 		double cx = 128, cy = 128, r = 128;
