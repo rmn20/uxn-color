@@ -515,9 +515,9 @@ main(int argc, char **argv)
 	/* load rom */
 	if(i == argc)
 		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
-	if(!start(&u, argv[i], argc - i))
-		return system_error("Start", "Failed");
 	rom_path = argv[i++];
+	if(!start(&u, rom_path, argc - i))
+		return system_error("Start", "Failed");
 	/* read arguments */
 	for(; i < argc; i++) {
 		char *p = argv[i];
