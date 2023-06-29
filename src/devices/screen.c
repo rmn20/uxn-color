@@ -25,8 +25,12 @@ static Uint8 blending[4][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2}};
 
 static void
-screen_change(int x1, int y1, int x2, int y2)
+screen_change(Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2)
 {
+	if(x1 > uxn_screen.width && x2 > x1) return;
+	if(y1 > uxn_screen.height && y2 > y1) return;
+	if(x1 > x2) x1 = 0;
+	if(y1 > y2) y1 = 0;
 	if(x1 < uxn_screen.x1) uxn_screen.x1 = x1;
 	if(y1 < uxn_screen.y1) uxn_screen.y1 = y1;
 	if(x2 > uxn_screen.x2) uxn_screen.x2 = x2;
