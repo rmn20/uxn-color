@@ -289,13 +289,15 @@ capture_screen(void)
 	int w, h;
 	SDL_Surface *surface;
 	SDL_GetRendererOutputSize(emu_renderer, &w, &h);
-	surface = SDL_CreateRGBSurface(0, w, h, 24, Rmask, Gmask, Bmask, 0);
+	if((surface = SDL_CreateRGBSurface(0, w, h, 24, Rmask, Gmask, Bmask, 0)) == NULL)
+		return;
 	SDL_RenderReadPixels(emu_renderer, NULL, format, surface->pixels, surface->pitch);
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(surface, fname);
+	if(SDL_SaveBMP(surface, fname) == 0){
+		fprintf(stderr, "Saved %s\n", fname);
+		fflush(stderr);
+	}
 	SDL_FreeSurface(surface);
-	fprintf(stderr, "Saved %s\n", fname);
-	fflush(stderr);
 }
 
 static void
