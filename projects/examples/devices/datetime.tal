@@ -6,16 +6,25 @@
 |0100
 
 @on-reset ( -> )
-	<print-date>
-	#0a18 DEO
-	<print-time>
-	#0a18 DEO
+	<print-date-num>
+	#0a .Console/write DEO
+	<print-date-str>
+	#0a .Console/write DEO
+	<print-time-num>
+	#0a .Console/write DEO
 	<print-doty>
-	#0a18 DEO
+	#0a .Console/write DEO
 	#800f DEO
 	BRK
 
-@<print-date> ( -- )
+@<print-date-num> ( -- )
+	.DateTime/year DEI2k <print-dec>
+	[ LIT "- ] .Console/write DEO
+	INC INC DEIk INC <print-dec-pad>
+	[ LIT "- ] .Console/write DEO
+	INC DEI !<print-dec-pad>
+
+@<print-date-str> ( -- )
 	;dict/date <print-str>
 	[ LIT2 00 -DateTime/dotw ] DEI #20 SFT ;week-txt ADD2 <print-str>
 	[ LIT2 20 ", ] #18 DEO
@@ -27,13 +36,13 @@
 	#18 DEO
 	.DateTime/year DEI2 !<print-dec>
 
-@<print-time> ( -- )
+@<print-time-num> ( -- )
 	;dict/time <print-str>
 	.DateTime/hour DEIk <print-dec-pad>
 	[ LIT2 ": 18 ] DEO
 	INC DEIk <print-dec-pad>
 	[ LIT2 ": 18 ] DEO
-	DEI !<print-dec-pad>
+	INC DEI !<print-dec-pad>
 
 @<print-str> ( str* -- )
 	&w ( -- )
