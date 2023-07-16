@@ -293,7 +293,7 @@ capture_screen(void)
 		return;
 	SDL_RenderReadPixels(emu_renderer, NULL, format, surface->pixels, surface->pitch);
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	if(SDL_SaveBMP(surface, fname) == 0){
+	if(SDL_SaveBMP(surface, fname) == 0) {
 		fprintf(stderr, "Saved %s\n", fname);
 		fflush(stderr);
 	}

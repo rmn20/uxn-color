@@ -83,14 +83,20 @@ void
 screen_resize(Uint16 width, Uint16 height)
 {
 	Uint8 *bg, *fg;
-	Uint32 *pixels;
+	Uint32 *pixels = NULL;
 	if(width < 0x8 || height < 0x8 || width >= 0x400 || height >= 0x400)
 		return;
-	bg = realloc(uxn_screen.bg, width * height),
-	fg = realloc(uxn_screen.fg, width * height);
-	pixels = realloc(uxn_screen.pixels, width * height * sizeof(Uint32));
-	if(!bg || !fg || !pixels)
+	bg = malloc(width * height),
+	fg = malloc(width * height);
+	if(bg && fg)
+		pixels = realloc(uxn_screen.pixels, width * height * sizeof(Uint32));
+	if(!bg || !fg || !pixels) {
+		free(bg);
+		free(fg);
 		return;
+	}
+	free(uxn_screen.bg);
+	free(uxn_screen.fg);
 	uxn_screen.bg = bg;
 	uxn_screen.fg = fg;
 	uxn_screen.pixels = pixels;
