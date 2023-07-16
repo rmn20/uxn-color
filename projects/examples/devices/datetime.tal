@@ -1,89 +1,84 @@
+( usage: uxncli datetime.rom )
+
+|10 @Console &vector $2 &read $1 &pad $4 &type $1 &write $1 &error $1
 |c0 @DateTime &year $2 &month $1 &day $1 &hour $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1
 
 |0100
 
-	( date )
-	;dict/date pstr
-	[ LIT2 00 -DateTime/dotw ] DEI #20 SFT ;week-txt ADD2 pstr
-	[ LIT2 20 ", ] #18 DEO #18 DEO
-	[ LIT2 00 -DateTime/month ] DEI #20 SFT ;month-txt ADD2 pstr
-	#2018 DEO
-	[ LIT2 00 -DateTime/day ] DEI pdec
-	[ LIT2 20 ", ] #18 DEO #18 DEO
-	.DateTime/year DEI2 pdec
+@on-reset ( -> )
+	<print-date>
 	#0a18 DEO
-
-	( time )
-	;dict/time pstr
-	[ LIT2 00 -DateTime/hour ] DEI pdec-pad
-	LIT ": #18 DEO
-	[ LIT2 00 -DateTime/minute ] DEI pdec-pad
-	LIT ": #18 DEO
-	[ LIT2 00 -DateTime/second ] DEI pdec-pad
+	<print-time>
 	#0a18 DEO
-
-	( doty )
-	;dict/doty pstr
-	.DateTime/doty DEI2 pdec
-	[ LIT2 0a ". ] #18 DEO #18 DEO
+	<print-doty>
+	#0a18 DEO
 	#800f DEO
+	BRK
 
-BRK
+@<print-date> ( -- )
+	;dict/date <print-str>
+	[ LIT2 00 -DateTime/dotw ] DEI #20 SFT ;week-txt ADD2 <print-str>
+	[ LIT2 20 ", ] #18 DEO
+	#18 DEO
+	[ LIT2 00 -DateTime/month ] DEI #20 SFT ;month-txt ADD2 <print-str>
+	#2018 DEO
+	[ LIT2 00 -DateTime/day ] DEI <print-dec>
+	[ LIT2 20 ", ] #18 DEO
+	#18 DEO
+	.DateTime/year DEI2 !<print-dec>
 
-@pstr ( str* -- )
+@<print-time> ( -- )
+	;dict/time <print-str>
+	.DateTime/hour DEIk <print-dec-pad>
+	[ LIT2 ": 18 ] DEO
+	INC DEIk <print-dec-pad>
+	[ LIT2 ": 18 ] DEO
+	DEI !<print-dec-pad>
 
-	LDAk ?&w POP2 JMP2r
-	&w
+@<print-str> ( str* -- )
+	&w ( -- )
 		LDAk #18 DEO
 		INC2 LDAk ?&w
-	POP2
+	POP2 JMP2r
 
-JMP2r
+@<print-doty> ( -- )
+	;dict/doty <print-str>
+	.DateTime/doty DEI2
+	( >> )
 
-@pdec-pad ( byte -- )
+@<print-dec> ( short* -- )
+	#2710 [ LIT2r 00fb ]
+	&w ( -- )
+		DIV2k #000a DIV2k MUL2 SUB2 SWPr EQUk OVR STHkr EQU AND ?&>skip
+			DUP <emit-dec>
+			INCr &>skip
+		POP2 #000a DIV2 SWPr INCr STHkr ?&w
+	POP2r POP2 POP2 JMP2r
 
-	#0a DIVk emit
-	DIVk MUL SUB emit
+@<print-dec-pad> ( byte -- )
+	#0a DIVk <emit-dec>
+	DIVk MUL SUB
+	( >> )
 
-JMP2r
-
-@pdec ( short* -- )
-
-	#00 ,&z STR
-	#2710 pdec/parse
-	#03e8 pdec/parse
-	#0064 pdec/parse
-	#000a pdec/parse
-	NIP emit
-
-JMP2r
-
-&parse ( short* den* -- short* )
-
-	DIV2k DUPk [ LIT &z $1 ] EQU ?&skip
-	DUP emit #ff ,&z STR
-	&skip POP MUL2 SUB2
-
-JMP2r
-
-@emit ( num -- )
-
+@<emit-dec> ( byte -- )
 	LIT "0 ADD #18 DEO
-
-JMP2r
+	JMP2r
 
 (
 @|assets )
 
-@week-txt [
-	"Sun $1 "Mon $1 "Tue $1 "Wed $1 "Thu $1 "Fri $1
-	"Sat $1 ]
+@week-txt
+	[
+	"Sun $1 "Mon $1 "Tue $1 "Wed $1
+	"Thu $1 "Fri $1 "Sat $1 ]
 
-@month-txt [
-	"Jan $1 "Feb $1 "Mar $1 "Apr $1 "May $1 "Jun $1
-	"Jul $1 "Aug $1 "Sep $1 "Oct $1 "Nov $1 "Dec $1 ]
+@month-txt
+	[
+	"Jan $1 "Feb $1 "Mar $1 "Apr $1
+	"May $1 "Jun $1 "Jul $1 "Aug $1
+	"Sep $1 "Oct $1 "Nov $1 "Dec $1 ]
 
-@dict
+@dict ( )
 	&date "The 20 "date 20 "is: 20 $1
 	&time "The 20 "time 20 "is: 20 $1
 	&doty "The 20 "day 20 "of 20 "the 20 "year 20 "is: 20 $1
