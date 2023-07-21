@@ -20,18 +20,18 @@
 @fib ( num* -- numfib* )
 	#0001 GTH2k ?&>ok
 		POP2 JMP2r &>ok
-	( a ) SUB2k fib STH2
-	( b ) INC2 SUB2 fib STH2r
-	( res ) ADD2 JMP2r
+	SUB2k fib STH2
+	INC2 SUB2 fib STH2r
+	ADD2 JMP2r
 
 (
 @|tail-recursive )
 
 @fibr ( a* b* num* -- a* b* numfib* )
-	DUP2 #0001 NEQ2 ?&>no-1
-		POP2 DUP2 JMP2r &>no-1
-	( a ) #0001 SUB2 STH2
-	( b ) SWP2 ADD2k NIP2 STH2r !fibr
+	#0001 NEQ2k ?&>no-1
+		POP2 POP2 DUP2 JMP2r &>no-1
+	SUB2 STH2
+	SWP2 OVR2 ADD2 STH2r !fibr
 
 (
 @|stdlib )
