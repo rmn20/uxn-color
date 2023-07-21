@@ -1,54 +1,47 @@
-( Fibonacci:
-	A series of numbers where the next number
-	is made of the two numbers before it )
+( Fibonacci: Numbers made of the two numbers before it )
 
-|0100 @on-reset
+|0100
 
-	#0019 #0000
-	&l
-		DUP2 pdec #2018 DEO
-		DUP2 fib pdec #2018 DEO
-		DUP2 #0000 #0001 ROT2 fibr pdec #0a18 DEO POP2 POP2
-		INC2 GTH2k ?&l
+@on-reset
+	#0019 #0001
+	&l ( -- )
+		( index ) DUP2 pdec #2018 DEO
+		( recursive ) DUP2 fib pdec #2018 DEO
+		( tail-recursive ) DUP2 #0000 #0001 ROT2 fibr pdec
+		( lb ) #0a18 DEO
+		POP2 POP2 INC2 GTH2k ?&l
 	POP2 POP2
-	#800f DEO
+	( end ) #800f DEO
+	BRK
 
-BRK
-
-( recursive )
+(
+@|recursive )
 
 @fib ( num* -- numfib* )
-	#0001 GTH2k ?&ok
-		POP2 JMP2r &ok
-	SUB2k fib STH2 INC2
-	SUB2 fib STH2r
-		ADD2
-JMP2r
+	#0001 GTH2k ?&>ok
+		POP2 JMP2r &>ok
+	( a ) SUB2k fib STH2
+	( b ) INC2 SUB2 fib STH2r
+	( res ) ADD2 JMP2r
 
-( tail-recursive )
+(
+@|tail-recursive )
 
 @fibr ( a* b* num* -- a* b* numfib* )
-	ORAk ?&no-0
-		POP2 OVR2 JMP2r &no-0
-	DUP2 #0001 NEQ2 ?&no-1
-		POP2 DUP2 JMP2r &no-1
-	#0001 SUB2 STH2
-	SWP2 ADD2k NIP2 STH2r
-!fibr
+	DUP2 #0001 NEQ2 ?&>no-1
+		POP2 DUP2 JMP2r &>no-1
+	( a ) #0001 SUB2 STH2
+	( b ) SWP2 ADD2k NIP2 STH2r !fibr
 
-( print routine )
+(
+@|stdlib )
 
 @pdec ( short* -- )
-
 	#2710 LIT2r 00fb
-	&w
-		DIV2k #000a DIV2k MUL2 SUB2 SWPr
-		EQUk OVR STHkr EQU AND ?&skip
-			DUP LIT "0 ADD #19 DEO INCr
-			&skip
-		POP2 #000a DIV2
-		SWPr INCr STHkr ?&w
-	POP2r POP2 POP2
-
-JMP2r
+	&w ( -- )
+		DIV2k #000a DIV2k MUL2 SUB2 SWPr EQUk OVR STHkr EQU AND ?&>skip
+			DUP LIT "0 ADD #18 DEO
+			INCr &>skip
+		POP2 #000a DIV2 SWPr INCr STHkr ?&w
+	POP2r POP2 POP2 JMP2r
 
