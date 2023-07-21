@@ -1,40 +1,36 @@
-( FizzBuzz:
-	A program that prints the integers from 1 to 100.
-	for multiples of three, print "Fizz"
-	for multiples of five, print "Buzz"
-	for multiples of both three and five, print "FizzBuzz" )
+( FizzBuzz: From 1 to 100, for multiples of 3 print "Fizz", of 5 "Buzz" and for both "FizzBuzz" )
 
-|0100 ( -> )
+|0100
+
+@on-reset ( -> )
 	#6400
-	&loop
-		( integer )
-		DUPk print-dec #2018 DEO
-		( fizzbuzz )
-		DUP #03 mod ?&no3 ;dict/fizz print-str &no3
-		DUP #05 mod ?&no5 ;dict/buzz print-str &no5
+	&loop ( integer )
+		DUP print-dec #2018 DEO
+		DUP #03 mod ?&>no-3
+			;dict/fizz print-str &>no-3
+		DUP #05 mod ?&>no-5
+			;dict/buzz print-str &>no-5
 		#0a18 DEO
 		INC GTHk ?&loop
 	POP2
-	( halt )
-	#010f DEO
-BRK
+	( halt ) #010f DEO
+	BRK
 
 @mod ( a b -- c )
-	DIVk MUL SUB
-JMP2r
+	DIVk MUL SUB JMP2r
 
 @print-dec ( num -- )
-	#0a DIV print-num
-	#0a DIVk MUL SUB
-@print-num
-	#30 ADD #18 DEO
-JMP2r
+	( x0 ) DUP #0a DIV print-dec/num
+	( 0x ) #0a DIVk MUL SUB &num #30 ADD #18 DEO
+	JMP2r
 
 @print-str ( addr* -- )
-	&while
+	&while ( -- )
 		LDAk #18 DEO
 		INC2 LDAk ?&while
-	POP2
-JMP2r
+	POP2 JMP2r
 
-@dict &fizz "Fizz $1 &buzz "Buzz $1
+@dict ( strings )
+	&fizz "Fizz $1
+	&buzz "Buzz $1
+
