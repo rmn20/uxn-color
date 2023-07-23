@@ -39,20 +39,20 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	int t, n, l, k, tmp, opc, ins;
-	Uint8 *ram = u->ram;
+	int t, n, l, k, tmp, ins;
+	Uint8 *ram = u->ram, opc;
 	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
 		ins = ram[pc++];
 		k = ins & 0x80 ? 0xff : 0;
 		s = ins & 0x40 ? &u->rst : &u->wst;
-		opc = !(ins & 0x1f) ? (0 - (ins >> 5)) & 0xff : ins & 0x3f;
+		opc = !(ins & 0x1f) ? (0 - (ins >> 5)) : ins & 0x3f;
 		switch(opc) {
 			/* IMM */
-			case 0x00: /* BRK   */ return 1;
-			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(ram + pc) + 2; break;
-			case 0xfe: /* JMI   */ pc += PEEK2(ram + pc) + 2; break;
+			case 0x00: /* BRK   */                          return 1;
+			case 0xff: /* JCI   */                          if(!s->dat[--s->ptr]) { pc += 2; break; }
+			case 0xfe: /* JMI   */                          pc += PEEK2(ram + pc) + 2; break;
 			case 0xfd: /* JSI   */                SET(0, 2) PUT2(0, pc + 2) pc += PEEK2(ram + pc) + 2; break;
 			case 0xfc: /* LIT   */                SET(0, 1) PUT(0, ram[pc++]) break;
 			case 0xfb: /* LIT2  */                SET(0, 2) PUT2(0, PEEK2(ram + pc)) pc += 2; break;
