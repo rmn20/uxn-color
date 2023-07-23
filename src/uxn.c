@@ -54,10 +54,10 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(ram + pc) + 2; break;
 			case 0xfe: /* JMI   */ pc += PEEK2(ram + pc) + 2; break;
 			case 0xfd: /* JSI   */ s = &u->rst; PUSH2(pc + 2) pc += PEEK2(ram + pc) + 2; break;
-			case 0xfc: /* LIT   */ PUSH(ram[pc++]) break;
-			case 0xfb: /* LIT2  */ PUSH2(PEEK2(ram + pc)) pc += 2; break;
-			case 0xfa: /* LITr  */ PUSH(ram[pc++]) break;
-			case 0xf9: /* LIT2r */ PUSH2(PEEK2(ram + pc)) pc += 2; break;
+			case 0xfc: /* LIT   */                SET(0, 1) PUT(0, ram[pc++]) break;
+			case 0xfb: /* LIT2  */                SET(0, 2) PUT2(0, PEEK2(ram + pc)) pc += 2; break;
+			case 0xfa: /* LITr  */                SET(0, 1) PUT(0, ram[pc++]) break;
+			case 0xf9: /* LIT2r */                SET(0, 2) PUT2(0, PEEK2(ram + pc)) pc += 2; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) PUT(0, t + 1) break;
 			case 0x21:            t=T2;           SET(2, 0) PUT2(0, t + 1) break;
