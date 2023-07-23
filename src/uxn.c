@@ -85,8 +85,8 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x2c:            t=T2;           SET(2,-2) pc = t; break;
 			case 0x0d: /* JCN  */ t=T;n=N;        SET(2,-2) if(n) pc += (Sint8)t; break;
 			case 0x2d:            t=T2;n=L;       SET(3,-3) if(n) pc = t; break;
-			case 0x0e: /* JSR  */ t=T;            SET(1,-1) s = &u->rst; PUSH2(pc) pc += (Sint8)t; break;
-			case 0x2e:            t=T2;           SET(2,-2) s = &u->rst; PUSH2(pc) pc = t; break;
+			case 0x0e: /* JSR  */ t=T;            SET(1,-1) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(pc) pc += (Sint8)t; break;
+			case 0x2e:            t=T2;           SET(2,-2) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(pc) pc = t; break;
 			case 0x0f: /* STH  */ t=T;            SET(1,-1) s = ins & 0x40 ? &u->wst : &u->rst; PUSH(t) break;
 			case 0x2f:            t=T2;           SET(2,-2) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(t) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT(0, ram[t]) break;
