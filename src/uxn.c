@@ -30,7 +30,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) tmp = (mul & k) + add + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v) { s->dat[(Uint8)(s->ptr - 1 - (o))] = (v); }
-#define PUT2(o, v) { tmp = (v); s->dat[(Uint8)(s->ptr - o - 2)] = tmp >> 8; s->dat[(Uint8)(s->ptr - o - 1)] = tmp; }
+#define PUT2(o, v) { tmp = (v); POKE2(s->dat + (Uint8)(s->ptr - o - 2), tmp); }
 #define PUSH(v) { if(s->ptr > 254) HALT(2) s->dat[s->ptr++] = (v); }
 #define PUSH2(v) { if(s->ptr > 253) HALT(2) tmp = (v); s->dat[s->ptr] = tmp >> 8; s->dat[s->ptr + 1] = tmp; s->ptr += 2; }
 #define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
