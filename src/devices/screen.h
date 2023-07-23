@@ -17,6 +17,8 @@ typedef struct UxnScreen {
 } UxnScreen;
 
 extern UxnScreen uxn_screen;
+extern int emu_resize(void);
+
 void screen_palette(Uint8 *addr);
 void screen_resize(Uint16 width, Uint16 height);
 void screen_redraw(void);

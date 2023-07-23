@@ -48,7 +48,6 @@ static SDL_Window *emu_window;
 static SDL_Texture *emu_texture;
 static SDL_Renderer *emu_renderer;
 static SDL_AudioDeviceID audio_id;
-static SDL_Rect emu_frame;
 static SDL_Thread *stdin_thread;
 
 Uint16 deo_mask[] = {0xff28, 0x0300, 0xc028, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000, 0x0000, 0x0000, 0xa260, 0xa260, 0x0000, 0x0000, 0x0000, 0x0000};
@@ -166,13 +165,7 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
-static int
-set_size(void)
-{
-	emu_frame.x = 0;
-	emu_frame.y = 0;
-	emu_frame.w = uxn_screen.width;
-	emu_frame.h = uxn_screen.height;
+int emu_resize(void){
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
 	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width, uxn_screen.height);
@@ -188,8 +181,6 @@ set_size(void)
 static void
 redraw(void)
 {
-	if(emu_frame.w != uxn_screen.width || emu_frame.h != uxn_screen.height)
-		set_size();
 	screen_redraw();
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
