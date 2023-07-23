@@ -41,7 +41,6 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
-#define PAD 2
 #define TIMEOUT_MS 334
 #define BENCH 0
 
@@ -176,19 +175,19 @@ set_window_size(SDL_Window *window, int w, int h)
 static int
 set_size(void)
 {
-	emu_frame.x = PAD;
-	emu_frame.y = PAD;
+	emu_frame.x = 0;
+	emu_frame.y = 0;
 	emu_frame.w = uxn_screen.width;
 	emu_frame.h = uxn_screen.height;
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
-	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width + PAD * 2, uxn_screen.height + PAD * 2);
+	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width, uxn_screen.height);
 	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
 	if(emu_texture == NULL || SDL_SetTextureBlendMode(emu_texture, SDL_BLENDMODE_NONE))
 		return system_error("SDL_SetTextureBlendMode", SDL_GetError());
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return system_error("SDL_UpdateTexture", SDL_GetError());
-	set_window_size(emu_window, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+	set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
 	return 1;
 }
 
@@ -217,7 +216,7 @@ init(void)
 	as.userdata = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
-	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH) * zoom, (HEIGHT) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
 	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
@@ -265,7 +264,7 @@ set_zoom(Uint8 z)
 {
 	if(z >= 1) {
 		zoom = z;
-		set_window_size(emu_window, (uxn_screen.width + PAD * 2) * zoom, (uxn_screen.height + PAD * 2) * zoom);
+		set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
 	}
 }
 
@@ -389,7 +388,7 @@ handle_events(Uxn *u)
 			uxn_eval(u, PEEK2(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
-			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
+			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x, 0, uxn_screen.width - 1), clamp(event.motion.y, 0, uxn_screen.height - 1));
 		else if(event.type == SDL_MOUSEBUTTONUP)
 			mouse_up(u, &u->dev[0x90], SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEBUTTONDOWN)
