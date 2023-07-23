@@ -27,14 +27,13 @@ WITH REGARD TO THIS SOFTWARE.
 
 */
 
-#define HALT(c) { return uxn_halt(u, ins, (c), pc - 1); }
+#define HALT(c)       { return uxn_halt(u, ins, (c), pc - 1); }
 #define SET(mul, add) { if(mul > s->ptr) HALT(1) tmp = (mul & k) + add + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
-#define PUT(o, v) { s->dat[(Uint8)(s->ptr - 1 - (o))] = (v); }
-#define PUT2(o, v) { tmp = (v); POKE2(s->dat + (Uint8)(s->ptr - o - 2), tmp); }
-#define PUSH(v) { if(s->ptr > 254) HALT(2) s->dat[s->ptr++] = (v); }
-#define PUSH2(v) { if(s->ptr > 253) HALT(2) tmp = (v); s->dat[s->ptr] = tmp >> 8; s->dat[s->ptr + 1] = tmp; s->ptr += 2; }
-#define DEO(a, b) { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
-#define DEI(a, b) { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)]) }
+#define PUT(o, v)     { s->dat[(Uint8)(s->ptr - 1 - (o))] = (v); }
+#define PUT2(o, v)    { tmp = (v); POKE2(s->dat + (Uint8)(s->ptr - o - 2), tmp); }
+#define DEO(a, b)     { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
+#define DEI(a, b)     { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)]) }
+#define FLIP          { s = ins & 0x40 ? &u->wst : &u->rst; }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -85,10 +84,10 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x2c:            t=T2;           SET(2,-2) pc = t; break;
 			case 0x0d: /* JCN  */ t=T;n=N;        SET(2,-2) if(n) pc += (Sint8)t; break;
 			case 0x2d:            t=T2;n=L;       SET(3,-3) if(n) pc = t; break;
-			case 0x0e: /* JSR  */ t=T;            SET(1,-1) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(pc) pc += (Sint8)t; break;
-			case 0x2e:            t=T2;           SET(2,-2) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(pc) pc = t; break;
-			case 0x0f: /* STH  */ t=T;            SET(1,-1) s = ins & 0x40 ? &u->wst : &u->rst; PUSH(t) break;
-			case 0x2f:            t=T2;           SET(2,-2) s = ins & 0x40 ? &u->wst : &u->rst; PUSH2(t) break;
+			case 0x0e: /* JSR  */ t=T;            SET(1,-1) FLIP SET(0,2) PUT2(0, pc) pc += (Sint8)t; break;
+			case 0x2e:            t=T2;           SET(2,-2) FLIP SET(0,2) PUT2(0, pc) pc = t; break;
+			case 0x0f: /* STH  */ t=T;            SET(1,-1) FLIP SET(0,1) PUT(0, t) break;
+			case 0x2f:            t=T2;           SET(2,-2) FLIP SET(0,2) PUT2(0, t) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT(0, ram[t]) break;
 			case 0x30:            t=T;            SET(1, 1) PUT2(0, PEEK2(ram + t)) break;
 			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
