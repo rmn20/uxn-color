@@ -86,6 +86,8 @@ screen_resize(Uint16 width, Uint16 height)
 	Uint32 *pixels = NULL;
 	if(width < 0x8 || height < 0x8 || width >= 0x400 || height >= 0x400)
 		return;
+	if(uxn_screen.width == width && uxn_screen.height == height)
+		return;
 	bg = malloc(width * height),
 	fg = malloc(width * height);
 	if(bg && fg)
@@ -123,8 +125,7 @@ screen_redraw(void)
 			i = x + y * w;
 			pixels[i] = palette[fg[i] << 2 | bg[i]];
 		}
-	uxn_screen.x1 = uxn_screen.y1 = 0xffff;
-	uxn_screen.x2 = uxn_screen.y2 = 0;
+	uxn_screen.x1 = uxn_screen.y1 = uxn_screen.x2 = uxn_screen.y2 = 0;
 }
 
 Uint8
