@@ -53,7 +53,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x00: /* BRK   */ return 1;
 			case 0xff: /* JCI   */ pc += !!s->dat[--s->ptr] * PEEK2(ram + pc) + 2; break;
 			case 0xfe: /* JMI   */ pc += PEEK2(ram + pc) + 2; break;
-			case 0xfd: /* JSI   */ s = &u->rst; PUSH2(pc + 2) pc += PEEK2(ram + pc) + 2; break;
+			case 0xfd: /* JSI   */                SET(0, 2) PUT2(0, pc + 2) pc += PEEK2(ram + pc) + 2; break;
 			case 0xfc: /* LIT   */                SET(0, 1) PUT(0, ram[pc++]) break;
 			case 0xfb: /* LIT2  */                SET(0, 2) PUT2(0, PEEK2(ram + pc)) pc += 2; break;
 			case 0xfa: /* LITr  */                SET(0, 1) PUT(0, ram[pc++]) break;
