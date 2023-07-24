@@ -49,7 +49,7 @@ screen_fill(Uint8 *layer, int x1, int y1, int x2, int y2, int color)
 static void
 screen_blit(Uint8 *layer, Uint8 *ram, Uint16 addr, int x1, int y1, int color, int flipx, int flipy, int twobpp)
 {
-	int v, h, width = uxn_screen.width, height = uxn_screen.height, opaque = (color % 5) || !color;
+	int v, h, width = uxn_screen.width, height = uxn_screen.height, opaque = (color % 5);
 	for(v = 0; v < 8; v++) {
 		Uint16 c = ram[(addr + v) & 0xffff] | (twobpp ? (ram[(addr + v + 8) & 0xffff] << 8) : 0);
 		Uint16 y = y1 + (flipy ? 7 - v : v);
