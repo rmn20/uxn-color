@@ -25,13 +25,13 @@ WITH REGARD TO THIS SOFTWARE.
 #define N2 PEEK2(s->dat + s->ptr - 4)
 #define L2 PEEK2(s->dat + s->ptr - 6)
 
-#define HALT(c)    { return uxn_halt(u, ins, (c), pc - 1); }
+#define HALT(c)    { return emu_halt(u, ins, (c), pc - 1); }
 #define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define SET(x, y)  { if(x > s->ptr) HALT(1) tmp = (x & k) + y + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v)  { s->dat[(s->ptr - 1 - (o))] = (v); }
 #define PUT2(o, v) { tmp = (v); POKE2(s->dat + (s->ptr - o - 2), tmp); }
-#define DEO(a, b)  { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) uxn_deo(u, (a)); }
-#define DEI(a, b)  { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? uxn_dei(u, (b)) : u->dev[(b)]) }
+#define DEO(a, b)  { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) emu_deo(u, (a)); }
+#define DEI(a, b)  { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? emu_dei(u, (b)) : u->dev[(b)]) }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)

@@ -84,7 +84,7 @@ audio_deo(int instance, Uint8 *d, Uint8 port, Uxn *u)
 }
 
 Uint8
-uxn_dei(Uxn *u, Uint8 addr)
+emu_dei(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
@@ -99,7 +99,7 @@ uxn_dei(Uxn *u, Uint8 addr)
 }
 
 void
-uxn_deo(Uxn *u, Uint8 addr)
+emu_deo(Uxn *u, Uint8 addr)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
 	switch(d) {
@@ -165,7 +165,9 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
-int emu_resize(void){
+int
+emu_resize(void)
+{
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
 	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width, uxn_screen.height);

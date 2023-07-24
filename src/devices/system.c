@@ -96,27 +96,6 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 	}
 }
 
-/* Errors */
-
-int
-uxn_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
-{
-	Uint8 *d = &u->dev[0];
-	Uint16 handler = PEEK2(d);
-	if(handler) {
-		u->wst.ptr = 4;
-		u->wst.dat[0] = addr >> 0x8;
-		u->wst.dat[1] = addr & 0xff;
-		u->wst.dat[2] = instr;
-		u->wst.dat[3] = err;
-		return uxn_eval(u, handler);
-	} else {
-		system_inspect(u);
-		fprintf(stderr, "%s %s, by %02x at 0x%04x.\n", (instr & 0x40) ? "Return-stack" : "Working-stack", errors[err - 1], instr, addr);
-	}
-	return 0;
-}
-
 /* Console */
 
 int
@@ -141,4 +120,25 @@ console_deo(Uint8 *d, Uint8 port)
 		fflush(stderr);
 		return;
 	}
+}
+
+/* Errors */
+
+int
+emu_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr)
+{
+	Uint8 *d = &u->dev[0];
+	Uint16 handler = PEEK2(d);
+	if(handler) {
+		u->wst.ptr = 4;
+		u->wst.dat[0] = addr >> 0x8;
+		u->wst.dat[1] = addr & 0xff;
+		u->wst.dat[2] = instr;
+		u->wst.dat[3] = err;
+		return uxn_eval(u, handler);
+	} else {
+		system_inspect(u);
+		fprintf(stderr, "%s %s, by %02x at 0x%04x.\n", (instr & 0x40) ? "Return-stack" : "Working-stack", errors[err - 1], instr, addr);
+	}
+	return 0;
 }
