@@ -104,9 +104,9 @@ screen_resize(Uint16 width, Uint16 height)
 	uxn_screen.pixels = pixels;
 	uxn_screen.width = width;
 	uxn_screen.height = height;
-	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	emu_resize();
+	screen_fill(uxn_screen.bg, 0, 0, width, height, 0);
+	screen_fill(uxn_screen.fg, 0, 0, width, height, 0);
+	emu_resize(width, height);
 }
 
 void

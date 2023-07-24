@@ -119,7 +119,7 @@ emu_deo(Uxn *u, Uint8 addr)
 	}
 }
 
-#pragma mark - Generics
+/* Handlers */
 
 static void
 audio_callback(void *u, Uint8 *stream, int len)
@@ -166,22 +166,22 @@ set_window_size(SDL_Window *window, int w, int h)
 }
 
 int
-emu_resize(void)
+emu_resize(int width, int height)
 {
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
-	SDL_RenderSetLogicalSize(emu_renderer, uxn_screen.width, uxn_screen.height);
-	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, uxn_screen.width, uxn_screen.height);
+	SDL_RenderSetLogicalSize(emu_renderer, width, height);
+	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, width, height);
 	if(emu_texture == NULL || SDL_SetTextureBlendMode(emu_texture, SDL_BLENDMODE_NONE))
 		return system_error("SDL_SetTextureBlendMode", SDL_GetError());
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return system_error("SDL_UpdateTexture", SDL_GetError());
-	set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
+	set_window_size(emu_window, width * zoom, height * zoom);
 	return 1;
 }
 
 static void
-redraw(void)
+emu_redraw(void)
 {
 	screen_redraw();
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
@@ -225,8 +225,6 @@ init(void)
 	deadline_interval = ms_interval * TIMEOUT_MS;
 	return 1;
 }
-
-#pragma mark - Devices
 
 /* Boot */
 
@@ -287,7 +285,7 @@ capture_screen(void)
 }
 
 static void
-restart(Uxn *u)
+emu_restart(Uxn *u)
 {
 	screen_resize(WIDTH, HEIGHT);
 	if(!start(u, "launcher.rom", 0))
@@ -342,19 +340,6 @@ get_key(SDL_Event *event)
 	return 0x00;
 }
 
-static void
-do_shortcut(Uxn *u, SDL_Event *event)
-{
-	if(event->key.keysym.sym == SDLK_F1)
-		set_zoom(zoom == 3 ? 1 : zoom + 1);
-	else if(event->key.keysym.sym == SDLK_F2)
-		system_inspect(u);
-	else if(event->key.keysym.sym == SDLK_F3)
-		capture_screen();
-	else if(event->key.keysym.sym == SDLK_F4)
-		restart(u);
-}
-
 static int
 handle_events(Uxn *u)
 {
@@ -364,7 +349,7 @@ handle_events(Uxn *u)
 		if(event.type == SDL_QUIT)
 			return 0;
 		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
-			redraw();
+			emu_redraw();
 		else if(event.type == SDL_DROPFILE) {
 			screen_resize(WIDTH, HEIGHT);
 			start(u, event.drop.file, 0);
@@ -391,12 +376,17 @@ handle_events(Uxn *u)
 				controller_key(u, &u->dev[0x80], get_key(&event));
 			else if(get_button(&event))
 				controller_down(u, &u->dev[0x80], get_button(&event));
-			else
-				do_shortcut(u, &event);
+			else if(event.key.keysym.sym == SDLK_F1)
+				set_zoom(zoom == 3 ? 1 : zoom + 1);
+			else if(event.key.keysym.sym == SDLK_F2)
+				system_inspect(u);
+			else if(event.key.keysym.sym == SDLK_F3)
+				capture_screen();
+			else if(event.key.keysym.sym == SDLK_F4)
+				emu_restart(u);
 			ksym = event.key.keysym.sym;
-			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym) {
+			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 				return 1;
-			}
 		} else if(event.type == SDL_KEYUP)
 			controller_up(u, &u->dev[0x80], get_button(&event));
 		else if(event.type == SDL_JOYAXISMOTION) {
@@ -473,7 +463,7 @@ run(Uxn *u)
 			next_refresh = now + frame_interval;
 			uxn_eval(u, screen_vector);
 			if(uxn_screen.x2)
-				redraw();
+				emu_redraw();
 		}
 		if(BENCH) {
 			/* no delay */
