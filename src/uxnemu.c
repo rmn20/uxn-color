@@ -59,6 +59,7 @@ static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
 char *rom_path;
+int window_created = 0;
 
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
@@ -168,6 +169,8 @@ set_window_size(SDL_Window *window, int w, int h)
 int
 emu_resize(int width, int height)
 {
+	if(!window_created)
+		return 0;
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
 	SDL_RenderSetLogicalSize(emu_renderer, width, height);
@@ -191,7 +194,7 @@ emu_redraw(void)
 }
 
 static int
-init(void)
+emu_init(void)
 {
 	SDL_AudioSpec as;
 	SDL_zero(as);
@@ -203,13 +206,7 @@ init(void)
 	as.userdata = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
-	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH)*zoom, (HEIGHT)*zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-	if(emu_window == NULL)
-		return system_error("sdl_window", SDL_GetError());
-	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
-	if(emu_renderer == NULL)
-		return system_error("sdl_renderer", SDL_GetError());
-	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
+
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
 		system_error("sdl_audio", SDL_GetError());
@@ -229,7 +226,7 @@ init(void)
 /* Boot */
 
 static int
-start(Uxn *u, char *rom, int queue)
+emu_start(Uxn *u, char *rom, int queue)
 {
 	free(u->ram);
 	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
@@ -245,11 +242,12 @@ start(Uxn *u, char *rom, int queue)
 }
 
 static void
-set_zoom(Uint8 z)
+set_zoom(Uint8 z, int win)
 {
 	if(z >= 1) {
 		zoom = z;
-		set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
+		if(win)
+			set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
 	}
 }
 
@@ -288,8 +286,8 @@ static void
 emu_restart(Uxn *u)
 {
 	screen_resize(WIDTH, HEIGHT);
-	if(!start(u, "launcher.rom", 0))
-		start(u, rom_path, 0);
+	if(!emu_start(u, "launcher.rom", 0))
+		emu_start(u, rom_path, 0);
 }
 
 static Uint8
@@ -352,7 +350,7 @@ handle_events(Uxn *u)
 			emu_redraw();
 		else if(event.type == SDL_DROPFILE) {
 			screen_resize(WIDTH, HEIGHT);
-			start(u, event.drop.file, 0);
+			emu_start(u, event.drop.file, 0);
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
@@ -377,7 +375,7 @@ handle_events(Uxn *u)
 			else if(get_button(&event))
 				controller_down(u, &u->dev[0x80], get_button(&event));
 			else if(event.key.keysym.sym == SDLK_F1)
-				set_zoom(zoom == 3 ? 1 : zoom + 1);
+				set_zoom(zoom == 3 ? 1 : zoom + 1, 1);
 			else if(event.key.keysym.sym == SDLK_F2)
 				system_inspect(u);
 			else if(event.key.keysym.sym == SDLK_F3)
@@ -443,7 +441,7 @@ handle_events(Uxn *u)
 }
 
 static int
-run(Uxn *u)
+emu_run(Uxn *u)
 {
 	Uint64 next_refresh = 0;
 	Uint64 now;
@@ -476,25 +474,40 @@ run(Uxn *u)
 }
 
 int
+emu_show(void)
+{
+	window_created = 1;
+	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, uxn_screen.width * zoom, uxn_screen.height * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	if(emu_window == NULL)
+		return system_error("sdl_window", SDL_GetError());
+	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
+	if(emu_renderer == NULL)
+		return system_error("sdl_renderer", SDL_GetError());
+	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
+	emu_resize(uxn_screen.width, uxn_screen.height);
+	return 1;
+}
+
+int
 main(int argc, char **argv)
 {
 	SDL_DisplayMode DM;
 	Uxn u = {0};
 	int i = 1;
-	if(!init())
+	if(!emu_init())
 		return system_error("Init", "Failed to initialize emulator.");
 	/* default resolution */
 	screen_resize(WIDTH, HEIGHT);
 	/* default zoom */
 	if(argc > 1 && (strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0))
-		set_zoom(argv[i++][1] - '0');
+		set_zoom(argv[i++][1] - '0', 0);
 	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
-		set_zoom(DM.w / 1280);
+		set_zoom(DM.w / 1280, 0);
 	/* load rom */
 	if(i == argc)
 		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
 	rom_path = argv[i++];
-	if(!start(&u, rom_path, argc - i))
+	if(!emu_start(&u, rom_path, argc - i))
 		return system_error("Start", "Failed");
 	/* read arguments */
 	for(; i < argc; i++) {
@@ -503,7 +516,8 @@ main(int argc, char **argv)
 		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 	}
 	/* start rom */
-	run(&u);
+	emu_show();
+	emu_run(&u);
 	/* finished */
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
