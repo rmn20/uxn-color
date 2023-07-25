@@ -246,6 +246,7 @@ emu_start(Uxn *u, char *rom, int queue)
 		return system_error("Boot", "Failed to load rom.");
 	u->dev[0x17] = queue;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
+	screen_resize(WIDTH, HEIGHT);
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return system_error("Boot", "Failed to eval rom.");
 	SDL_SetWindowTitle(emu_window, rom);
@@ -495,14 +496,12 @@ main(int argc, char **argv)
 	int i = 1;
 	if(!emu_init())
 		return system_error("Init", "Failed to initialize emulator.");
-	/* default resolution */
-	screen_resize(WIDTH, HEIGHT);
 	/* default zoom */
-	if(argc > 1 && (strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0))
+	if(argc < 2)
+		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
+	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0', 0);
 	/* load rom */
-	if(i == argc)
-		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
 	rom_path = argv[i++];
 	if(!emu_start(&u, rom_path, argc - i))
 		return system_error("Start", "Failed");
