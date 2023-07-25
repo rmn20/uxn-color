@@ -166,6 +166,18 @@ set_window_size(SDL_Window *window, int w, int h)
 	SDL_SetWindowSize(window, w, h);
 }
 
+static void
+set_zoom(Uint8 z, int win)
+{
+	if(z >= 1) {
+		zoom = z;
+		if(win)
+			set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
+	}
+}
+
+/* emulator primitives */
+
 int
 emu_resize(int width, int height)
 {
@@ -218,12 +230,11 @@ emu_init(void)
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
 	ms_interval = SDL_GetPerformanceFrequency() / 1000;
 	deadline_interval = ms_interval * TIMEOUT_MS;
 	return 1;
 }
-
-/* Boot */
 
 static int
 emu_start(Uxn *u, char *rom, int queue)
@@ -242,13 +253,11 @@ emu_start(Uxn *u, char *rom, int queue)
 }
 
 static void
-set_zoom(Uint8 z, int win)
+emu_restart(Uxn *u)
 {
-	if(z >= 1) {
-		zoom = z;
-		if(win)
-			set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
-	}
+	screen_resize(WIDTH, HEIGHT);
+	if(!emu_start(u, "launcher.rom", 0))
+		emu_start(u, rom_path, 0);
 }
 
 static void
@@ -280,14 +289,6 @@ capture_screen(void)
 		fflush(stderr);
 	}
 	SDL_FreeSurface(surface);
-}
-
-static void
-emu_restart(Uxn *u)
-{
-	screen_resize(WIDTH, HEIGHT);
-	if(!emu_start(u, "launcher.rom", 0))
-		emu_start(u, rom_path, 0);
 }
 
 static Uint8
@@ -441,7 +442,7 @@ handle_events(Uxn *u)
 }
 
 static int
-emu_run(Uxn *u)
+gameloop(Uxn *u)
 {
 	Uint64 next_refresh = 0;
 	Uint64 now;
@@ -474,7 +475,7 @@ emu_run(Uxn *u)
 }
 
 int
-emu_show(void)
+show(void)
 {
 	window_created = 1;
 	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, uxn_screen.width * zoom, uxn_screen.height * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -483,7 +484,6 @@ emu_show(void)
 	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
 	if(emu_renderer == NULL)
 		return system_error("sdl_renderer", SDL_GetError());
-	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
 	emu_resize(uxn_screen.width, uxn_screen.height);
 	return 1;
 }
@@ -491,7 +491,6 @@ emu_show(void)
 int
 main(int argc, char **argv)
 {
-	SDL_DisplayMode DM;
 	Uxn u = {0};
 	int i = 1;
 	if(!emu_init())
@@ -501,8 +500,6 @@ main(int argc, char **argv)
 	/* default zoom */
 	if(argc > 1 && (strcmp(argv[i], "-1x") == 0 || strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0))
 		set_zoom(argv[i++][1] - '0', 0);
-	else if(SDL_GetCurrentDisplayMode(0, &DM) == 0)
-		set_zoom(DM.w / 1280, 0);
 	/* load rom */
 	if(i == argc)
 		return system_error("usage", "uxnemu [-2x][-3x] file.rom [args...]");
@@ -516,8 +513,8 @@ main(int argc, char **argv)
 		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 	}
 	/* start rom */
-	emu_show();
-	emu_run(&u);
+	show();
+	gameloop(&u);
 	/* finished */
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
