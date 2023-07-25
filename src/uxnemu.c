@@ -42,7 +42,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define TIMEOUT_MS 334
-#define BENCH 0
 
 static SDL_Window *emu_window;
 static SDL_Texture *emu_texture;
@@ -443,41 +442,10 @@ handle_events(Uxn *u)
 }
 
 static int
-gameloop(Uxn *u)
+run(Uxn *u)
 {
 	Uint64 next_refresh = 0;
-	Uint64 now;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
-	for(;;) {
-		Uint16 screen_vector;
-		/* .System/halt */
-		if(u->dev[0x0f])
-			return system_error("Run", "Ended.");
-		now = SDL_GetPerformanceCounter();
-		exec_deadline = now + deadline_interval;
-		if(!handle_events(u))
-			return 0;
-		screen_vector = PEEK2(&u->dev[0x20]);
-		if(BENCH || now >= next_refresh) {
-			now = SDL_GetPerformanceCounter();
-			next_refresh = now + frame_interval;
-			uxn_eval(u, screen_vector);
-			if(uxn_screen.x2)
-				emu_redraw();
-		}
-		if(BENCH) {
-			/* no delay */
-		} else if(screen_vector || uxn_screen.x2) {
-			Uint64 delay_ms = (next_refresh - now) / ms_interval;
-			if(delay_ms > 0) SDL_Delay(delay_ms);
-		} else
-			SDL_WaitEvent(NULL);
-	}
-}
-
-int
-show(void)
-{
 	window_created = 1;
 	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, uxn_screen.width * zoom, uxn_screen.height * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(emu_window == NULL)
@@ -486,7 +454,30 @@ show(void)
 	if(emu_renderer == NULL)
 		return system_error("sdl_renderer", SDL_GetError());
 	emu_resize(uxn_screen.width, uxn_screen.height);
-	return 1;
+	/* game loop */
+	for(;;) {
+		Uint16 screen_vector;
+		Uint64 now = SDL_GetPerformanceCounter();
+		/* .System/halt */
+		if(u->dev[0x0f])
+			return system_error("Run", "Ended.");
+		exec_deadline = now + deadline_interval;
+		if(!handle_events(u))
+			return 0;
+		screen_vector = PEEK2(&u->dev[0x20]);
+		if(now >= next_refresh) {
+			now = SDL_GetPerformanceCounter();
+			next_refresh = now + frame_interval;
+			uxn_eval(u, screen_vector);
+			if(uxn_screen.x2)
+				emu_redraw();
+		}
+		if(screen_vector || uxn_screen.x2) {
+			Uint64 delay_ms = (next_refresh - now) / ms_interval;
+			if(delay_ms > 0) SDL_Delay(delay_ms);
+		} else
+			SDL_WaitEvent(NULL);
+	}
 }
 
 int
@@ -512,8 +503,7 @@ main(int argc, char **argv)
 		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 	}
 	/* start rom */
-	show();
-	gameloop(&u);
+	run(&u);
 	/* finished */
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
