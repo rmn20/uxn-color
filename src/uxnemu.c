@@ -39,6 +39,8 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+#define PAD 2
+#define PAD2 4
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define TIMEOUT_MS 334
@@ -60,6 +62,13 @@ static Uint64 exec_deadline, deadline_interval, ms_interval;
 char *rom_path;
 int window_created = 0;
 
+static int
+clamp(int v, int min, int max)
+{
+
+	return v < min ? min : v > max ? max
+								   : v;
+}
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
@@ -171,7 +180,7 @@ set_zoom(Uint8 z, int win)
 	if(z >= 1) {
 		zoom = z;
 		if(win)
-			set_window_size(emu_window, (uxn_screen.width) * zoom, (uxn_screen.height) * zoom);
+			set_window_size(emu_window, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom);
 	}
 }
 
@@ -184,23 +193,29 @@ emu_resize(int width, int height)
 		return 0;
 	if(emu_texture != NULL)
 		SDL_DestroyTexture(emu_texture);
-	SDL_RenderSetLogicalSize(emu_renderer, width, height);
+	SDL_RenderSetLogicalSize(emu_renderer, width + PAD2, height + PAD2);
 	emu_texture = SDL_CreateTexture(emu_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, width, height);
 	if(emu_texture == NULL || SDL_SetTextureBlendMode(emu_texture, SDL_BLENDMODE_NONE))
 		return system_error("SDL_SetTextureBlendMode", SDL_GetError());
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, sizeof(Uint32)) != 0)
 		return system_error("SDL_UpdateTexture", SDL_GetError());
-	set_window_size(emu_window, width * zoom, height * zoom);
+	set_window_size(emu_window, (width + PAD2) * zoom, (height + PAD2) * zoom);
 	return 1;
 }
 
 static void
 emu_redraw(void)
 {
+	SDL_Rect r;
+	r.x = PAD;
+	r.y = PAD;
+	r.w = uxn_screen.width;
+	r.h = uxn_screen.height;
 	screen_redraw();
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
-	SDL_RenderCopy(emu_renderer, emu_texture, NULL, NULL);
+	SDL_RenderClear(emu_renderer);
+	SDL_RenderCopy(emu_renderer, emu_texture, NULL, &r);
 	SDL_RenderPresent(emu_renderer);
 }
 
@@ -359,7 +374,7 @@ handle_events(Uxn *u)
 			uxn_eval(u, PEEK2(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
-			mouse_pos(u, &u->dev[0x90], event.motion.x, event.motion.y);
+			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x - PAD, 0, uxn_screen.width), clamp(event.motion.y - PAD, 0, uxn_screen.height));
 		else if(event.type == SDL_MOUSEBUTTONUP)
 			mouse_up(u, &u->dev[0x90], SDL_BUTTON(event.button.button));
 		else if(event.type == SDL_MOUSEBUTTONDOWN)
@@ -447,10 +462,10 @@ run(Uxn *u)
 	Uint64 next_refresh = 0;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
 	window_created = 1;
-	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, uxn_screen.width * zoom, uxn_screen.height * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
-	emu_renderer = SDL_CreateRenderer(emu_window, -1, 0);
+	emu_renderer = SDL_CreateRenderer(emu_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 	if(emu_renderer == NULL)
 		return system_error("sdl_renderer", SDL_GetError());
 	emu_resize(uxn_screen.width, uxn_screen.height);
