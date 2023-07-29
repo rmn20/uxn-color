@@ -36,12 +36,12 @@ typedef struct {
 typedef struct {
 	Uint8 data[LENGTH];
 	Uint8 lambda_stack[0x100], lambda_ptr, lambda_count;
+	char scope[0x40], lambda[0x10];
 	unsigned int ptr, length;
 	Uint16 label_len, macro_len, refs_len;
 	Label labels[0x400];
 	Macro macros[0x100];
 	Reference refs[0x800];
-	char scope[0x40];
 } Program;
 
 Program p;
@@ -201,6 +201,15 @@ makereference(char *scope, char *label, char rune, Uint16 addr)
 	return 1;
 }
 
+static char *
+makelambda(int id)
+{
+	scpy("lambda", p.lambda, 0x07);
+	p.lambda[6] = '0' + (id >> 0x4);
+	p.lambda[7] = '0' + (id & 0xf);
+	return p.lambda;
+}
+
 static int
 writebyte(Uint8 b)
 {
@@ -353,16 +362,12 @@ parse(char *w, FILE *f)
 			if(!writebyte(c)) return 0;
 		break;
 	case '{': /* lambda start */
-		char laba[8] = "lambda0\0";
 		p.lambda_stack[p.lambda_ptr++] = p.lambda_count;
-		laba[6] = '0' + p.lambda_count++;
-		makereference(p.scope, laba, ' ', p.ptr + 1);
+		makereference(p.scope, makelambda(p.lambda_count++), ' ', p.ptr + 1);
 		return writebyte(0x60) && writeshort(0xffff, 0);
 	case '}': /* lambda end */
-		char labb[8] = "lambda0\0";
-		labb[6] = '0' + p.lambda_stack[--p.lambda_ptr];
-		if(!makelabel(labb))
-			return error("Invalid label", labb);
+		if(!makelabel(makelambda(p.lambda_stack[--p.lambda_ptr])))
+			return error("Invalid label", w);
 		return writebyte(0x6f);
 	case '[':
 	case ']':
