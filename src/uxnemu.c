@@ -456,12 +456,12 @@ handle_events(Uxn *u)
 }
 
 static int
-run(Uxn *u)
+run(Uxn *u, char *rom)
 {
 	Uint64 next_refresh = 0;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
 	window_created = 1;
-	emu_window = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
 	emu_renderer = SDL_CreateRenderer(emu_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
@@ -517,7 +517,7 @@ main(int argc, char **argv)
 		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
 	}
 	/* start rom */
-	run(&u);
+	run(&u, rom_path);
 	/* finished */
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
