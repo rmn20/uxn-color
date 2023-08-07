@@ -12,7 +12,7 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 #define HALT(c)    { return emu_halt(u, ins, (c), pc - 1); }
-#define FLIP       { s = (ins & 0x40) ? &u->wst : &u->rst; }
+#define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define JUMP(x)    { if(m2) pc = (x); else pc += (Sint8)(x); }
 #define POKE(x, y) { if(m2) { POKE2(ram + x, y) } else { ram[(x)] = (y); } }
 #define PEEK(o, x) { if(m2) { o = PEEK2(ram + x); } else o = ram[(x)]; }
@@ -47,7 +47,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case -0x2: /* JMI   */ pc += PEEK2(ram + pc) + 2; break;
 		case -0x3: /* JSI   */ PUSH2(pc + 2) pc += PEEK2(ram + pc) + 2; break;
 		case -0x4: /* LIT   */
-		case -0x6: /* LITr  */ a = ram[pc++]; PUSH1(a) break;
+		case -0x6: /* LITr  */ PUSH1(ram[pc++]) break;
 		case -0x5: /* LIT2  */
 		case -0x7: /* LIT2r */ PUSH2(PEEK2(ram + pc)) pc += 2; break;
 		/* ALU */
