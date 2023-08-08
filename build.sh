@@ -96,11 +96,13 @@ if [ $norun = 1 ]; then exit; fi
 
 # Test usage
 
+./bin/uxnasm
 ./bin/uxncli
 ./bin/uxnemu
 
 # Test version
 
+./bin/uxnasm -v
 ./bin/uxncli -v
 ./bin/uxnemu -v
 
