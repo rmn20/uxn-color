@@ -94,6 +94,16 @@ fi
 
 if [ $norun = 1 ]; then exit; fi
 
+# Test usage
+
+./bin/uxncli
+./bin/uxnemu
+
+# Test version
+
+./bin/uxncli -v
+./bin/uxnemu -v
+
 ./bin/uxnasm projects/software/piano.tal bin/piano.rom
 
 ./bin/uxnemu -2x bin/piano.rom

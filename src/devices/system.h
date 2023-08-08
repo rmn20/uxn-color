@@ -16,7 +16,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define RAM_PAGES 0x10
 
 void system_connect(Uint8 device, Uint8 ver, Uint16 dei, Uint16 deo);
-int system_version(void);
+int system_version(char *emulator, char *date);
 int system_load(Uxn *u, char *filename);
 void system_inspect(Uxn *u);
 int system_error(char *msg, const char *err);

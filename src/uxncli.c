@@ -48,17 +48,18 @@ main(int argc, char **argv)
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxncli [-v] file.rom [args..]");
-	/* Boot Varvara */
+	/* Connect Varvara */
 	system_connect(0x0, SYSTEM_VERSION, SYSTEM_DEIMASK, SYSTEM_DEOMASK);
 	system_connect(0x1, CONSOLE_VERSION, CONSOLE_DEIMASK, CONSOLE_DEOMASK);
 	system_connect(0xa, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
 	system_connect(0xb, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
 	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
-	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
-		return system_error("Boot", "Failed");
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version();
+		return system_version("Uxncli - Console Varvara Emulator", "8 Aug 2023");
+	/* Continue.. */
+	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
+		return system_error("Boot", "Failed");
 	/* Load rom */
 	if(!system_load(&u, argv[i++]))
 		return system_error("Load", "Failed");

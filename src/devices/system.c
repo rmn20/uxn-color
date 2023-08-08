@@ -83,11 +83,11 @@ system_connect(Uint8 device, Uint8 ver, Uint16 dei, Uint16 deo)
 }
 
 int
-system_version(void)
+system_version(char *name, char *date)
 {
 	int i;
-	printf("Varvara Emulator 1.0\n");
-	printf("Device Version Dei  Deo\n", i, dev_vers[i], dei_mask[i], deo_mask[i]);
+	printf("%s, %s.\n", name, date);
+	printf("Device Version Dei  Deo\n");
 	for(i = 0; i < 0x10; i++)
 		if(dev_vers[i])
 			printf("%6x %7d %04x %04x\n", i, dev_vers[i], dei_mask[i], deo_mask[i]);
