@@ -155,13 +155,12 @@ void
 screen_debugger(Uxn *u)
 {
 	int i;
-	for(i = 0; i < u->wst.ptr + 1; i++)
+	for(i = 0; i < u->wst.ptr; i++)
 		draw_byte(u->wst.dat[i], i * 0x18 + 0x8, uxn_screen.height - 0x18, 0x2);
-	for(i = 0; i < u->rst.ptr + 1; i++)
+	for(i = 0; i < u->rst.ptr; i++)
 		draw_byte(u->rst.dat[i], i * 0x18 + 0x8, uxn_screen.height - 0x10, 0x3);
-	for(i = 0; i < 0x40; i++) {
-		draw_byte(u->ram[i], (i & 0x7) * 0x18 + 0x8, ((i >> 3) << 3) + 0x8, 0x2 + !!u->ram[i]);
-	}
+	for(i = 0; i < 0x40; i++)
+		draw_byte(u->ram[i], (i & 0x7) * 0x18 + 0x8, ((i >> 3) << 3) + 0x8, 1 + !!u->ram[i]);
 }
 
 Uint8
