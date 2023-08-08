@@ -30,8 +30,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define SET(x, y)  { if(x > s->ptr) HALT(1) tmp = (x & k) + y + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v)  { s->dat[(s->ptr - 1 - (o))] = (v); }
 #define PUT2(o, v) { tmp = (v); POKE2(s->dat + (s->ptr - o - 2), tmp); }
-#define DEO(a, b)  { u->dev[(a)] = (b); if((deo_mask[(a) >> 4] >> ((a) & 0xf)) & 0x1) emu_deo(u, (a)); }
-#define DEI(a, b)  { PUT((a), ((dei_mask[(b) >> 4] >> ((b) & 0xf)) & 0x1) ? emu_dei(u, (b)) : u->dev[(b)]) }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -98,10 +96,10 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x34:            t=T2;           SET(2, 0) PUT2(0, PEEK2(ram + t)) break;
 			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
 			case 0x35:            t=T2;n=N2;      SET(4,-4) POKE2(ram + t, n) break;
-			case 0x16: /* DEI  */ t=T;            SET(1, 0) DEI(0, t) break;
-			case 0x36:            t=T;            SET(1, 1) DEI(1, t) DEI(0, t + 1) break;
+			case 0x16: /* DEI  */ t=T;            SET(1, 0) PUT(0, DEI(t)) break;
+			case 0x36:            t=T;            SET(1, 1) PUT(1, DEI(t)) PUT(0, DEI(t + 1)) break;
 			case 0x17: /* DEO  */ t=T;n=N;        SET(2,-2) DEO(t, n) break;
-			case 0x37:            t=T;n=N;l=L;    SET(3,-3) DEO(t, l) DEO(t + 1, n) break;
+			case 0x37:            t=T;n=N;l=L;    SET(3,-3) DEO(t, l) DEO((t + 1), n) break;
 			case 0x18: /* ADD  */ t=T;n=N;        SET(2,-1) PUT(0, n + t) break;
 			case 0x38:            t=T2;n=N2;      SET(4,-2) PUT2(0, n + t) break;
 			case 0x19: /* SUB  */ t=T;n=N;        SET(2,-1) PUT(0, n - t) break;
