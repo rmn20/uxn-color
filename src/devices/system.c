@@ -74,6 +74,15 @@ system_inspect(Uxn *u)
 	system_print(&u->rst, "rst");
 }
 
+void
+system_connect(Uint8 device, Uint8 ver, Uint16 dei, Uint16 deo)
+{
+	/* printf("%02x -> v%d %04x %04x\n", device, ver, dei, deo); */
+	dev_vers[device] = ver;
+	dei_mask[device] = dei;
+	deo_mask[device] = deo;
+}
+
 /* IO */
 
 void

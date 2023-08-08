@@ -11,10 +11,11 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define SYSTEM_VERSION 1
 #define SYSTEM_DEIMASK 0x0000
-#define SYSTEM_DEOMASK 0x0000
+#define SYSTEM_DEOMASK 0xff28
 
 #define RAM_PAGES 0x10
 
+void system_connect(Uint8 device, Uint8 ver, Uint16 dei, Uint16 deo);
 int system_load(Uxn *u, char *filename);
 void system_inspect(Uxn *u);
 int system_error(char *msg, const char *err);

@@ -42,8 +42,7 @@ typedef struct Uxn {
 extern Uint8 emu_dei(Uxn *u, Uint8 addr);
 extern void emu_deo(Uxn *u, Uint8 addr);
 extern int emu_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
-extern Uint16 dei_mask[];
-extern Uint16 deo_mask[];
+extern Uint16 dev_vers[0x10], dei_mask[0x10], deo_mask[0x10];
 
 /* built-ins */
 
