@@ -23,7 +23,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define POP2(o)    { if((tsp = *sp) <= 0x01) HALT(1) o = PEEK2(&s->dat[tsp - 2]); *sp = tsp - 2; }
 #define POPx(o)    { if(m2) { POP2(o) } else { POP1(o) } }
 #define DEVW(p, y) { if(m2) { DEO(p, y >> 8) DEO((p + 1), y) } else { DEO(p, y) } }
-#define DEVR(o, p) { if(m2) { o = ((DEI(p) << 8) + DEI(p + 1)); } else { o = DEI(p); } }
+#define DEVR(o, p) { if(m2) { o = DEI(p) << 8 | DEI(p + 1); } else { o = DEI(p); } }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
