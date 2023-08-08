@@ -9,8 +9,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define PAGE_PROGRAM 0x0100
-
 /* clang-format off */
 
 #define POKE2(d, v) { (d)[0] = (v) >> 8; (d)[1] = (v); }
@@ -19,6 +17,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEI(p) ((dei_mask[(p) >> 4] >> ((p) & 0xf)) & 0x1 ? emu_dei(u, (p)) : u->dev[(p)])
 
 /* clang-format on */
+
+#define PAGE_PROGRAM 0x0100
 
 typedef unsigned char Uint8;
 typedef signed char Sint8;

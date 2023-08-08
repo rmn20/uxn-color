@@ -77,10 +77,21 @@ system_inspect(Uxn *u)
 void
 system_connect(Uint8 device, Uint8 ver, Uint16 dei, Uint16 deo)
 {
-	/* printf("%02x -> v%d %04x %04x\n", device, ver, dei, deo); */
 	dev_vers[device] = ver;
 	dei_mask[device] = dei;
 	deo_mask[device] = deo;
+}
+
+int
+system_version(void)
+{
+	int i;
+	printf("Varvara Emulator 1.0\n");
+	printf("Device Version Dei  Deo\n", i, dev_vers[i], dei_mask[i], deo_mask[i]);
+	for(i = 0; i < 0x10; i++)
+		if(dev_vers[i])
+			printf("%6x %7d %04x %04x\n", i, dev_vers[i], dei_mask[i], deo_mask[i]);
+	return 0;
 }
 
 /* IO */

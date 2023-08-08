@@ -31,7 +31,7 @@ Build the assembler and emulator by running the `build.sh` script. The assembler
 If you wish to build the emulator without graphics mode:
 
 ```sh
-cc src/devices/datetime.c src/devices/system.c src/devices/file.c src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
+cc src/devices/datetime.c src/devices/system.c src/devices/console.c src/devices/file.c src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
 ```
 
 ### Plan 9 
