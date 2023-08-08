@@ -208,9 +208,14 @@ emu_resize(int width, int height)
 }
 
 static void
-emu_redraw(void)
+emu_redraw(Uxn *u)
 {
-	screen_redraw();
+	if(u->dev[0x0e]) {
+		screen_change(0, 0, uxn_screen.width, uxn_screen.height);
+		screen_redraw();
+		screen_debugger(u);
+	} else
+		screen_redraw();
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(emu_renderer);
@@ -362,7 +367,7 @@ handle_events(Uxn *u)
 		if(event.type == SDL_QUIT)
 			return 0;
 		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
-			emu_redraw();
+			emu_redraw(u);
 		else if(event.type == SDL_DROPFILE) {
 			screen_resize(WIDTH, HEIGHT);
 			emu_start(u, event.drop.file, 0);
@@ -392,7 +397,7 @@ handle_events(Uxn *u)
 			else if(event.key.keysym.sym == SDLK_F1)
 				set_zoom(zoom == 3 ? 1 : zoom + 1, 1);
 			else if(event.key.keysym.sym == SDLK_F2)
-				system_inspect(u);
+				u->dev[0x0e] = !u->dev[0x0e];
 			else if(event.key.keysym.sym == SDLK_F3)
 				capture_screen();
 			else if(event.key.keysym.sym == SDLK_F4)
@@ -484,7 +489,7 @@ run(Uxn *u, char *rom)
 			next_refresh = now + frame_interval;
 			uxn_eval(u, screen_vector);
 			if(uxn_screen.x2)
-				emu_redraw();
+				emu_redraw(u);
 		}
 		if(screen_vector || uxn_screen.x2) {
 			Uint64 delay_ms = (next_refresh - now) / ms_interval;
