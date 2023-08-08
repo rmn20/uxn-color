@@ -81,8 +81,8 @@ else
 fi
 
 ${CC} ${CFLAGS} src/uxnasm.c -o bin/uxnasm
-${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
-${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
+${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/console.c src/devices/file.c src/devices/datetime.c src/devices/mouse.c src/devices/controller.c src/devices/screen.c src/devices/audio.c src/uxnemu.c ${UXNEMU_LDFLAGS} ${FILE_LDFLAGS} -o bin/uxnemu
+${CC} ${CFLAGS} src/uxn.c src/devices/system.c src/devices/console.c src/devices/file.c src/devices/datetime.c src/uxncli.c ${FILE_LDFLAGS} -o bin/uxncli
 
 if [ $install = 1 ]
 then

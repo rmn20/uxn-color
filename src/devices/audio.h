@@ -12,6 +12,11 @@ WITH REGARD TO THIS SOFTWARE.
 
 typedef signed int Sint32;
 
+
+#define AUDIO_VERSION 1
+#define AUDIO_DEIMASK 0x0000
+#define AUDIO_DEOMASK 0x0000
+
 #define SAMPLE_FREQUENCY 44100
 #define POLYPHONY 4
 

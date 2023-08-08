@@ -10,6 +10,7 @@
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #include <SDL.h>
 #include "devices/system.h"
+#include "devices/console.h"
 #include "devices/screen.h"
 #include "devices/audio.h"
 #include "devices/file.h"

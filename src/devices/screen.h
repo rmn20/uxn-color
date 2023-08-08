@@ -10,6 +10,10 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+#define SCREEN_VERSION 1
+#define SCREEN_DEIMASK 0x0000
+#define SCREEN_DEOMASK 0x0000
+
 typedef struct UxnScreen {
 	int width, height, x1, y1, x2, y2;
 	Uint32 palette[4], *pixels;

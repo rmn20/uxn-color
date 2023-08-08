@@ -96,32 +96,6 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 	}
 }
 
-/* Console */
-
-int
-console_input(Uxn *u, char c, int type)
-{
-	Uint8 *d = &u->dev[0x10];
-	d[0x2] = c;
-	d[0x7] = type;
-	return uxn_eval(u, PEEK2(d));
-}
-
-void
-console_deo(Uint8 *d, Uint8 port)
-{
-	switch(port) {
-	case 0x8:
-		fputc(d[port], stdout);
-		fflush(stdout);
-		return;
-	case 0x9:
-		fputc(d[port], stderr);
-		fflush(stderr);
-		return;
-	}
-}
-
 /* Errors */
 
 int

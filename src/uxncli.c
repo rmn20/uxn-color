@@ -3,6 +3,7 @@
 
 #include "uxn.h"
 #include "devices/system.h"
+#include "devices/console.h"
 #include "devices/file.h"
 #include "devices/datetime.h"
 
