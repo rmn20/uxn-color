@@ -9,16 +9,16 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define PAGE_PROGRAM 0x0100
-
 /* clang-format off */
 
 #define POKE2(d, v) { (d)[0] = (v) >> 8; (d)[1] = (v); }
 #define PEEK2(d) ((d)[0] << 8 | (d)[1])
-#define DEO(p, value) { u->dev[p] = value; if((deo_mask[p >> 4] >> (p & 0xf)) & 0x1) emu_deo(u, p); }
+#define DEO(p, v) { u->dev[p] = v; if((deo_mask[p >> 4] >> (p & 0xf)) & 0x1) emu_deo(u, p); }
 #define DEI(p) ((dei_mask[(p) >> 4] >> ((p) & 0xf)) & 0x1 ? emu_dei(u, (p)) : u->dev[(p)])
 
 /* clang-format on */
+
+#define PAGE_PROGRAM 0x0100
 
 typedef unsigned char Uint8;
 typedef signed char Sint8;
@@ -42,8 +42,7 @@ typedef struct Uxn {
 extern Uint8 emu_dei(Uxn *u, Uint8 addr);
 extern void emu_deo(Uxn *u, Uint8 addr);
 extern int emu_halt(Uxn *u, Uint8 instr, Uint8 err, Uint16 addr);
-extern Uint16 dei_mask[];
-extern Uint16 deo_mask[];
+extern Uint16 dev_vers[0x10], dei_mask[0x10], deo_mask[0x10];
 
 /* built-ins */
 
