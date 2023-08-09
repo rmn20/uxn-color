@@ -29,8 +29,8 @@ WITH REGARD TO THIS SOFTWARE.
 #define POP1(o)      { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
 #define POP2(o)      { if((tsp = *sp) <= 0x01) HALT(1) o = PEEK2(&s->dat[tsp - 2]); *sp = tsp - 2; }
 #define POPx(o)      { if(m2) { POP2(o) } else { POP1(o) } }
-#define POP11(o, p)  { if((tsp = *sp) <= 0x01) HALT(1) o = s->dat[--*sp]; p = s->dat[--*sp]; }
-#define POP22(o, p)  { POP2(o) POP2(p) }
+#define POP11(o, p)  { if(*sp <= 0x01) HALT(1) o = s->dat[--*sp]; p = s->dat[--*sp]; }
+#define POP22(o, p)  { if((tsp = *sp) <= 0x03) HALT(1) o = PEEK2(&s->dat[tsp - 2]); p = PEEK2(&s->dat[tsp - 4]); *sp = tsp - 4; }
 #define POPxx(o, p)  { if(m2) { POP22(o, p) } else { POP11(o, p) } }
 
 int
