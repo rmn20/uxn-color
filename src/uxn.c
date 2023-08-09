@@ -19,11 +19,15 @@ WITH REGARD TO THIS SOFTWARE.
 #define PUSH1(y)     { if(s->ptr == 0xff) HALT(2) s->dat[s->ptr++] = (y); }
 #define PUSH2(y)     { if((tsp = s->ptr) >= 0xfe) HALT(2) t = (y); POKE2(&s->dat[tsp], t); s->ptr = tsp + 2; }
 #define PUSHx(y)     { if(m2) { PUSH2(y) } else { PUSH1(y) } }
-#define PUSHxx(y, z) { if(m2) { PUSH2(y) PUSH2(z) } else { PUSH2(y << 8 | z) } }
+#define PUSH11(y, z) { if((tsp = s->ptr) >= 0xfe) HALT(2) s->dat[s->ptr++] = y; s->dat[s->ptr++] = z; }
+#define PUSH22(y, z) { PUSH2(y) PUSH2(z) }
+#define PUSHxx(y, z) { if(m2) { PUSH22(y, z) } else { PUSH11(y, z) } }
 #define POP1(o)      { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
 #define POP2(o)      { if((tsp = *sp) <= 0x01) HALT(1) o = PEEK2(&s->dat[tsp - 2]); *sp = tsp - 2; }
 #define POPx(o)      { if(m2) { POP2(o) } else { POP1(o) } }
-#define POPxx(o, p)  { if(m2) { POP2(o) POP2(p) } else { POP1(o) POP1(p) } }
+#define POP11(o, p)  { POP1(o) POP1(p) }
+#define POP22(o, p)  { POP2(o) POP2(p) }
+#define POPxx(o, p)  { if(m2) { POP22(o, p) } else { POP11(o, p) } }
 #define DEVW(p, y)   { if(m2) { DEO(p, y >> 8) DEO((p + 1), y) } else { DEO(p, y) } }
 #define DEVR(o, p)   { if(m2) { o = DEI(p) << 8 | DEI(p + 1); } else { o = DEI(p); } }
 
