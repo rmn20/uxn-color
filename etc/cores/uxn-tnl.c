@@ -17,31 +17,32 @@ WITH REGARD TO THIS SOFTWARE.
 [   L2   ][   N2   ][   T2   ] <
 */
 
-#define T s->dat[s->ptr - 1]
-#define N s->dat[s->ptr - 2]
-#define L s->dat[s->ptr - 3]
-#define T2 PEEK2(s->dat + s->ptr - 2)
-#define H2 PEEK2(s->dat + s->ptr - 3)
-#define N2 PEEK2(s->dat + s->ptr - 4)
-#define L2 PEEK2(s->dat + s->ptr - 6)
+#define T *sp
+#define N *(sp-1)
+#define L *(sp-2)
+#define T2 PEEK2((sp-1))
+#define H2 PEEK2((sp-2))
+#define N2 PEEK2((sp-3))
+#define L2 PEEK2((sp-5))
 
 #define HALT(c)    { return emu_halt(u, ins, (c), pc - 1); }
 #define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define SET(x, y)  { if(x > s->ptr) HALT(1) tmp = (x & k) + y + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
 #define PUT(o, v)  { s->dat[(s->ptr - 1 - (o))] = (v); }
-#define PUT2(o, v) { tmp = (v); POKE2(s->dat + (s->ptr - o - 2), tmp); }
+#define PUT2(o, v) { tmp = (v); POKE2(s->dat + (s->ptr - 2 - (o)), tmp); }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
 	int t, n, l, k, tmp, ins, opc;
-	Uint8 *ram = u->ram;
+	Uint8 *ram = u->ram, *sp;
 	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
 		ins = ram[pc++];
 		k = ins & 0x80 ? 0xff : 0;
 		s = ins & 0x40 ? &u->rst : &u->wst;
+		sp = s->dat + s->ptr - 1;
 		opc = !(ins & 0x1f) ? (0 - (ins >> 5)) & 0xff : ins & 0x3f;
 		switch(opc) {
 			/* IMM */
