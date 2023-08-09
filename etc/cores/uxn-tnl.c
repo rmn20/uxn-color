@@ -25,11 +25,11 @@ WITH REGARD TO THIS SOFTWARE.
 #define N2 PEEK2((sp-3))
 #define L2 PEEK2((sp-5))
 
-#define HALT(c)    { return emu_halt(u, ins, (c), pc - 1); }
+#define HALT(c)    { return emu_halt(u, ins, c, pc - 1); }
 #define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
-#define SET(x, y)  { if(x > s->ptr) HALT(1) tmp = (x & k) + y + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; }
-#define PUT(o, v)  { s->dat[(s->ptr - 1 - (o))] = (v); }
-#define PUT2(o, v) { tmp = (v); POKE2(s->dat + (s->ptr - 2 - (o)), tmp); }
+#define SET(x, y)  { if(x > s->ptr) HALT(1) tmp = (x & k) + y + s->ptr; if(tmp > 254) HALT(2) s->ptr = tmp; sp = s->dat + tmp - 1; }
+#define PUT(o, v)  { *(sp - o) = v; }
+#define PUT2(o, v) { tmp = (v); POKE2(sp - 1 - o, tmp); }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
