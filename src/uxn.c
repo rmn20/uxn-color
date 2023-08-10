@@ -29,7 +29,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define SET(x, y)  { r = s->ptr; if(x > r) HALT(1) r += (x & k) + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
 #define PUT1(o, v) { *(ptr - o) = v; }
-#define PUT2(o, v) { r = (v); POKE2(ptr - 1 - o, r); }
+#define PUT2(o, v) { r = (v); *(ptr - o) = r; *(ptr - o - 1) = r >> 8; }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
