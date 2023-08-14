@@ -279,6 +279,21 @@ emu_restart(Uxn *u)
 		emu_start(u, rom_path, 0);
 }
 
+static int
+emu_restart_soft(Uxn *u)
+{
+	int i;
+	for(i = 0x100; i < 0x10000; i++)
+		u->ram[i] = 0;
+	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	if(!system_load(u, rom_path))
+		return system_error("Boot", "Failed to load rom.");
+	if(!uxn_eval(u, PAGE_PROGRAM))
+		return system_error("Boot", "Failed to eval rom.");
+	return 1;
+}
+
 static void
 capture_screen(void)
 {
@@ -402,6 +417,8 @@ handle_events(Uxn *u)
 				capture_screen();
 			else if(event.key.keysym.sym == SDLK_F4)
 				emu_restart(u);
+			else if(event.key.keysym.sym == SDLK_F5)
+				emu_restart_soft(u);
 			ksym = event.key.keysym.sym;
 			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 				return 1;

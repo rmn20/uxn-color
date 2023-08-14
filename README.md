@@ -88,7 +88,6 @@ uxnemu orca.rom | shim
 
 ## GUI Emulator Options
 
-- `-1x` Force small scale
 - `-2x` Force medium scale
 - `-3x` Force large scale
 
@@ -97,7 +96,8 @@ uxnemu orca.rom | shim
 - `F1` toggle zoom
 - `F2` toggle debug
 - `F3` capture screen
-- `F4` load launcher.rom
+- `F4` reboot
+- `F5` soft reboot
 
 ### GUI Buttons
 
