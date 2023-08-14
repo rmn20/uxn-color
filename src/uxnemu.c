@@ -285,6 +285,10 @@ emu_restart_soft(Uxn *u)
 	int i;
 	for(i = 0x100; i < 0x10000; i++)
 		u->ram[i] = 0;
+	for(i = 0x0; i < 0x100; i++)
+		u->dev[i] = 0;
+	u->wst.ptr = 0;
+	u->rst.ptr = 0;
 	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	if(!system_load(u, rom_path))
