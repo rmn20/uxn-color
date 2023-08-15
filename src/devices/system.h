@@ -20,4 +20,5 @@ int system_version(char *emulator, char *date);
 int system_load(Uxn *u, char *filename);
 void system_inspect(Uxn *u);
 int system_error(char *msg, const char *err);
+int system_boot(Uxn *u, Uint8 *ram);
 void system_deo(Uxn *u, Uint8 *d, Uint8 port);

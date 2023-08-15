@@ -258,7 +258,7 @@ static int
 emu_start(Uxn *u, char *rom, int queue)
 {
 	free(u->ram);
-	if(!uxn_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
+	if(!system_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return system_error("Boot", "Failed to start uxn.");
 	if(!system_load(u, rom))
 		return system_error("Boot", "Failed to load rom.");

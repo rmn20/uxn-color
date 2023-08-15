@@ -94,6 +94,13 @@ system_version(char *name, char *date)
 	return 0;
 }
 
+int
+system_boot(Uxn *u, Uint8 *ram)
+{
+	u->ram = ram;
+	return 1;
+}
+
 /* IO */
 
 void
@@ -102,13 +109,6 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 	switch(port) {
 	case 0x3:
 		system_cmd(u->ram, PEEK2(d + 2));
-		break;
-	case 0x5:
-		if(PEEK2(d + 4)) {
-			Uxn friend;
-			uxn_boot(&friend, u->ram);
-			uxn_eval(&friend, PEEK2(d + 4));
-		}
 		break;
 	case 0xe:
 		system_inspect(u);

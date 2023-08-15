@@ -58,7 +58,7 @@ main(int argc, char **argv)
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
 		return system_version("Uxncli - Console Varvara Emulator", "9 Aug 2023");
 	/* Continue.. */
-	if(!uxn_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
+	if(!system_boot(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
 		return system_error("Boot", "Failed");
 	/* Load rom */
 	if(!system_load(&u, argv[i++]))
