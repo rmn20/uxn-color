@@ -549,11 +549,7 @@ main(int argc, char **argv)
 	if(!emu_start(&u, rom_path))
 		return system_error("Start", "Failed");
 	/* read arguments */
-	for(; i < argc; i++) {
-		char *p = argv[i];
-		while(*p) console_input(&u, *p++, CONSOLE_ARG);
-		console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
-	}
+	console_listen(&u, i, argc, argv);
 	/* start rom */
 	run(&u, rom_path);
 	/* finished */

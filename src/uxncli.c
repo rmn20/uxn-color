@@ -62,11 +62,7 @@ main(int argc, char **argv)
 	/* Game Loop */
 	u.dev[0x17] = argc - i;
 	if(uxn_eval(&u, PAGE_PROGRAM)) {
-		for(; i < argc; i++) {
-			char *p = argv[i];
-			while(*p) console_input(&u, *p++, CONSOLE_ARG);
-			console_input(&u, '\n', i == argc - 1 ? CONSOLE_END : CONSOLE_EOA);
-		}
+		console_listen(&u, i, argc, argv);
 		while(!u.dev[0x0f]) {
 			int c = fgetc(stdin);
 			if(c == EOF) break;
