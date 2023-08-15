@@ -95,9 +95,11 @@ system_version(char *name, char *date)
 }
 
 int
-system_boot(Uxn *u, Uint8 *ram)
+system_init(Uxn *u, Uint8 *ram, char *rom)
 {
 	u->ram = ram;
+	if(!system_load(u, rom))
+		return system_error("Init", "Failed to load rom.");
 	return 1;
 }
 

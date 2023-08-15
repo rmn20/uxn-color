@@ -257,11 +257,6 @@ emu_init(void)
 static int
 emu_start(Uxn *u, char *rom, int queue)
 {
-	free(u->ram);
-	if(!system_boot(u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8))))
-		return system_error("Boot", "Failed to start uxn.");
-	if(!system_load(u, rom))
-		return system_error("Boot", "Failed to load rom.");
 	u->dev[0x17] = queue;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	screen_resize(WIDTH, HEIGHT);
@@ -545,11 +540,12 @@ main(int argc, char **argv)
 		return system_version("Uxnemu - Graphical Varvara Emulator", "10 Aug 2023");
 	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0', 0);
-	/* Continue.. */
-	if(!emu_init())
-		return system_error("Init", "Failed to initialize emulator.");
-	/* load rom */
 	rom_path = argv[i++];
+	if(!emu_init())
+		return system_error("Init", "Failed to initialize varvara.");
+	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), rom_path))
+		return system_error("Init", "Failed to initialize uxn.");
+	/* load rom */
 	if(!emu_start(&u, rom_path, argc - i))
 		return system_error("Start", "Failed");
 	/* read arguments */
