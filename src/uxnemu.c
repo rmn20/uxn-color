@@ -255,9 +255,8 @@ emu_init(void)
 }
 
 static int
-emu_start(Uxn *u, char *rom, int queue)
+emu_start(Uxn *u, char *rom)
 {
-	u->dev[0x17] = queue;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	screen_resize(WIDTH, HEIGHT);
 	if(!uxn_eval(u, PAGE_PROGRAM))
@@ -270,8 +269,8 @@ static void
 emu_restart(Uxn *u)
 {
 	screen_resize(WIDTH, HEIGHT);
-	if(!emu_start(u, "launcher.rom", 0))
-		emu_start(u, rom_path, 0);
+	if(!emu_start(u, "launcher.rom"))
+		emu_start(u, rom_path);
 }
 
 static int
@@ -384,7 +383,7 @@ handle_events(Uxn *u)
 			emu_redraw(u);
 		else if(event.type == SDL_DROPFILE) {
 			screen_resize(WIDTH, HEIGHT);
-			emu_start(u, event.drop.file, 0);
+			emu_start(u, event.drop.file);
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
@@ -545,8 +544,9 @@ main(int argc, char **argv)
 		return system_error("Init", "Failed to initialize varvara.");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), rom_path))
 		return system_error("Init", "Failed to initialize uxn.");
+	u.dev[0x17] = argc - i;
 	/* load rom */
-	if(!emu_start(&u, rom_path, argc - i))
+	if(!emu_start(&u, rom_path))
 		return system_error("Start", "Failed");
 	/* read arguments */
 	for(; i < argc; i++) {
