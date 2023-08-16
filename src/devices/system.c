@@ -48,19 +48,6 @@ system_print(Stack *s, char *name)
 	fprintf(stderr, "\n");
 }
 
-static void
-system_cmd(Uint8 *ram, Uint16 addr)
-{
-	if(ram[addr] == 0x1) {
-		Uint16 i, length = PEEK2(ram + addr + 1);
-		Uint16 a_page = PEEK2(ram + addr + 1 + 2), a_addr = PEEK2(ram + addr + 1 + 4);
-		Uint16 b_page = PEEK2(ram + addr + 1 + 6), b_addr = PEEK2(ram + addr + 1 + 8);
-		int src = (a_page % RAM_PAGES) * 0x10000, dst = (b_page % RAM_PAGES) * 0x10000;
-		for(i = 0; i < length; i++)
-			ram[dst + (Uint16)(b_addr + i)] = ram[src + (Uint16)(a_addr + i)];
-	}
-}
-
 int
 system_error(char *msg, const char *err)
 {
@@ -129,7 +116,16 @@ system_deo(Uxn *u, Uint8 *d, Uint8 port)
 {
 	switch(port) {
 	case 0x3:
-		system_cmd(u->ram, PEEK2(d + 2));
+		Uint8 *ram = u->ram;
+		Uint16 addr = PEEK2(d + 2);
+		if(ram[addr] == 0x1) {
+			Uint16 i, length = PEEK2(ram + addr + 1);
+			Uint16 a_page = PEEK2(ram + addr + 1 + 2), a_addr = PEEK2(ram + addr + 1 + 4);
+			Uint16 b_page = PEEK2(ram + addr + 1 + 6), b_addr = PEEK2(ram + addr + 1 + 8);
+			int src = (a_page % RAM_PAGES) * 0x10000, dst = (b_page % RAM_PAGES) * 0x10000;
+			for(i = 0; i < length; i++)
+				ram[dst + (Uint16)(b_addr + i)] = ram[src + (Uint16)(a_addr + i)];
+		}
 		break;
 	case 0xe:
 		system_inspect(u);
