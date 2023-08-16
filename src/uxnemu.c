@@ -251,6 +251,8 @@ emu_init(void)
 	SDL_SetRenderDrawColor(emu_renderer, 0x00, 0x00, 0x00, 0xff);
 	ms_interval = SDL_GetPerformanceFrequency() / 1000;
 	deadline_interval = ms_interval * TIMEOUT_MS;
+	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
+	screen_resize(WIDTH, HEIGHT);
 	return 1;
 }
 
@@ -269,6 +271,7 @@ static void
 emu_restart(Uxn *u)
 {
 	screen_resize(WIDTH, HEIGHT);
+	SDL_SetWindowTitle(emu_window, rom_path);
 	if(!emu_start(u, "launcher.rom"))
 		emu_start(u, rom_path);
 }
@@ -476,7 +479,7 @@ handle_events(Uxn *u)
 }
 
 static int
-run(Uxn *u, char *rom)
+emu_run(Uxn *u, char *rom)
 {
 	Uint64 next_refresh = 0;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
@@ -515,6 +518,19 @@ run(Uxn *u, char *rom)
 }
 
 int
+emu_end(Uxn *u)
+{
+#ifdef _WIN32
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
+#elif !defined(__APPLE__)
+	close(0); /* make stdin thread exit */
+#endif
+	SDL_Quit();
+	return u->dev[0x0f] & 0x7f;
+}
+
+int
 main(int argc, char **argv)
 {
 	Uxn u = {0};
@@ -544,21 +560,11 @@ main(int argc, char **argv)
 		return system_error("Init", "Failed to initialize varvara.");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), rom_path))
 		return system_error("Init", "Failed to initialize uxn.");
+	/* Game Loop */
 	u.dev[0x17] = argc - i;
-	/* load rom */
-	if(!emu_start(&u, rom_path))
-		return system_error("Start", "Failed");
-	/* read arguments */
-	console_listen(&u, i, argc, argv);
-	/* start rom */
-	run(&u, rom_path);
-	/* finished */
-#ifdef _WIN32
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
-#elif !defined(__APPLE__)
-	close(0); /* make stdin thread exit */
-#endif
-	SDL_Quit();
-	return 0;
+	if(uxn_eval(&u, PAGE_PROGRAM)) {
+		console_listen(&u, i, argc, argv);
+		emu_run(&u, rom_path);
+	}
+	return emu_end(&u);
 }

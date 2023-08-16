@@ -42,6 +42,13 @@ emu_deo(Uxn *u, Uint8 addr)
 }
 
 int
+emu_end(Uxn *u)
+{
+	free(u->ram);
+	return u->dev[0x0f] & 0x7f;
+}
+
+int
 main(int argc, char **argv)
 {
 	Uxn u;
@@ -69,6 +76,5 @@ main(int argc, char **argv)
 			console_input(&u, (Uint8)c, CONSOLE_STD);
 		}
 	}
-	free(u.ram);
-	return u.dev[0x0f] & 0x7f;
+	return emu_end(&u);
 }
