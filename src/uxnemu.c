@@ -58,7 +58,6 @@ static SDL_Thread *stdin_thread;
 static int window_created = 0;
 static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
-static char *rom_path;
 
 Uint16 dev_vers[0x10], dei_mask[0x10], deo_mask[0x10];
 
@@ -271,9 +270,9 @@ static void
 emu_restart(Uxn *u)
 {
 	screen_resize(WIDTH, HEIGHT);
-	SDL_SetWindowTitle(emu_window, rom_path);
+	SDL_SetWindowTitle(emu_window, boot_rom);
 	if(!emu_start(u, "launcher.rom"))
-		emu_start(u, rom_path);
+		emu_start(u, boot_rom);
 }
 
 static int
@@ -288,7 +287,7 @@ emu_restart_soft(Uxn *u)
 	u->rst.ptr = 0;
 	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	if(!system_load(u, rom_path))
+	if(!system_load(u, boot_rom))
 		return system_error("Boot", "Failed to load rom.");
 	if(!uxn_eval(u, PAGE_PROGRAM))
 		return system_error("Boot", "Failed to eval rom.");
@@ -552,19 +551,18 @@ main(int argc, char **argv)
 	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxnemu - Graphical Varvara Emulator", "10 Aug 2023");
+		return system_version("Uxnemu - Graphical Varvara Emulator", "15 Aug 2023");
 	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0', 0);
-	rom_path = argv[i++];
 	if(!emu_init())
 		return system_error("Init", "Failed to initialize varvara.");
-	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), rom_path))
+	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
 		return system_error("Init", "Failed to initialize uxn.");
 	/* Game Loop */
 	u.dev[0x17] = argc - i;
 	if(uxn_eval(&u, PAGE_PROGRAM)) {
 		console_listen(&u, i, argc, argv);
-		emu_run(&u, rom_path);
+		emu_run(&u, boot_rom);
 	}
 	return emu_end(&u);
 }

@@ -15,6 +15,8 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+char *boot_rom;
+
 static const char *errors[] = {
 	"underflow",
 	"overflow",
@@ -100,6 +102,7 @@ system_init(Uxn *u, Uint8 *ram, char *rom)
 	u->ram = ram;
 	if(!system_load(u, rom))
 		return system_error("Init", "Failed to load rom.");
+	boot_rom = rom;
 	return 1;
 }
 
