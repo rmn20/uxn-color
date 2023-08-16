@@ -517,7 +517,7 @@ emu_run(Uxn *u, char *rom)
 	}
 }
 
-int
+static int
 emu_end(Uxn *u)
 {
 #ifdef _WIN32

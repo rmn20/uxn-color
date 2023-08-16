@@ -41,7 +41,17 @@ emu_deo(Uxn *u, Uint8 addr)
 	}
 }
 
-int
+static void
+emu_run(Uxn *u)
+{
+	while(!u->dev[0x0f]) {
+		int c = fgetc(stdin);
+		if(c == EOF) break;
+		console_input(u, (Uint8)c, CONSOLE_STD);
+	}
+}
+
+static int
 emu_end(Uxn *u)
 {
 	free(u->ram);
@@ -70,11 +80,7 @@ main(int argc, char **argv)
 	u.dev[0x17] = argc - i;
 	if(uxn_eval(&u, PAGE_PROGRAM)) {
 		console_listen(&u, i, argc, argv);
-		while(!u.dev[0x0f]) {
-			int c = fgetc(stdin);
-			if(c == EOF) break;
-			console_input(&u, (Uint8)c, CONSOLE_STD);
-		}
+		emu_run(&u);
 	}
 	return emu_end(&u);
 }
