@@ -255,43 +255,14 @@ emu_init(void)
 	return 1;
 }
 
-static int
-emu_start(Uxn *u, char *rom)
-{
-	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
-	screen_resize(WIDTH, HEIGHT);
-	if(!uxn_eval(u, PAGE_PROGRAM))
-		return system_error("Boot", "Failed to eval rom.");
-	SDL_SetWindowTitle(emu_window, rom);
-	return 1;
-}
-
 static void
-emu_restart(Uxn *u)
+emu_restart(Uxn *u, char *rom, int soft)
 {
 	screen_resize(WIDTH, HEIGHT);
-	SDL_SetWindowTitle(emu_window, boot_rom);
-	if(!emu_start(u, "launcher.rom"))
-		emu_start(u, boot_rom);
-}
-
-static int
-emu_restart_soft(Uxn *u)
-{
-	int i;
-	for(i = 0x100; i < 0x10000; i++)
-		u->ram[i] = 0;
-	for(i = 0x0; i < 0x100; i++)
-		u->dev[i] = 0;
-	u->wst.ptr = 0;
-	u->rst.ptr = 0;
 	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	if(!system_load(u, boot_rom))
-		return system_error("Boot", "Failed to load rom.");
-	if(!uxn_eval(u, PAGE_PROGRAM))
-		return system_error("Boot", "Failed to eval rom.");
-	return 1;
+	system_reboot(u, rom, soft);
+	SDL_SetWindowTitle(emu_window, boot_rom);
 }
 
 static void
@@ -384,8 +355,7 @@ handle_events(Uxn *u)
 		else if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_EXPOSED)
 			emu_redraw(u);
 		else if(event.type == SDL_DROPFILE) {
-			screen_resize(WIDTH, HEIGHT);
-			emu_start(u, event.drop.file);
+			emu_restart(u, event.drop.file, 0);
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
@@ -416,9 +386,9 @@ handle_events(Uxn *u)
 			else if(event.key.keysym.sym == SDLK_F3)
 				capture_screen();
 			else if(event.key.keysym.sym == SDLK_F4)
-				emu_restart(u);
+				emu_restart(u, boot_rom, 0);
 			else if(event.key.keysym.sym == SDLK_F5)
-				emu_restart_soft(u);
+				emu_restart(u, boot_rom, 1);
 			ksym = event.key.keysym.sym;
 			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 				return 1;
