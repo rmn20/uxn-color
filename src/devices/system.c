@@ -22,6 +22,20 @@ static const char *errors[] = {
 	"overflow",
 	"division by zero"};
 
+static int
+system_load(Uxn *u, char *filename)
+{
+	int l, i = 0;
+	FILE *f = fopen(filename, "rb");
+	if(!f)
+		return 0;
+	l = fread(&u->ram[PAGE_PROGRAM], 0x10000 - PAGE_PROGRAM, 1, f);
+	while(l && ++i < RAM_PAGES)
+		l = fread(u->ram + 0x10000 * i, 0x10000, 1, f);
+	fclose(f);
+	return 1;
+}
+
 static void
 system_print(Stack *s, char *name)
 {
@@ -53,20 +67,6 @@ system_error(char *msg, const char *err)
 	fprintf(stderr, "%s: %s\n", msg, err);
 	fflush(stderr);
 	return 0;
-}
-
-int
-system_load(Uxn *u, char *filename)
-{
-	int l, i = 0;
-	FILE *f = fopen(filename, "rb");
-	if(!f)
-		return 0;
-	l = fread(&u->ram[PAGE_PROGRAM], 0x10000 - PAGE_PROGRAM, 1, f);
-	while(l && ++i < RAM_PAGES)
-		l = fread(u->ram + 0x10000 * i, 0x10000, 1, f);
-	fclose(f);
-	return 1;
 }
 
 void
