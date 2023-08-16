@@ -209,12 +209,7 @@ emu_resize(int width, int height)
 static void
 emu_redraw(Uxn *u)
 {
-	if(u->dev[0x0e]) {
-		screen_change(0, 0, uxn_screen.width, uxn_screen.height);
-		screen_redraw();
-		screen_debugger(u);
-	} else
-		screen_redraw();
+	screen_redraw(u);
 	if(SDL_UpdateTexture(emu_texture, NULL, uxn_screen.pixels, uxn_screen.width * sizeof(Uint32)) != 0)
 		system_error("SDL_UpdateTexture", SDL_GetError());
 	SDL_RenderClear(emu_renderer);
