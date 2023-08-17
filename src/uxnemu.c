@@ -502,21 +502,21 @@ main(int argc, char **argv)
 	if(i == argc)
 		return system_error("usage", "uxnemu [-v][-2x][-3x] file.rom [args...]");
 	/* Connect Varvara */
-	system_connect(0x0, SYSTEM_VERSION, SYSTEM_DEIMASK, SYSTEM_DEOMASK);
-	system_connect(0x1, CONSOLE_VERSION, CONSOLE_DEIMASK, CONSOLE_DEOMASK);
-	system_connect(0x2, SCREEN_VERSION, SCREEN_DEIMASK, SCREEN_DEOMASK);
-	system_connect(0x3, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
-	system_connect(0x4, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
-	system_connect(0x5, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
-	system_connect(0x6, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
-	system_connect(0x8, CONTROL_VERSION, CONTROL_DEIMASK, CONTROL_DEOMASK);
-	system_connect(0x9, MOUSE_VERSION, MOUSE_DEIMASK, MOUSE_DEOMASK);
-	system_connect(0xa, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
-	system_connect(0xb, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
-	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
+	system_connect(&u, 0x0, SYSTEM_VERSION, SYSTEM_DEIMASK, SYSTEM_DEOMASK);
+	system_connect(&u, 0x1, CONSOLE_VERSION, CONSOLE_DEIMASK, CONSOLE_DEOMASK);
+	system_connect(&u, 0x2, SCREEN_VERSION, SCREEN_DEIMASK, SCREEN_DEOMASK);
+	system_connect(&u, 0x3, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
+	system_connect(&u, 0x4, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
+	system_connect(&u, 0x5, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
+	system_connect(&u, 0x6, AUDIO_VERSION, AUDIO_DEIMASK, AUDIO_DEOMASK);
+	system_connect(&u, 0x8, CONTROL_VERSION, CONTROL_DEIMASK, CONTROL_DEOMASK);
+	system_connect(&u, 0x9, MOUSE_VERSION, MOUSE_DEIMASK, MOUSE_DEOMASK);
+	system_connect(&u, 0xa, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
+	system_connect(&u, 0xb, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
+	system_connect(&u, 0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxnemu - Graphical Varvara Emulator", "15 Aug 2023");
+		return system_version(&u, "Uxnemu - Graphical Varvara Emulator", "17 Aug 2023");
 	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0', 0);
 	if(!emu_init())
