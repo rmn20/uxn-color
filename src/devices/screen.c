@@ -120,7 +120,7 @@ screen_resize(Uint16 width, Uint16 height)
 {
 	Uint8 *bg, *fg;
 	Uint32 *pixels = NULL;
-	if(width < 0x8 || height < 0x8 || width >= 0x400 || height >= 0x400)
+	if(width < 0x8 || height < 0x8 || width >= 0x800 || height >= 0x800)
 		return;
 	if(uxn_screen.width == width && uxn_screen.height == height)
 		return;
