@@ -91,7 +91,8 @@ system_version(char *name, char *date)
 }
 
 void
-system_boot(Uxn *u, int soft){
+system_boot(Uxn *u, int soft)
+{
 	int i;
 	for(i = 0x100 * soft; i < 0x10000; i++)
 		u->ram[i] = 0;
