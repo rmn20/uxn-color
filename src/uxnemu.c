@@ -516,7 +516,7 @@ main(int argc, char **argv)
 	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxnemu - Graphical Varvara Emulator", "19 Aug 2023");
+		return system_version("Uxnemu - Graphical Varvara Emulator", "29 Aug 2023");
 	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
 		set_zoom(argv[i++][1] - '0', 0);
 	if(!emu_init())

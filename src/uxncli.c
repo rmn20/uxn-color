@@ -72,7 +72,7 @@ main(int argc, char **argv)
 	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxncli - Console Varvara Emulator", "19 Aug 2023");
+		return system_version("Uxncli - Console Varvara Emulator", "29 Aug 2023");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
 		return system_error("Init", "Failed to initialize uxn.");
 	/* Game Loop */
