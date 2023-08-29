@@ -28,8 +28,12 @@ WITH REGARD TO THIS SOFTWARE.
 #define HALT(c)   { return emu_halt(u, ins, c, pc - 1); }
 #define FLIP      { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define SET(x, y) { r = s->ptr; if(x > r) HALT(1) r += (x & k) + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
-#define PUT1(v)   { *(ptr--) = v; }
-#define PUT2(v)   { r = (v); *(ptr--) = r; *(ptr--) = r >> 8; }
+#define PUT1(a)         { *(ptr) = a; }
+#define PUT1x2(a, b)    { *(ptr) = a; *(ptr - 1) = b; }
+#define PUT1x3(a, b, c) { *(ptr) = a; *(ptr - 1) = b; *(ptr - 2) = c; }
+#define PUT2(a)         { POKE2(ptr - 1, a) }
+#define PUT2x2(a, b)    { POKE2(ptr - 1, a) POKE2(ptr - 3, b) }
+#define PUT2x3(a, b, c) { POKE2(ptr - 1, a) POKE2(ptr - 3, b) POKE2(ptr - 5, c) }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -42,14 +46,14 @@ uxn_eval(Uxn *u, Uint16 pc)
 		int k = ins & 0x80 ? 0xff : 0;
 		Stack *s = ins & 0x40 ? &u->rst : &u->wst;
 		Uint8 *ptr = s->dat + s->ptr - 1;
-		switch(ins & 0x1f ? ins & 0x3f : (0 - (ins >> 5))) {
+		switch(ins & 0x1f ? ins & 0x3f : ins << 4) {
 			/* IMM */
-			case -0:   /* BRK  */                           return 1;
-			case -1:   /* JCI  */                           if(!s->dat[--s->ptr]) { pc += 2; break; } /* else fallthrough */
-			case -2:   /* JMI  */                           pc += PEEK2(ram + pc) + 2; break;
-			case -3:   /* JSI  */                 SET(0, 2) PUT2(pc + 2) pc += PEEK2(ram + pc) + 2; break;
-			case -4:   /* LITr */ case -6:        SET(0, 1) PUT1(ram[pc++]) break;
-			case -5:   /* LIT2r*/ case -7:        SET(0, 2) PUT2(PEEK2(ram + pc)) pc += 2; break;
+			case 0x000: /* BRK  */                          return 1;
+			case 0x200: /* JCI  */                          if(!s->dat[--s->ptr]) { pc += 2; break; } /* else fallthrough */
+			case 0x400: /* JMI  */                          pc += PEEK2(ram + pc) + 2; break;
+			case 0x600: /* JSI  */                SET(0, 2) PUT2(pc + 2) pc += PEEK2(ram + pc) + 2; break;
+			case 0x800: /* LIT  */ case 0xc00:    SET(0, 1) PUT1(ram[pc++]) break;
+			case 0xa00: /* LIT2 */ case 0xe00:    SET(0, 2) PUT2(PEEK2(ram + pc)) pc += 2; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) PUT1(t + 1) break;
 			case 0x21: /* INC2 */ t=T2;           SET(2, 0) PUT2(t + 1) break;
@@ -57,14 +61,14 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x22: /* POP2 */                 SET(2,-2) break;
 			case 0x03: /* NIP  */ t=T;            SET(2,-1) PUT1(t) break;
 			case 0x23: /* NIP2 */ t=T2;           SET(4,-2) PUT2(t) break;
-			case 0x04: /* SWP  */ t=T;n=N;        SET(2, 0) PUT1(n) PUT1(t) break;
-			case 0x24: /* SWP2 */ t=T2;n=N2;      SET(4, 0) PUT2(n) PUT2(t) break;
-			case 0x05: /* ROT  */ t=T;n=N;l=L;    SET(3, 0) PUT1(l) PUT1(t) PUT1(n) break;
-			case 0x25: /* ROT2 */ t=T2;n=N2;l=L2; SET(6, 0) PUT2(l) PUT2(t) PUT2(n) break;
-			case 0x06: /* DUP  */ t=T;            SET(1, 1) PUT1(t) PUT1(t) break;
-			case 0x26: /* DUP2 */ t=T2;           SET(2, 2) PUT2(t) PUT2(t) break;
-			case 0x07: /* OVR  */ t=T;n=N;        SET(2, 1) PUT1(n) PUT1(t) PUT1(n) break;
-			case 0x27: /* OVR2 */ t=T2;n=N2;      SET(4, 2) PUT2(n) PUT2(t) PUT2(n) break;
+			case 0x04: /* SWP  */ t=T;n=N;        SET(2, 0) PUT1x2(n, t) break;
+			case 0x24: /* SWP2 */ t=T2;n=N2;      SET(4, 0) PUT2x2(n, t) break;
+			case 0x05: /* ROT  */ t=T;n=N;l=L;    SET(3, 0) PUT1x3(l, t, n) break;
+			case 0x25: /* ROT2 */ t=T2;n=N2;l=L2; SET(6, 0) PUT2x3(l, t, n) break;
+			case 0x06: /* DUP  */ t=T;            SET(1, 1) PUT1x2(t, t) break;
+			case 0x26: /* DUP2 */ t=T2;           SET(2, 2) PUT2x2(t, t) break;
+			case 0x07: /* OVR  */ t=T;n=N;        SET(2, 1) PUT1x3(n, t, n) break;
+			case 0x27: /* OVR2 */ t=T2;n=N2;      SET(4, 2) PUT2x3(n, t, n) break;
 			case 0x08: /* EQU  */ t=T;n=N;        SET(2,-1) PUT1(n == t) break;
 			case 0x28: /* EQU2 */ t=T2;n=N2;      SET(4,-3) PUT1(n == t) break;
 			case 0x09: /* NEQ  */ t=T;n=N;        SET(2,-1) PUT1(n != t) break;
@@ -94,7 +98,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
 			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) POKE2(ram + t, n) break;
 			case 0x16: /* DEI  */ t=T;            SET(1, 0) PUT1(DEI(t)) break;
-			case 0x36: /* DEI2 */ t=T;            SET(1, 1) PUT1(DEI(t + 1)) PUT1(DEI(t)) break;
+			case 0x36: /* DEI2 */ t=T;            SET(1, 1) PUT1x2(DEI(t + 1), DEI(t)) break;
 			case 0x17: /* DEO  */ t=T;n=N;        SET(2,-2) DEO(t, n) break;
 			case 0x37: /* DEO2 */ t=T;n=N;l=L;    SET(3,-3) DEO(t, l) DEO((t + 1), n) break;
 			case 0x18: /* ADD  */ t=T;n=N;        SET(2,-1) PUT1(n + t) break;
