@@ -31,9 +31,9 @@ WITH REGARD TO THIS SOFTWARE.
 #define N2_(v) { r = (v); L = r; X = r >> 8; }
 #define L2_(v) { r = (v); Y = r; Z = r >> 8; }
 
-#define HALT(c)         { return emu_halt(u, ins, c, pc - 1); }
-#define FLIP            { s = ins & 0x40 ? &u->wst : &u->rst; }
-#define SET(x, y)       { r = s->ptr; if(x > r) HALT(1) r += (x & k) + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
+#define HALT(c)   { return emu_halt(u, ins, c, pc - 1); }
+#define FLIP      { s = ins & 0x40 ? &u->wst : &u->rst; }
+#define SET(x, y) { r = s->ptr; if(x > r) HALT(1) r += (x & k) + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -50,10 +50,10 @@ uxn_eval(Uxn *u, Uint16 pc)
 			/* IMM */
 			case 0x000: /* BRK  */                          return 1;
 			case 0x200: /* JCI  */ t=T;           SET(0,-1) if(!t) { pc += 2; break; } /* else fallthrough */
-			case 0x400: /* JMI  */                          pc += PEEK2(ram + pc) + 2; break;
-			case 0x600: /* JSI  */                SET(0, 2) T2_(pc + 2) pc += PEEK2(ram + pc) + 2; break;
+			case 0x400: /* JMI  */                          rr = ram + pc; pc += PEEK2(rr) + 2; break;
+			case 0x600: /* JSI  */                SET(0, 2) T2_(pc + 2); rr = ram + pc; pc += PEEK2(rr) + 2; break;
 			case 0x800: /* LIT  */ case 0xc00:    SET(0, 1) T = ram[pc++]; break;
-			case 0xa00: /* LIT2 */ case 0xe00:    SET(0, 2) T2_(PEEK2(ram + pc)) pc += 2; break;
+			case 0xa00: /* LIT2 */ case 0xe00:    SET(0, 2) rr = ram + pc; T2_(PEEK2(rr)) pc += 2; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) T = t + 1; break;
 			case 0x21: /* INC2 */ t=T2;           SET(2, 0) T2_(t + 1) break;
@@ -86,15 +86,15 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0f: /* STH  */ t=T;            SET(1,-1) FLIP SET(0,1) T = t; break;
 			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) FLIP SET(0,2) T2_(t) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) T = ram[t]; break;
-			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) T2_(PEEK2(ram + t)) break;
+			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) rr = ram + t; T2_(PEEK2(rr)) break;
 			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
 			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) rr = ram + t; POKE2(rr, n) break;
 			case 0x12: /* LDR  */ t=T;            SET(1, 0) T = ram[pc + (Sint8)t]; break;
-			case 0x32: /* LDR2 */ t=T;            SET(1, 1) T2_(PEEK2(ram + pc + (Sint8)t)) break;
+			case 0x32: /* LDR2 */ t=T;            SET(1, 1) rr = ram + pc + (Sint8)t; T2_(PEEK2(rr)) break;
 			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) ram[pc + (Sint8)t] = n; break;
 			case 0x33: /* STR2 */ t=T;n=H2;       SET(3,-3) rr = ram + pc + (Sint8)t; POKE2(rr, n) break;
 			case 0x14: /* LDA  */ t=T2;           SET(2,-1) T = ram[t]; break;
-			case 0x34: /* LDA2 */ t=T2;           SET(2, 0) T2_(PEEK2(ram + t)) break;
+			case 0x34: /* LDA2 */ t=T2;           SET(2, 0) rr = ram + t; T2_(PEEK2(rr)) break;
 			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
 			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) rr = ram + t; POKE2(rr, n) break;
 			case 0x16: /* DEI  */ t=T;            SET(1, 0) T = DEI(t); break;
