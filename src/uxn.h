@@ -13,6 +13,7 @@ WITH REGARD TO THIS SOFTWARE.
 
 #define PEEK2(d) (*(d) << 8 | (d)[1])
 #define POKE2(d, v) { *(d) = (v) >> 8; (d)[1] = (v); }
+#define POKE2c(cache, d, v) { cache = (d); POKE2(cache, v) }
 #define DEI(p) (dei_masks[p] ? emu_dei(u, (p)) : u->dev[(p)])
 #define DEO(p, v) { u->dev[p] = v; if(deo_masks[p]) emu_deo(u, p); }
 
