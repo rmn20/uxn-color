@@ -69,10 +69,15 @@ clamp(int v, int min, int max)
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
+	Uint8 *addr;
+	Uint16 vu;
 	if(!audio_id) return d[port];
 	switch(port) {
 	case 0x4: return audio_get_vu(instance);
-	case 0x2: POKE2(d + 0x2, audio_get_position(instance)); /* fall through */
+	case 0x2:
+		addr = d + 2;
+		vu = audio_get_position(instance);
+		POKE2(addr, vu); /* fall through */
 	default: return d[port];
 	}
 }
@@ -353,8 +358,10 @@ handle_events(Uxn *u)
 			SDL_free(event.drop.file);
 		}
 		/* Audio */
-		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
-			uxn_eval(u, PEEK2(&u->dev[0x30 + 0x10 * (event.type - audio0_event)]));
+		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
+			Uint8 *addr = &u->dev[0x30 + 0x10 * (event.type - audio0_event)];
+			uxn_eval(u, PEEK2(addr));
+		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
 			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
@@ -446,6 +453,7 @@ emu_run(Uxn *u, char *rom)
 {
 	Uint64 next_refresh = 0;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
+	Uint8 *vector_addr = &u->dev[0x20];
 	window_created = 1;
 	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if(emu_window == NULL)
@@ -464,7 +472,7 @@ emu_run(Uxn *u, char *rom)
 		exec_deadline = now + deadline_interval;
 		if(!handle_events(u))
 			return 0;
-		screen_vector = PEEK2(&u->dev[0x20]);
+		screen_vector = PEEK2(vector_addr);
 		if(now >= next_refresh) {
 			now = SDL_GetPerformanceCounter();
 			next_refresh = now + frame_interval;
