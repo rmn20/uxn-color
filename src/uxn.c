@@ -34,6 +34,7 @@ WITH REGARD TO THIS SOFTWARE.
 #define HALT(c)   { return emu_halt(u, ins, c, pc - 1); }
 #define FLIP      { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define SET(x, y) { r = s->ptr; if(x > r) HALT(1) r += (x & k) + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
+#define SHIFT(y)  { r = s->ptr + y; if(r > 254) HALT(2) ptr = s->dat + r - 1; s->ptr = r; }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
@@ -49,11 +50,11 @@ uxn_eval(Uxn *u, Uint16 pc)
 		switch(ins & 0x1f ? ins & 0x3f : ins << 4) {
 			/* IMM */
 			case 0x000: /* BRK  */                          return 1;
-			case 0x200: /* JCI  */ t=T;           SET(0,-1) if(!t) { pc += 2; break; } /* else fallthrough */
+			case 0x200: /* JCI  */ t=T;           SHIFT(-1) if(!t) { pc += 2; break; } /* else fallthrough */
 			case 0x400: /* JMI  */                          rr = ram + pc; pc += PEEK2(rr) + 2; break;
-			case 0x600: /* JSI  */                SET(0, 2) T2_(pc + 2); rr = ram + pc; pc += PEEK2(rr) + 2; break;
-			case 0x800: /* LIT  */ case 0xc00:    SET(0, 1) T = ram[pc++]; break;
-			case 0xa00: /* LIT2 */ case 0xe00:    SET(0, 2) rr = ram + pc; T2_(PEEK2(rr)) pc += 2; break;
+			case 0x600: /* JSI  */                SHIFT( 2) T2_(pc + 2); rr = ram + pc; pc += PEEK2(rr) + 2; break;
+			case 0x800: /* LIT  */ case 0xc00:    SHIFT( 1) T = ram[pc++]; break;
+			case 0xa00: /* LIT2 */ case 0xe00:    SHIFT( 2) rr = ram + pc; T2_(PEEK2(rr)) pc += 2; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) T = t + 1; break;
 			case 0x21: /* INC2 */ t=T2;           SET(2, 0) T2_(t + 1) break;
@@ -81,10 +82,10 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x2c: /* JMP2 */ t=T2;           SET(2,-2) pc = t; break;
 			case 0x0d: /* JCN  */ t=T;n=N;        SET(2,-2) if(n) pc += (Sint8)t; break;
 			case 0x2d: /* JCN2 */ t=T2;n=L;       SET(3,-3) if(n) pc = t; break;
-			case 0x0e: /* JSR  */ t=T;            SET(1,-1) FLIP SET(0,2) T2_(pc) pc += (Sint8)t; break;
-			case 0x2e: /* JSR2 */ t=T2;           SET(2,-2) FLIP SET(0,2) T2_(pc) pc = t; break;
-			case 0x0f: /* STH  */ t=T;            SET(1,-1) FLIP SET(0,1) T = t; break;
-			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) FLIP SET(0,2) T2_(t) break;
+			case 0x0e: /* JSR  */ t=T;            SET(1,-1) FLIP SHIFT(2) T2_(pc) pc += (Sint8)t; break;
+			case 0x2e: /* JSR2 */ t=T2;           SET(2,-2) FLIP SHIFT(2) T2_(pc) pc = t; break;
+			case 0x0f: /* STH  */ t=T;            SET(1,-1) FLIP SHIFT(1) T = t; break;
+			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) FLIP SHIFT(2) T2_(t) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) T = ram[t]; break;
 			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) rr = ram + t; T2_(PEEK2(rr)) break;
 			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
