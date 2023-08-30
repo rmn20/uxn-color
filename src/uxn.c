@@ -45,7 +45,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 		int ins = ram[pc++];
 		int k = ins & 0x80 ? 0xff : 0;
 		Stack *s = ins & 0x40 ? &u->rst : &u->wst;
-		Uint8 *ptr = s->dat + s->ptr - 1;
+		Uint8 *ptr = s->dat + s->ptr - 1, *rr;
 		switch(ins & 0x1f ? ins & 0x3f : ins << 4) {
 			/* IMM */
 			case 0x000: /* BRK  */                          return 1;
@@ -88,15 +88,15 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) PUT1(ram[t]) break;
 			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) PUT2(PEEK2(ram + t)) break;
 			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
-			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) POKE2(ram + t, n) break;
+			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) rr = ram + t; POKE2(rr, n) break;
 			case 0x12: /* LDR  */ t=T;            SET(1, 0) PUT1(ram[pc + (Sint8)t]) break;
 			case 0x32: /* LDR2 */ t=T;            SET(1, 1) PUT2(PEEK2(ram + pc + (Sint8)t)) break;
 			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) ram[pc + (Sint8)t] = n; break;
-			case 0x33: /* STR2 */ t=T;n=H2;       SET(3,-3) POKE2(ram + pc + (Sint8)t, n) break;
+			case 0x33: /* STR2 */ t=T;n=H2;       SET(3,-3) rr = ram + pc + (Sint8)t; POKE2(rr, n) break;
 			case 0x14: /* LDA  */ t=T2;           SET(2,-1) PUT1(ram[t]) break;
 			case 0x34: /* LDA2 */ t=T2;           SET(2, 0) PUT2(PEEK2(ram + t)) break;
 			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
-			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) POKE2(ram + t, n) break;
+			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) rr = ram + t; POKE2(rr, n) break;
 			case 0x16: /* DEI  */ t=T;            SET(1, 0) PUT1(DEI(t)) break;
 			case 0x36: /* DEI2 */ t=T;            SET(1, 1) PUT1x2(DEI(t + 1), DEI(t)) break;
 			case 0x17: /* DEO  */ t=T;n=N;        SET(2,-2) DEO(t, n) break;
