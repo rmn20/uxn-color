@@ -15,6 +15,7 @@ typedef signed int Sint32;
 #define AUDIO_DEIMASK 0x0014
 #define AUDIO_DEOMASK 0x8000
 
+#define AUDIO_BUFSIZE 256
 #define SAMPLE_FREQUENCY 44100
 #define POLYPHONY 4
 
@@ -23,3 +24,4 @@ Uint16 audio_get_position(int instance);
 int audio_render(int instance, Sint16 *sample, Sint16 *end);
 void audio_start(int instance, Uint8 *d, Uxn *u);
 void audio_finished_handler(int instance);
+int audio_handler(void *ctx, Uint8 *out_stream, int len);

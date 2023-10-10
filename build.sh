@@ -52,7 +52,7 @@ fi
 
 mkdir -p bin
 CC="${CC:-cc}"
-CFLAGS="${CFLAGS:--std=c89 -Wall -Wno-unknown-pragmas}"
+CFLAGS="${CFLAGS:--std=c99 -Wall -Wno-unknown-pragmas}"
 case "$(uname -s 2>/dev/null)" in
 MSYS_NT*|MINGW*) # MSYS2 on Windows
 	FILE_LDFLAGS="-liberty"
@@ -106,7 +106,7 @@ if [ $norun = 1 ]; then exit; fi
 ./bin/uxncli -v
 ./bin/uxnemu -v
 
-./bin/uxnasm projects/software/piano.tal bin/piano.rom
+./bin/uxnasm projects/examples/devices/audio-tests.tal bin/audio-tests.rom
 
-./bin/uxnemu -2x bin/piano.rom
+./bin/uxnemu -2x bin/audio-tests.rom
 

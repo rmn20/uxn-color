@@ -70,17 +70,29 @@ clamp(int v, int min, int max)
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
-	Uint8 *addr;
-	Uint16 vu;
-	if(!audio_id) return d[port];
-	switch(port) {
-	case 0x4: return audio_get_vu(instance);
-	case 0x2:
-		addr = d + 2;
-		vu = audio_get_position(instance);
-		POKE2(addr, vu); /* fall through */
-	default: return d[port];
-	}
+	    /*
+	// Uint8 *addr;
+	// Uint16 vu;
+	// if(!audio_id) return d[port];
+	// switch(port) {
+	// case 0x4: return audio_get_vu(instance);
+	// case 0x2:
+	// 	addr = d + 2;
+	// 	vu = audio_get_position(instance);
+	// 	POKE2(addr, vu);
+	// default: return d[port];
+	// }
+    */
+    // TODO: get envelope
+    switch(port) {
+        case 0x0:
+        case 0x2:
+        case 0x8:
+        case 0xa:
+        case 0xc: return PEEK2(d + port);
+        default: return d[port];
+    }
+    return d[port];
 }
 
 static void
@@ -134,19 +146,6 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 }
 
 /* Handlers */
-
-static void
-audio_callback(void *u, Uint8 *stream, int len)
-{
-	int instance, running = 0;
-	Sint16 *samples = (Sint16 *)stream;
-	USED(u);
-	SDL_memset(stream, 0, len);
-	for(instance = 0; instance < POLYPHONY; instance++)
-		running += audio_render(instance, samples, samples + len / 2);
-	if(!running)
-		SDL_PauseAudioDevice(audio_id, 1);
-}
 
 void
 audio_finished_handler(int instance)
@@ -259,8 +258,8 @@ emu_init(void)
 	as.freq = SAMPLE_FREQUENCY;
 	as.format = AUDIO_S16SYS;
 	as.channels = 2;
-	as.callback = audio_callback;
-	as.samples = 512;
+	as.callback = audio_handler;
+	as.samples = AUDIO_BUFSIZE;
 	as.userdata = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
@@ -389,8 +388,8 @@ handle_events(Uxn *u)
 		}
 		/* Audio */
 		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			Uint8 *addr = &u->dev[0x30 + 0x10 * (event.type - audio0_event)];
-			uxn_eval(u, PEEK2(addr));
+			// Uint8 *addr = &u->dev[0x30 + 0x10 * (event.type - audio0_event)];
+			// uxn_eval(u, PEEK2(addr));
 		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
