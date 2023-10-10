@@ -2608,23 +2608,20 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
 
     for (int n = 0; n < N_CHANNELS; n++) {
         Uint8 device = (3 + n) << 4;
-        // TODO: Make sure this works properly and evals to the audio stack
-        // instead of the regular stack.
-        // Uxn *u = (Uxn *)ctx;
-        // Uint8 *addr = &u->dev[device];
-        // if (channel[n].duration <= 0 && PEEK2(addr)) {
-			// uxn_eval(u, PEEK2(addr));
-        // }
-        // printf("DEVICE: %x\n", device);
-        // printf("ADDR: %x\n", PEEK2(addr));
-        if (channel[n].sample.data != 0) {
-            channel[n].duration -= SOUND_TIMER;
+        Uxn *u = (Uxn *)ctx;
+        Uint8 *addr = &u->dev[device];
+        if (channel[n].duration <= 0 && PEEK2(addr)) {
+			uxn_eval(u, PEEK2(addr));
+            // printf("EVAL: %x\n", device);
+            // printf("ADDR: %x\n", PEEK2(addr));
+            // printf("----\n");
         }
+        channel[n].duration -= SOUND_TIMER;
 
         int x = 0;
         if (channel[n].xfade) {
             float delta = 1.0f / (XFADE_SAMPLES);
-            while (x < XFADE_SAMPLES * 2) {
+            while (x < XFADE_SAMPLES * 2 && x < len / 2) {
                 float alpha = x * delta;
                 float beta = 1.0f - alpha;
                 Sint16 next_a = next_a = next_sample(&channel[n].next_sample);

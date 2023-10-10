@@ -15,8 +15,8 @@ typedef signed int Sint32;
 #define AUDIO_DEIMASK 0x0014
 #define AUDIO_DEOMASK 0x8000
 
-#define AUDIO_BUFSIZE 256
-#define SAMPLE_FREQUENCY 44100
+#define AUDIO_BUFSIZE 256.0f
+#define SAMPLE_FREQUENCY 44100.0f
 #define POLYPHONY 4
 
 Uint8 audio_get_vu(int instance);

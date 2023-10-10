@@ -103,7 +103,6 @@ audio_deo(int instance, Uint8 *d, Uint8 port, Uxn *u)
 		SDL_LockAudioDevice(audio_id);
 		audio_start(instance, d, u);
 		SDL_UnlockAudioDevice(audio_id);
-		SDL_PauseAudioDevice(audio_id, 0);
 	}
 }
 
@@ -251,7 +250,7 @@ emu_redraw(Uxn *u)
 }
 
 static int
-emu_init(void)
+emu_init(Uxn *u)
 {
 	SDL_AudioSpec as;
 	SDL_zero(as);
@@ -260,7 +259,7 @@ emu_init(void)
 	as.channels = 2;
 	as.callback = audio_handler;
 	as.samples = AUDIO_BUFSIZE;
-	as.userdata = NULL;
+	as.userdata = u;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
 
@@ -280,6 +279,7 @@ emu_init(void)
 	deadline_interval = ms_interval * TIMEOUT_MS;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	screen_resize(WIDTH, HEIGHT);
+    SDL_PauseAudioDevice(audio_id, 0);
 	return 1;
 }
 
@@ -541,7 +541,11 @@ emu_end(Uxn *u)
 int
 main(int argc, char **argv)
 {
+    Uint8 dev[0x100] = {0};
 	Uxn u = {0};
+	u.dev = &dev;
+	Uxn u_audio = {0};
+	u_audio.dev = &dev;
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxnemu [-v] | uxnemu [-f | -2x | -3x | --] file.rom [args...]");
@@ -559,10 +563,16 @@ main(int argc, char **argv)
 		}
 	}
 	/* Start system. */
-	if(!emu_init())
-		return system_error("Init", "Failed to initialize varvara.");
-	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
+	Uint8 *ram = (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8));
+	char *rom = argv[i++];
+	if(!system_init(&u, ram, rom)) {
 		return system_error("Init", "Failed to initialize uxn.");
+    }
+	if(!system_init(&u_audio, ram, rom)) {
+		return system_error("Init", "Failed to initialize uxn.");
+    }
+	if(!emu_init(&u_audio))
+		return system_error("Init", "Failed to initialize varvara.");
 	/* Game Loop */
 	u.dev[0x17] = argc - i;
 	if(uxn_eval(&u, PAGE_PROGRAM)) {
