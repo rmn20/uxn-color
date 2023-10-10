@@ -24,4 +24,4 @@ Uint16 audio_get_position(int instance);
 int audio_render(int instance, Sint16 *sample, Sint16 *end);
 void audio_start(int instance, Uint8 *d, Uxn *u);
 void audio_finished_handler(int instance);
-int audio_handler(void *ctx, Uint8 *out_stream, int len);
+void audio_handler(void *ctx, Uint8 *out_stream, int len);

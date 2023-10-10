@@ -70,20 +70,7 @@ clamp(int v, int min, int max)
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
-	    /*
-	// Uint8 *addr;
-	// Uint16 vu;
-	// if(!audio_id) return d[port];
-	// switch(port) {
-	// case 0x4: return audio_get_vu(instance);
-	// case 0x2:
-	// 	addr = d + 2;
-	// 	vu = audio_get_position(instance);
-	// 	POKE2(addr, vu);
-	// default: return d[port];
-	// }
-    */
-    // TODO: get envelope
+    /* TODO: get envelope */
     switch(port) {
         case 0x0:
         case 0x2:
@@ -386,11 +373,6 @@ handle_events(Uxn *u)
 			emu_restart(u, event.drop.file, 0);
 			SDL_free(event.drop.file);
 		}
-		/* Audio */
-		else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
-			// Uint8 *addr = &u->dev[0x30 + 0x10 * (event.type - audio0_event)];
-			// uxn_eval(u, PEEK2(addr));
-		}
 		/* Mouse */
 		else if(event.type == SDL_MOUSEMOTION)
 			mouse_pos(u, &u->dev[0x90], clamp(event.motion.x - PAD, 0, uxn_screen.width - 1), clamp(event.motion.y - PAD, 0, uxn_screen.height - 1));
@@ -543,9 +525,9 @@ main(int argc, char **argv)
 {
     Uint8 dev[0x100] = {0};
 	Uxn u = {0};
-	u.dev = &dev;
 	Uxn u_audio = {0};
-	u_audio.dev = &dev;
+	u.dev = (Uint8 *)&dev;
+	u_audio.dev = (Uint8 *)&dev;
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxnemu [-v] | uxnemu [-f | -2x | -3x | --] file.rom [args...]");
