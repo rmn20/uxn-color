@@ -92,19 +92,19 @@ env_on(Envelope *env) {
     env->stage = ENV_ATTACK;
     env->vol = 0.0f;
     if (env->a > 0) {
-        env->a = (SOUND_TIMER / 256.0f) / env->a;
+        env->a = (SOUND_TIMER / AUDIO_BUFSIZE) / env->a;
     } else if (env->stage == ENV_ATTACK) {
         env->stage = ENV_DECAY;
         env->vol = 1.0f;
     }
     if (env->d > 0) {
-        env->d = (SOUND_TIMER / 256.0f) / env->d;
+        env->d = (SOUND_TIMER / AUDIO_BUFSIZE) / env->d;
     } else if (env->stage == ENV_DECAY) {
         env->stage = ENV_SUSTAIN;
         env->vol = env->s;
     }
     if (env->r > 0) {
-        env->r = (SOUND_TIMER / 256.0f) / env->r;
+        env->r = (SOUND_TIMER / AUDIO_BUFSIZE) / env->r;
     }
 }
 
