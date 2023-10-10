@@ -2612,19 +2612,16 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
         Uint8 *addr = &u->dev[device];
         if (channel[n].duration <= 0 && PEEK2(addr)) {
 			uxn_eval(u, PEEK2(addr));
-            // printf("EVAL: %x\n", device);
-            // printf("ADDR: %x\n", PEEK2(addr));
-            // printf("----\n");
         }
         channel[n].duration -= SOUND_TIMER;
 
         int x = 0;
         if (channel[n].xfade) {
-            float delta = 1.0f / (XFADE_SAMPLES);
-            while (x < XFADE_SAMPLES * 2 && x < len / 2) {
+            float delta = 1.0f / (XFADE_SAMPLES * 2);
+            while (x < XFADE_SAMPLES * 2) {
                 float alpha = x * delta;
                 float beta = 1.0f - alpha;
-                Sint16 next_a = next_a = next_sample(&channel[n].next_sample);
+                Sint16 next_a = next_sample(&channel[n].next_sample);
                 Sint16 next_b = 0;
                 if (channel[n].sample.data != 0) {
                     next_b = next_sample(&channel[n].sample);
@@ -2637,7 +2634,6 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
             channel[n].xfade = false;
         }
         Sample *sample = &channel[n].sample;
-        int direction = 1;
         while (x < len / 2) {
             if (sample->data == 0) {
                 break;

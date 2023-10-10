@@ -16,7 +16,6 @@
 
 |0000
 
-@progress0  $1
 @progress1  $1
 @progress2  $1
 @progress3  $1
@@ -31,6 +30,7 @@
 	( vectors )
 	;on-frame  .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
+	#0000      .Audio1/vector DEO2
 	;on-audio1 .Audio1/vector DEO2
 	;on-audio2 .Audio2/vector DEO2
 	;on-audio3 .Audio3/vector DEO2
@@ -44,7 +44,6 @@
 	#f0     .Audio0/decay    DEO
 	#ff     .Audio0/sustain  DEO
 	#1e     .Audio0/release  DEO
-	#00e8   .Audio0/duration DEO2
 
 	;sine   .Audio1/addr     DEO2
 	#0054   .Audio1/length   DEO2
@@ -71,7 +70,7 @@
 	#f0     .Audio3/decay    DEO
 	#00     .Audio3/sustain  DEO
 	#1e     .Audio3/release  DEO
-	#03e0   .Audio3/duration DEO2
+	#00e8   .Audio3/duration DEO2
 BRK
 
 @on-button ( -> )
@@ -82,16 +81,6 @@ BRK
 
 @play-kick ( -> )
 	#3c     .Audio0/pitch    DEO
-BRK
-
-@on-audio0 ( -> )
-    ( load next note )
-	.progress0 LDZ
-	( increment note counter )
-	DUP INC #1f AND .progress0 STZ
-    ( play note )
-    GET-NOTE
-	.Audio0/pitch DEO
 BRK
 
 @on-audio1 ( -> )
