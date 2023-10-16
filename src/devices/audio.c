@@ -117,17 +117,17 @@ void
 note_on(AudioChannel *channel, Uint16 duration, Uint8 *data, Uint16 len, Uint8 vol,
         Uint8 attack, Uint8 decay, Uint8 sustain, Uint8 release, Uint8 pitch, bool loop) {
     channel->duration = duration;
-    channel->vol_l = (vol >> 4) / 16.0f;
-    channel->vol_r = (vol & 0xf) / 16.0f;
+    channel->vol_l = (vol >> 4) / 16.0f * 0.9;
+    channel->vol_r = (vol & 0xf) / 16.0f * 0.9;
 
     Sample sample = {0};
     sample.data = data;
     sample.len = len;
     sample.pos = 0;
-    sample.env.a = attack * 10.0f;
-    sample.env.d = decay * 10.0f;
-    sample.env.s = sustain / 256.0f;
-    sample.env.r = release * 10.0f;
+    sample.env.a = attack * 62.0f;
+    sample.env.d = decay * 62.0f;
+    sample.env.s = sustain / 16.0f;
+    sample.env.r = release * 62.0f;
     if (loop) {
         sample.loop = len;
     } else {
@@ -284,20 +284,21 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
 void
 audio_start(int idx, Uint8 *d, Uxn *u)
 {
-    Uint16 duration = PEEK2(d + 0x2);
+    Uint16 duration = PEEK2(d + 0x5);
     Uint8 off = d[0xf] == 0xff;
 
     if (!off) {
-        Uint16 addr = PEEK2(d + 0xa);
+        Uint16 addr = PEEK2(d + 0xc);
         Uint8 *data = &u->ram[addr];
-        Uint16 len = PEEK2(d + 0x8);
-        Uint8 volume = d[0xd];
+        Uint16 len = PEEK2(d + 0xa);
+        Uint8 volume = d[0xe];
         bool loop = !!(d[0xf] & 0x80);
         Uint8 pitch = d[0xf] & 0x7f;
-        Uint8 attack = d[0x4];
-        Uint8 decay = d[0x5];
-        Uint8 sustain = d[0x6];
-        Uint8 release = d[0x7];
+        Uint16 adsr = PEEK2(d + 0x8);
+        Uint8 attack = (adsr >> 12) & 0xF;
+        Uint8 decay = (adsr >> 8) & 0xF;
+        Uint8 sustain = (adsr >> 4) & 0xF;
+        Uint8 release = (adsr >> 0) & 0xF;
         note_on(&channel[idx], duration, data, len, volume, attack, decay, sustain, release, pitch, loop);
     } else {
         note_off(&channel[idx], duration);

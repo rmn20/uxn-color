@@ -6,10 +6,10 @@
 
 |00 @System     [ &vector $2 &pad      $6 &r      $2 &g     $2 &b      $2 ]
 |20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y    $2 &addr  $2 &pixel $1 &sprite $1 ]
-|30 @Audio0     [ &vector $2 &duration $2 &attack $1 &decay $1 &sustain $1 &release $1 &length $2 &addr $2 &expansion $1 &volume $1 &detune $1 &pitch $1 ]
-|40 @Audio1     [ &vector $2 &duration $2 &attack $1 &decay $1 &sustain $1 &release $1 &length $2 &addr $2 &expansion $1 &volume $1 &detune $1 &pitch $1 ]
-|50 @Audio2     [ &vector $2 &duration $2 &attack $1 &decay $1 &sustain $1 &release $1 &length $2 &addr $2 &expansion $1 &volume $1 &detune $1 &pitch $1 ]
-|60 @Audio3     [ &vector $2 &duration $2 &attack $1 &decay $1 &sustain $1 &release $1 &length $2 &addr $2 &expansion $1 &volume $1 &detune $1 &pitch $1 ]
+|30 @Audio0     [ &vector $2 &position $2 &output $1 &duration $2 &pad $1 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|40 @Audio1     [ &vector $2 &position $2 &output $1 &duration $2 &pad $1 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|50 @Audio2     [ &vector $2 &position $2 &output $1 &duration $2 &pad $1 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|60 @Audio3     [ &vector $2 &position $2 &output $1 &duration $2 &pad $1 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
 |80 @Controller &vector $2 &button $1 &key $1
 
 ( variables )
@@ -40,36 +40,24 @@
 	;kick/end ;kick SUB2
 	        .Audio0/length DEO2
 	#ff     .Audio0/volume   DEO
-	#00     .Audio0/attack   DEO
-	#f0     .Audio0/decay    DEO
-	#ff     .Audio0/sustain  DEO
-	#1e     .Audio0/release  DEO
+	#00ff   .Audio0/adsr     DEO2
 
 	;sine   .Audio1/addr     DEO2
 	#0054   .Audio1/length   DEO2
 	#ff     .Audio1/volume   DEO
-	#00     .Audio1/attack   DEO
-	#11     .Audio1/decay    DEO
-	#00     .Audio1/sustain  DEO
-	#1e     .Audio1/release  DEO
+	#01ff   .Audio1/adsr     DEO2
 	#0074   .Audio1/duration DEO2
 
 	;sine   .Audio2/addr     DEO2
 	#00a8   .Audio2/length   DEO2
 	#ff     .Audio2/volume   DEO
-	#00     .Audio2/attack   DEO
-	#f0     .Audio2/decay    DEO
-	#00     .Audio2/sustain  DEO
-	#1e     .Audio2/release  DEO
+	#2200   .Audio2/adsr     DEO2
 	#01d0   .Audio2/duration DEO2
 
 	;sine   .Audio3/addr     DEO2
 	#00a8   .Audio3/length   DEO2
 	#ff     .Audio3/volume   DEO
-	#00     .Audio3/attack   DEO
-	#f0     .Audio3/decay    DEO
-	#00     .Audio3/sustain  DEO
-	#1e     .Audio3/release  DEO
+	#38ff   .Audio3/adsr     DEO2
 	#00e8   .Audio3/duration DEO2
 BRK
 
