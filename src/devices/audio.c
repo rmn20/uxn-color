@@ -111,8 +111,8 @@ void
 note_on(AudioChannel *channel, Uint16 duration, Uint8 *data, Uint16 len, Uint8 vol,
         Uint8 attack, Uint8 decay, Uint8 sustain, Uint8 release, Uint8 pitch, bool loop) {
     channel->duration = duration;
-    channel->vol_l = (vol >> 4) / 16.0f * 0.9;
-    channel->vol_r = (vol & 0xf) / 16.0f * 0.9;
+    channel->vol_l = (vol >> 4) / 15.0f;
+    channel->vol_r = (vol & 0xf) / 15.0f;
 
     Sample sample = {0};
     sample.data = data;
@@ -278,7 +278,7 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
     }
     int i;
     for (i = 0; i < len / 2; i++) {
-        stream[i] <<= 4;
+        stream[i] <<= 6;
     }
 }
 
