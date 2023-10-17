@@ -30,7 +30,7 @@
 	( vectors )
 	;on-frame  .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
-	#0000      .Audio1/vector DEO2
+	#0000      .Audio0/vector DEO2
 	;on-audio1 .Audio1/vector DEO2
 	;on-audio2 .Audio2/vector DEO2
 	;on-audio3 .Audio3/vector DEO2
@@ -43,19 +43,22 @@
 	#00ff   .Audio0/adsr     DEO2
 
 	;sine   .Audio1/addr     DEO2
-	#0054   .Audio1/length   DEO2
+	;sine/end ;sine SUB2
+	        .Audio1/length   DEO2
 	#ff     .Audio1/volume   DEO
 	#01ff   .Audio1/adsr     DEO2
-	#0074   .Audio1/duration DEO2
+	#ff74   .Audio1/duration DEO2
 
 	;sine   .Audio2/addr     DEO2
-	#00a8   .Audio2/length   DEO2
+	;sine/end ;sine SUB2
+	        .Audio2/length   DEO2
 	#ff     .Audio2/volume   DEO
 	#2200   .Audio2/adsr     DEO2
 	#01d0   .Audio2/duration DEO2
 
 	;sine   .Audio3/addr     DEO2
-	#00a8   .Audio3/length   DEO2
+	;sine/end ;sine SUB2
+	        .Audio3/length   DEO2
 	#ff     .Audio3/volume   DEO
 	#38ff   .Audio3/adsr     DEO2
 	#00e8   .Audio3/duration DEO2
@@ -112,18 +115,24 @@ BRK
 ]
 
 @sine [
-    8084 888c 9195 999d a1a5 a9ad b1b5 b9bd
-    c0c4 c7ca ced1 d4d7 d9dc dee1 e3e5 e7e9
-    ebec edef f0f1 f1f2 f2f3 f3f3 f2f2 f2f1
-    f0ef eeec ebe9 e8e6 e4e2 dfdd dad7 d5d2
-    cfcb c8c5 c1be bab6 b2af aba7 a39e 9a96
-    928e 8985 817c 7874 706b 6763 5f5b 5753
-    4f4b 4743 403c 3935 322f 2c29 2624 211f
-    1d1a 1817 1513 1211 100f 0e0d 0d0c 0c0c
-    0c0d 0d0e 0f10 1112 1415 1719 1b1d 1f22
-    2427 2a2d 3033 3639 3d40 4448 4c4f 5357
-    5b5f 6468 6c70 7579
+	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
+	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
+	d9db dee0 e2e4 e6e7 e9eb ecee f0f1 f2f4
+	f5f6 f7f8 f9fa fbfb fcfd fdfe fefe fefe
+	fffe fefe fefe fdfd fcfb fbfa f9f8 f7f6
+	f5f4 f2f1 f0ee eceb e9e7 e6e4 e2e0 dedb
+	d9d7 d5d2 d0ce cbc9 c6c3 c1be bbb9 b6b3
+	b0ad aaa7 a4a1 9e9b 9895 928f 8c89 8683
+	807d 7a77 7471 6e6b 6865 625f 5c59 5653
+	504d 4a47 4542 3f3d 3a37 3532 302e 2b29
+	2725 2220 1e1c 1a19 1715 1412 100f 0e0c
+	0b0a 0908 0706 0505 0403 0302 0202 0202
+	0102 0202 0202 0303 0405 0506 0708 090a
+	0b0c 0e0f 1012 1415 1719 1a1c 1e20 2225
+	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
+	5053 5659 5c5f 6265 686b 6e71 7477 7a7d 
 ]
+@sine/end
 
 @kick [
     7f7f 7f7f 7f7f 7f7f 7f7f 7f7f 7e7f 7e7e
