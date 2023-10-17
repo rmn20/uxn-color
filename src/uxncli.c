@@ -64,7 +64,9 @@ emu_end(Uxn *u)
 int
 main(int argc, char **argv)
 {
-	Uxn u = {0};
+    Uint8 dev[0x100] = {0};
+	Uxn u;
+	u.dev = (Uint8 *)&dev;
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxncli [-v] file.rom [args..]");
