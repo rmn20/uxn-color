@@ -276,7 +276,7 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
         }
     }
     int i;
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len / 2; i++) {
         stream[i] <<= 4;
     }
 }
@@ -292,7 +292,7 @@ audio_start(int idx, Uint8 *d, Uxn *u)
         Uint8 *data = &u->ram[addr];
         Uint16 len = PEEK2(d + 0xa);
         Uint8 volume = d[0xe];
-        bool loop = !!(d[0xf] & 0x80);
+        bool loop = !(d[0xf] & 0x80);
         Uint8 pitch = d[0xf] & 0x7f;
         Uint16 adsr = PEEK2(d + 0x8);
         Uint8 attack = (adsr >> 12) & 0xF;

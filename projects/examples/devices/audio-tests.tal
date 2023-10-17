@@ -1,6 +1,6 @@
 ( dev/audio-tests )
 
-%GET-NOTE { #00 SWP ;melody ADD2 LDA #80 ORA }
+%GET-NOTE { #00 SWP ;melody ADD2 LDA }
 
 ( devices )
 
@@ -68,7 +68,7 @@ BRK
 BRK
 
 @play-kick ( -> )
-	#3c     .Audio0/pitch    DEO
+	#3c #80 ORA .Audio0/pitch    DEO
 BRK
 
 @on-audio1 ( -> )
