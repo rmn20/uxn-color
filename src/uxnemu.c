@@ -509,7 +509,7 @@ emu_run(Uxn *u, char *rom)
 static int
 emu_end(Uxn *u)
 {
-	free(u->ram);
+    SDL_CloseAudioDevice(audio_id);
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
@@ -517,6 +517,7 @@ emu_end(Uxn *u)
 	close(0); /* make stdin thread exit */
 #endif
 	SDL_Quit();
+	free(u->ram);
 	return u->dev[0x0f] & 0x7f;
 }
 
