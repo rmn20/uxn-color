@@ -510,7 +510,6 @@ static int
 emu_end(Uxn *u)
 {
 	free(u->ram);
-	free(u->dev);
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
