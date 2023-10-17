@@ -47,7 +47,7 @@
 	        .Audio1/length   DEO2
 	#ff     .Audio1/volume   DEO
 	#01ff   .Audio1/adsr     DEO2
-	#ff74   .Audio1/duration DEO2
+	#03a0   .Audio1/duration DEO2
 
 	;sine   .Audio2/addr     DEO2
 	;sine/end ;sine SUB2
@@ -130,7 +130,7 @@ BRK
 	0102 0202 0202 0303 0405 0506 0708 090a
 	0b0c 0e0f 1012 1415 1719 1a1c 1e20 2225
 	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
-	5053 5659 5c5f 6265 686b 6e71 7477 7a7d 
+	5053 5659 5c5f 6265 686b 6e71 7477 7a7d
 ]
 @sine/end
 
