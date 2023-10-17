@@ -93,12 +93,13 @@ env_on(Envelope *env) {
     }
     if (env->d > 0) {
         env->d = (SOUND_TIMER / AUDIO_BUFSIZE) / env->d;
-    } else if (env->stage == ENV_DECAY) {
-        env->stage = ENV_SUSTAIN;
-        env->vol = env->s;
+    } else {
+        env->d = (SOUND_TIMER / AUDIO_BUFSIZE) / 10.0f;
     }
     if (env->r > 0) {
         env->r = (SOUND_TIMER / AUDIO_BUFSIZE) / env->r;
+    } else {
+        env->r = (SOUND_TIMER / AUDIO_BUFSIZE) / 10.0f;
     }
 }
 
