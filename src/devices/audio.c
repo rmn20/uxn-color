@@ -15,7 +15,6 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 #define SOUND_TIMER (AUDIO_BUFSIZE / SAMPLE_FREQUENCY * 1000.0f)
-#define N_CHANNELS 4
 #define XFADE_SAMPLES 100
 #define INTERPOL_METHOD 1
 
@@ -54,7 +53,7 @@ typedef struct AudioChannel {
     float vol_r;
 } AudioChannel;
 
-AudioChannel channel[N_CHANNELS];
+AudioChannel channel[POLYPHONY];
 
 const float tuning[109] = {
         0.00058853f, 0.00062352f, 0.00066060f, 0.00069988f, 0.00074150f,
@@ -117,10 +116,10 @@ note_on(AudioChannel *channel, Uint16 duration, Uint8 *data, Uint16 len, Uint8 v
     sample.data = data;
     sample.len = len;
     sample.pos = 0;
-    sample.env.a = attack * 62.0f;
-    sample.env.d = decay * 62.0f;
+    sample.env.a = attack * 64.0f;
+    sample.env.d = decay * 64.0f;
     sample.env.s = sustain / 16.0f;
-    sample.env.r = release * 62.0f;
+    sample.env.r = release * 64.0f;
     if (loop) {
         sample.loop = len;
     } else {
@@ -238,7 +237,7 @@ audio_handler(void *ctx, Uint8 *out_stream, int len) {
     memset(stream, 0x00, len);
 
     int n;
-    for (n = 0; n < N_CHANNELS; n++) {
+    for (n = 0; n < POLYPHONY; n++) {
         Uint8 device = (3 + n) << 4;
         Uxn *u = (Uxn *)ctx;
         Uint8 *addr = &u->dev[device];
