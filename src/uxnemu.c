@@ -70,10 +70,14 @@ clamp(int v, int min, int max)
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
-    /* TODO: get envelope */
     switch(port) {
-        case 0x0:
         case 0x2:
+            return audio_get_position(instance) >> 8;
+        case 0x3:
+            return audio_get_position(instance);
+        case 0x4:
+            return audio_get_vu(instance);
+        case 0x0:
         case 0x8:
         case 0xa:
         case 0xc: return PEEK2(d + port);

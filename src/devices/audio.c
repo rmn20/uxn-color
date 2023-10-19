@@ -303,3 +303,13 @@ audio_start(int idx, Uint8 *d, Uxn *u)
         note_off(&channel[idx], duration);
     }
 }
+
+Uint8
+audio_get_vu(int instance) {
+    return channel[instance].sample.env.vol * 255.0f;
+}
+
+Uint16
+audio_get_position(int instance) {
+    return channel[instance].sample.pos;
+}
