@@ -70,20 +70,20 @@ clamp(int v, int min, int max)
 static Uint8
 audio_dei(int instance, Uint8 *d, Uint8 port)
 {
-    switch(port) {
-        case 0x2:
-            return audio_get_position(instance) >> 8;
-        case 0x3:
-            return audio_get_position(instance);
-        case 0x4:
-            return audio_get_vu(instance);
-        case 0x0:
-        case 0x8:
-        case 0xa:
-        case 0xc: return PEEK2(d + port);
-        default: return d[port];
-    }
-    return d[port];
+	switch(port) {
+	case 0x2:
+		return audio_get_position(instance) >> 8;
+	case 0x3:
+		return audio_get_position(instance);
+	case 0x4:
+		return audio_get_vu(instance);
+	case 0x0:
+	case 0x8:
+	case 0xa:
+	case 0xc: return PEEK2(d + port);
+	default: return d[port];
+	}
+	return d[port];
 }
 
 static void
@@ -94,7 +94,7 @@ audio_deo(int instance, Uint8 *d, Uint8 port, Uxn *u)
 		SDL_LockAudioDevice(audio_id);
 		audio_start(instance, d, u);
 		SDL_UnlockAudioDevice(audio_id);
-        SDL_PauseAudioDevice(audio_id, 0);
+		SDL_PauseAudioDevice(audio_id, 0);
 	}
 }
 
@@ -271,7 +271,7 @@ emu_init(Uxn *u)
 	deadline_interval = ms_interval * TIMEOUT_MS;
 	exec_deadline = SDL_GetPerformanceCounter() + deadline_interval;
 	screen_resize(WIDTH, HEIGHT);
-    SDL_PauseAudioDevice(audio_id, 1);
+	SDL_PauseAudioDevice(audio_id, 1);
 	return 1;
 }
 
@@ -514,7 +514,7 @@ emu_run(Uxn *u, char *rom)
 static int
 emu_end(Uxn *u)
 {
-    SDL_CloseAudioDevice(audio_id);
+	SDL_CloseAudioDevice(audio_id);
 #ifdef _WIN32
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 	TerminateThread((HANDLE)SDL_GetThreadID(stdin_thread), 0);
@@ -529,7 +529,7 @@ emu_end(Uxn *u)
 int
 main(int argc, char **argv)
 {
-    Uint8 dev[0x100] = {0};
+	Uint8 dev[0x100] = {0};
 	Uxn u = {0};
 	Uxn u_audio = {0};
 	u.dev = (Uint8 *)&dev;
@@ -555,10 +555,10 @@ main(int argc, char **argv)
 	char *rom = argv[i++];
 	if(!system_init(&u, ram, rom)) {
 		return system_error("Init", "Failed to initialize uxn.");
-    }
+	}
 	if(!system_init(&u_audio, ram, rom)) {
 		return system_error("Init", "Failed to initialize uxn.");
-    }
+	}
 	if(!emu_init(&u_audio))
 		return system_error("Init", "Failed to initialize varvara.");
 	/* Game Loop */
