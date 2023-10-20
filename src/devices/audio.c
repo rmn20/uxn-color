@@ -291,20 +291,27 @@ audio_handler(void *ctx, Uint8 *out_stream, int len)
 	}
 }
 
+float
+calc_duration(Uint16 len, Uint8 pitch)
+{
+	float scale = tuning[pitch - 20] / tuning[0x3c - 20];
+	return len / (scale * 44.1f);
+}
+
 void
 audio_start(int idx, Uint8 *d, Uxn *u)
 {
 	Uint16 dur = PEEK2(d + 0x5);
 	Uint8 off = d[0xf] == 0x00;
 	Uint16 len = PEEK2(d + 0xa);
-	float duration = dur > 0 ? dur : len / 44.1f;
+	Uint8 pitch = d[0xf] & 0x7f;
+	float duration = dur > 0 ? dur : calc_duration(len, pitch);
 
 	if(!off) {
 		Uint16 addr = PEEK2(d + 0xc);
 		Uint8 *data = &u->ram[addr];
 		Uint8 volume = d[0xe];
 		bool loop = !(d[0xf] & 0x80);
-		Uint8 pitch = d[0xf] & 0x7f;
 		Uint16 adsr = PEEK2(d + 0x8);
 		Uint8 attack = (adsr >> 12) & 0xF;
 		Uint8 decay = (adsr >> 8) & 0xF;
