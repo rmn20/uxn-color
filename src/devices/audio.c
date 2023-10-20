@@ -108,7 +108,7 @@ env_off(Envelope *env) {
 void
 note_on(AudioChannel *channel, Uint16 duration, Uint8 *data, Uint16 len, Uint8 vol,
         Uint8 attack, Uint8 decay, Uint8 sustain, Uint8 release, Uint8 pitch, bool loop) {
-    channel->duration = duration;
+    channel->duration = duration > 0 ? duration : len / 44.1f;
     channel->vol_l = (vol >> 4) / 15.0f;
     channel->vol_r = (vol & 0xf) / 15.0f;
 
