@@ -132,9 +132,6 @@ note_on(AudioChannel *channel, float duration, Uint8 *data, Uint16 len, Uint8 vo
 		sample.loop = 0;
 	}
 	env_on(&sample.env);
-	if(pitch < 20) {
-		pitch = 20;
-	}
 	float sample_rate = 44100 / 261.60;
 	if(len <= 256) {
 		sample_rate = len;
@@ -305,6 +302,9 @@ audio_start(int idx, Uint8 *d, Uxn *u)
 	Uint8 off = d[0xf] == 0x00;
 	Uint16 len = PEEK2(d + 0xa);
 	Uint8 pitch = d[0xf] & 0x7f;
+	if(pitch < 20) {
+		pitch = 20;
+	}
 	float duration = dur > 0 ? dur : calc_duration(len, pitch);
 
 	if(!off) {
