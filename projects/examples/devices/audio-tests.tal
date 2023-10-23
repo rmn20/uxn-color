@@ -59,7 +59,7 @@
 	BRK
 
 @get-note ( offset* -- )
-	;melody ADD2 LDA
+	#001f AND2 ;melody ADD2 LDA
 	JMP2r
 
 @on-audio1 ( -> )
