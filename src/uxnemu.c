@@ -56,7 +56,7 @@ static SDL_Thread *stdin_thread;
 /* devices */
 
 static int window_created = 0;
-static int fullscreen = 0;
+static int fullscreen = 0, borderless = 0;
 static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
@@ -189,15 +189,22 @@ set_zoom(Uint8 z, int win)
 }
 
 static void
-set_fullscreen(int new_fullscreen, int win)
+set_fullscreen(int value, int win)
 {
-	fullscreen = new_fullscreen;
+	fullscreen = value;
 	Uint32 flags = 0; /* windowed mode; SDL2 has no constant for this */
 	if(fullscreen) {
 		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 	if(win)
 		SDL_SetWindowFullscreen(emu_window, flags);
+}
+
+static void
+set_borderless(int value)
+{
+	borderless = value;
+	SDL_SetWindowBordered(emu_window, !value);
 }
 
 /* emulator primitives */
@@ -405,6 +412,8 @@ handle_events(Uxn *u)
 				emu_restart(u, boot_rom, 1);
 			else if(event.key.keysym.sym == SDLK_F11)
 				set_fullscreen(!fullscreen, 1);
+			else if(event.key.keysym.sym == SDLK_F12)
+				set_borderless(!borderless);
 			ksym = event.key.keysym.sym;
 			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 				return 1;

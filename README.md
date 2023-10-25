@@ -101,6 +101,7 @@ uxnemu orca.rom | shim
 - `F4` reboot
 - `F5` soft reboot
 - `F11` toggle fullscreen
+- `F12` toggle decorations
 
 ### GUI Buttons
 
