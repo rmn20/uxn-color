@@ -90,6 +90,8 @@ uxnemu orca.rom | shim
 
 - `-2x` Force medium scale
 - `-3x` Force large scale
+- `-f`  Force fullscreen mode
+- `--`  Force next argument to be read as ROM name. (This is useful if your ROM file is named `-v`, `-2x`, and so forth.)
 
 ## GUI Emulator Controls
 
@@ -98,6 +100,7 @@ uxnemu orca.rom | shim
 - `F3` capture screen
 - `F4` reboot
 - `F5` soft reboot
+- `F11` toggle fullscreen
 
 ### GUI Buttons
 

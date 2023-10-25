@@ -56,6 +56,7 @@ static SDL_Thread *stdin_thread;
 /* devices */
 
 static int window_created = 0;
+static int fullscreen = 0;
 static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
@@ -185,6 +186,18 @@ set_zoom(Uint8 z, int win)
 		if(win)
 			set_window_size(emu_window, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom);
 	}
+}
+
+static void
+set_fullscreen(int new_fullscreen, int win)
+{
+	fullscreen = new_fullscreen;
+	Uint32 flags = 0; /* windowed mode; SDL2 has no constant for this */
+	if(fullscreen) {
+		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+	}
+		if(win)
+			SDL_SetWindowFullscreen(emu_window, flags);
 }
 
 /* emulator primitives */
@@ -390,6 +403,8 @@ handle_events(Uxn *u)
 				emu_restart(u, boot_rom, 0);
 			else if(event.key.keysym.sym == SDLK_F5)
 				emu_restart(u, boot_rom, 1);
+			else if(event.key.keysym.sym == SDLK_F11)
+				set_fullscreen(!fullscreen, 1);
 			ksym = event.key.keysym.sym;
 			if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYUP, SDL_KEYUP) == 1 && ksym == event.key.keysym.sym)
 				return 1;
@@ -455,7 +470,10 @@ emu_run(Uxn *u, char *rom)
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
 	Uint8 *vector_addr = &u->dev[0x20];
 	window_created = 1;
-	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+	if (fullscreen)
+		window_flags = window_flags | SDL_WINDOW_FULLSCREEN_DESKTOP;
+	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, window_flags);
 	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
 	emu_renderer = SDL_CreateRenderer(emu_window, -1, SDL_RENDERER_ACCELERATED);
@@ -508,7 +526,7 @@ main(int argc, char **argv)
 	Uxn u = {0};
 	int i = 1;
 	if(i == argc)
-		return system_error("usage", "uxnemu [-v][-2x][-3x] file.rom [args...]");
+		return system_error("usage", "uxnemu [-v] | uxnemu [-f | -2x | -3x | --] file.rom [args...]");
 	/* Connect Varvara */
 	system_connect(0x0, SYSTEM_VERSION, SYSTEM_DEIMASK, SYSTEM_DEOMASK);
 	system_connect(0x1, CONSOLE_VERSION, CONSOLE_DEIMASK, CONSOLE_DEOMASK);
@@ -522,11 +540,20 @@ main(int argc, char **argv)
 	system_connect(0xa, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
 	system_connect(0xb, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
 	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
-	/* Read flags */
-	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxnemu - Graphical Varvara Emulator", "2 Sep 2023");
-	if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
-		set_zoom(argv[i++][1] - '0', 0);
+	/* Read flag. Right now, there can be only one. */
+	if(argv[i][0] == '-') {
+		if(argv[i][1] == 'v')
+			return system_version("Uxnemu - Graphical Varvara Emulator", "2 Sep 2023");
+		if(argv[i][1] == '-')
+			i++;
+		if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
+			set_zoom(argv[i++][1] - '0', 0);
+		if(strcmp(argv[i], "-f") == 0) {
+			i++;
+			set_fullscreen(1, 0);
+		}
+	}
+	/* Start system. */
 	if(!emu_init())
 		return system_error("Init", "Failed to initialize varvara.");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
