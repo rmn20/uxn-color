@@ -191,8 +191,8 @@ set_zoom(Uint8 z, int win)
 static void
 set_fullscreen(int value, int win)
 {
-	fullscreen = value;
 	Uint32 flags = 0; /* windowed mode; SDL2 has no constant for this */
+	fullscreen = value;
 	if(fullscreen) {
 		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
@@ -487,8 +487,8 @@ emu_run(Uxn *u, char *rom)
 	Uint64 next_refresh = 0;
 	Uint64 frame_interval = SDL_GetPerformanceFrequency() / 60;
 	Uint8 *vector_addr = &u->dev[0x20];
-	window_created = 1;
 	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+	window_created = 1;
 	if(fullscreen)
 		window_flags = window_flags | SDL_WINDOW_FULLSCREEN_DESKTOP;
 	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, window_flags);
