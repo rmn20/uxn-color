@@ -196,8 +196,8 @@ set_fullscreen(int new_fullscreen, int win)
 	if(fullscreen) {
 		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
-		if(win)
-			SDL_SetWindowFullscreen(emu_window, flags);
+	if(win)
+		SDL_SetWindowFullscreen(emu_window, flags);
 }
 
 /* emulator primitives */
@@ -471,7 +471,7 @@ emu_run(Uxn *u, char *rom)
 	Uint8 *vector_addr = &u->dev[0x20];
 	window_created = 1;
 	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
-	if (fullscreen)
+	if(fullscreen)
 		window_flags = window_flags | SDL_WINDOW_FULLSCREEN_DESKTOP;
 	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, window_flags);
 	if(emu_window == NULL)
@@ -543,7 +543,7 @@ main(int argc, char **argv)
 	/* Read flag. Right now, there can be only one. */
 	if(argv[i][0] == '-') {
 		if(argv[i][1] == 'v')
-			return system_version("Uxnemu - Graphical Varvara Emulator", "2 Sep 2023");
+			return system_version("Uxnemu - Graphical Varvara Emulator", "25 Oct 2023");
 		if(argv[i][1] == '-')
 			i++;
 		if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
