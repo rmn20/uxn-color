@@ -203,8 +203,17 @@ set_fullscreen(int value, int win)
 static void
 set_borderless(int value)
 {
+	if(fullscreen) return;
 	borderless = value;
 	SDL_SetWindowBordered(emu_window, !value);
+}
+
+static void
+set_debugger(Uxn *u, int value)
+{
+	u->dev[0x0e] = value;
+	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_redraw(u);
 }
 
 /* emulator primitives */
@@ -403,7 +412,7 @@ handle_events(Uxn *u)
 			else if(event.key.keysym.sym == SDLK_F1)
 				set_zoom(zoom == 3 ? 1 : zoom + 1, 1);
 			else if(event.key.keysym.sym == SDLK_F2)
-				u->dev[0x0e] = !u->dev[0x0e];
+				set_debugger(u, !u->dev[0x0e]);
 			else if(event.key.keysym.sym == SDLK_F3)
 				capture_screen();
 			else if(event.key.keysym.sym == SDLK_F4)
