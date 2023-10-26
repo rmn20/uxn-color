@@ -13,7 +13,7 @@ WITH REGARD TO THIS SOFTWARE.
 
 /* Registers
 [ Z ][ Y ][ X ][ L ][ N ][ T ] <
-[ . ][ . ][ . ][   H2   ][ T ] <
+[ . ][ . ][ . ][   H2   ][ . ] <
 [   L2   ][   N2   ][   T2   ] <
 */
 

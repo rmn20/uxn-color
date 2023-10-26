@@ -5,12 +5,18 @@
 |0100
 
 @on-reset ( -> )
-	;text
-	&while ( -- )
+	( | write )
+	{ "Hello 20 "Write 0a 00 }
+	STH2r
+	&wa ( -- )
 		LDAk .Console/write DEO
-		INC2 LDAk ?&while
+		INC2 LDAk ?&wa
+	POP2
+	( | error )
+	{ "Hello 20 "Error 0a 00 }
+	STH2r
+	&wb ( -- )
+		LDAk .Console/error DEO
+		INC2 LDAk ?&wb
 	POP2 BRK
-
-@text
-	"Hello $1
 
