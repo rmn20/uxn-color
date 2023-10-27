@@ -506,12 +506,16 @@ main(int argc, char *argv[])
 		return !error("Invalid input", argv[1]);
 	if(!assemble(src))
 		return !error("Assembly", "Failed to assemble rom.");
-	if(!(dst = fopen(argv[2], "wb")))
+	if (scmp(argv[2], "-", 2)) 
+		dst = stdout;
+	else if(!(dst = fopen(argv[2], "wb")))
 		return !error("Invalid Output", argv[2]);
 	if(p.length <= TRIM)
 		return !error("Assembly", "Output rom is empty.");
 	fwrite(p.data + TRIM, p.length - TRIM, 1, dst);
-	review(argv[2]);
-	writesym(argv[2]);
+	if (!scmp(argv[2], "-", 2)) {
+		review(argv[2]);
+		writesym(argv[2]);
+	}
 	return 0;
 }
