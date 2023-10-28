@@ -17,15 +17,15 @@
 	#c0f7 .System/b DEO2
 	( | vectors )
 	;on-frame .Screen/vector DEO2
-	(| set origin ) .Screen/width DEI2 #01 SFT2 .hello/x STZ2
+	( | set origin ) .Screen/width DEI2 #01 SFT2 .hello/x STZ2
 	.Screen/height DEI2 #01 SFT2 .hello/y STZ2
-	#16 .Screen/auto DEO
+	[ LIT2 16 -Screen/auto ] DEO
 	#00 on-frame/draw BRK
 
 @on-frame ( -> )
 	.Controller/button DEI DUP ?{ POP BRK }
 	( | clear )
-	#40 .Screen/sprite DEO
+	[ LIT2 40 -Screen/sprite ] DEO
 	( | movement )
 	DUP #10 AND #00 EQU ?{
 		.hello/y LDZ2k #0001 SUB2 ROT STZ2 }
@@ -39,7 +39,7 @@
 		.hello/x LDZ2 STH2k .Screen/x DEO2
 		.hello/y LDZ2 STH2k .Screen/y DEO2
 		;hello-chr .Screen/addr DEO2
-		#c1 .Screen/sprite DEOk
+		[ LIT2 c1 -Screen/sprite ] DEOk
 		DEO
 		( draw slime ) STH2r .Screen/y DEO2
 		STH2r .Screen/x DEO2
