@@ -29,9 +29,10 @@ emu_dei(Uxn *u, Uint8 addr)
 }
 
 void
-emu_deo(Uxn *u, Uint8 addr)
+emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 {
 	Uint8 p = addr & 0x0f, d = addr & 0xf0;
+	u->dev[addr] = value;
 	switch(d) {
 	case 0x00: system_deo(u, &u->dev[d], p); break;
 	case 0x10: console_deo(&u->dev[d], p); break;

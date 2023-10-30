@@ -11,34 +11,34 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define HALT(c)    { return emu_halt(u, ins, (c), pc - 1); }
 #define FLIP       { s = ins & 0x40 ? &u->wst : &u->rst; }
 #define JUMP(x)    { if(m2) pc = (x); else pc += (Sint8)(x); }
-#define POKE(x, y) { if(m2) { POKE2(ram + x, y) } else { ram[(x)] = (y); } }
+#define POKE(x, y) { if(m2) { POKE2(ram + x, y) } else ram[(x)] = (y); }
 #define PEEK(o, x) { if(m2) { o = PEEK2(ram + x); } else o = ram[(x)]; }
-#define PUSH1(y)   { if(s->ptr == 0xff) HALT(2) s->dat[s->ptr++] = (y); }
-#define PUSH2(y)   { if((tsp = s->ptr) >= 0xfe) HALT(2) t = (y); POKE2(&s->dat[tsp], t); s->ptr = tsp + 2; }
-#define PUSHx(y)   { if(m2) { PUSH2(y) } else { PUSH1(y) } }
-#define POP1(o)    { if(*sp == 0x00) HALT(1) o = s->dat[--*sp]; }
-#define POP2(o)    { if((tsp = *sp) <= 0x01) HALT(1) o = PEEK2(&s->dat[tsp - 2]); *sp = tsp - 2; }
-#define POPx(o)    { if(m2) { POP2(o) } else { POP1(o) } }
-#define DEVW(p, y) { if(m2) { DEO(p, y >> 8) DEO((p + 1), y) } else { DEO(p, y) } }
-#define DEVR(o, p) { if(m2) { o = ((DEI(p) << 8) + DEI(p + 1)); } else { o = DEI(p); } }
+#define DEVR(o, p) { if(m2) { o = ((emu_dei(u, p) << 8) + emu_dei(u, p + 1)); } else o = emu_dei(u, p); }
+#define DEVW(p, y) { if(m2) { emu_deo(u, p, y >> 8); emu_deo(u, p + 1, y); } else emu_deo(u, p, y); }
+#define PUSH1(y)   { s->dat[s->ptr++] = (y); }
+#define PUSH2(y)   { t = (y); s->dat[s->ptr++] = t >> 0x8; s->dat[s->ptr++] = t & 0xff; }
+#define PUSHx(y)   { if(m2) { PUSH2(y) } else PUSH1(y) }
+#define POP1(o)    { o = s->dat[--*sp]; }
+#define POP2(o)    { o = s->dat[--*sp] | s->dat[--*sp] << 0x8; }
+#define POPx(o)    { if(m2) { POP2(o) } else POP1(o) }
 
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	Uint8 ins, opc, m2, ksp, tsp, *sp, *ram = u->ram;
+	Uint8 ksp, *sp, *ram = u->ram;
 	Uint16 a, b, c, t;
-	Stack *s;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
-		ins = ram[pc++];
-		/* modes */
-		opc = ins & 0x1f;
-		m2 = ins & 0x20;
-		s = ins & 0x40 ? &u->rst : &u->wst;
-		if(ins & 0x80) { ksp = s->ptr; sp = &ksp; } else sp = &s->ptr;
+		Uint8 ins = ram[pc++], opc = ins & 0x1f;
+		Uint8 m2 = ins & 0x20;
+		Stack *s = ins & 0x40 ? &u->rst : &u->wst;
+		if(ins & 0x80) {
+			ksp = s->ptr;
+			sp = &ksp;
+		} else
+			sp = &s->ptr;
 		/* Opcodes */
 		switch(opc - (!opc * (ins >> 5))) {
 		/* Immediate */
@@ -77,22 +77,11 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x18: /* ADD */ POPx(a) POPx(b) PUSHx(b + a) break;
 		case 0x19: /* SUB */ POPx(a) POPx(b) PUSHx(b - a) break;
 		case 0x1a: /* MUL */ POPx(a) POPx(b) PUSHx((Uint32)b * a) break;
-		case 0x1b: /* DIV */ POPx(a) POPx(b) if(!a) HALT(3) PUSHx(b / a) break;
+		case 0x1b: /* DIV */ POPx(a) POPx(b) PUSHx(a ? b / a : 0) break;
 		case 0x1c: /* AND */ POPx(a) POPx(b) PUSHx(b & a) break;
 		case 0x1d: /* ORA */ POPx(a) POPx(b) PUSHx(b | a) break;
 		case 0x1e: /* EOR */ POPx(a) POPx(b) PUSHx(b ^ a) break;
 		case 0x1f: /* SFT */ POP1(a) POPx(b) PUSHx(b >> (a & 0xf) << (a >> 4)) break;
 		}
 	}
-}
-
-int
-uxn_boot(Uxn *u, Uint8 *ram)
-{
-	Uint32 i;
-	char *cptr = (char *)u;
-	for(i = 0; i < sizeof(*u); i++)
-		cptr[i] = 0;
-	u->ram = ram;
-	return 1;
 }
