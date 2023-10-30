@@ -18,10 +18,10 @@ WITH REGARD TO THIS SOFTWARE.
 #define DEVR(o, p) { if(m2) { o = ((emu_dei(u, p) << 8) + emu_dei(u, p + 1)); } else o = emu_dei(u, p); }
 #define DEVW(p, y) { if(m2) { emu_deo(u, p, y >> 8); emu_deo(u, p + 1, y); } else emu_deo(u, p, y); }
 #define PUSH1(y)   { s->dat[s->ptr++] = (y); }
-#define PUSH2(y)   { t = (y); s->dat[s->ptr++] = t >> 0x8; s->dat[s->ptr++] = t & 0xff; }
+#define PUSH2(y)   { t = (y); s->dat[s->ptr++] = t >> 8; s->dat[s->ptr++] = t; }
 #define PUSHx(y)   { if(m2) { PUSH2(y) } else PUSH1(y) }
 #define POP1(o)    { o = s->dat[--*sp]; }
-#define POP2(o)    { o = s->dat[--*sp] | s->dat[--*sp] << 0x8; }
+#define POP2(o)    { o = s->dat[--*sp] | s->dat[--*sp] << 8; }
 #define POPx(o)    { if(m2) { POP2(o) } else POP1(o) }
 
 int
