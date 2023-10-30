@@ -561,7 +561,7 @@ main(int argc, char **argv)
 	/* Read flag. Right now, there can be only one. */
 	if(argv[i][0] == '-') {
 		if(argv[i][1] == 'v')
-			return system_version("Uxnemu - Graphical Varvara Emulator", "25 Oct 2023");
+			return system_version("Uxnemu - Graphical Varvara Emulator", "30 Oct 2023");
 		if(argv[i][1] == '-')
 			i++;
 		if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)

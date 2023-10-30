@@ -17,12 +17,12 @@ WITH REGARD TO THIS SOFTWARE.
 [   L2   ][   N2   ][   T2   ] <
 */
 
-#define T *(ptr)
-#define N *(ptr - 1)
-#define L *(ptr - 2)
-#define X *(ptr - 3)
-#define Y *(ptr - 4)
-#define Z *(ptr - 5)
+#define T *(s->dat + s->ptr - 1)
+#define N *(s->dat + s->ptr - 2)
+#define L *(s->dat + s->ptr - 3)
+#define X *(s->dat + s->ptr - 4)
+#define Y *(s->dat + s->ptr - 5)
+#define Z *(s->dat + s->ptr - 6)
 #define T2 (N << 8 | T)
 #define H2 (L << 8 | N)
 #define N2 (X << 8 | L)
@@ -30,12 +30,10 @@ WITH REGARD TO THIS SOFTWARE.
 #define T2_(v) { r = (v); T = r; N = r >> 8; }
 #define N2_(v) { r = (v); L = r; X = r >> 8; }
 #define L2_(v) { r = (v); Y = r; Z = r >> 8; }
-
 #define DEI(p) (dei_masks[p] ? emu_dei(u, (p)) : u->dev[(p)])
 #define DEO(p, v) { u->dev[p] = v; if(deo_masks[p]) emu_deo(u, p); }
-
 #define FLIP      { s = ins & 0x40 ? &u->wst : &u->rst; }
-#define SHIFT(y)  { s->ptr += (y); ptr = s->dat + s->ptr - 1; }
+#define SHIFT(y)  { s->ptr += (y); }
 #define SET(x, y) { SHIFT((ins & 0x80) ? x + y : y) }
 
 int
@@ -47,7 +45,6 @@ uxn_eval(Uxn *u, Uint16 pc)
 	for(;;) {
 		int ins = ram[pc++];
 		Stack *s = ins & 0x40 ? &u->rst : &u->wst;
-		Uint8 *ptr = s->dat + s->ptr - 1;
 		switch(ins & 0x1f ? ins & 0x3f : ins << 4) {
 			/* IMM */
 			case 0x000: /* BRK  */                          return 1;
