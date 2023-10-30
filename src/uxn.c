@@ -17,12 +17,12 @@ WITH REGARD TO THIS SOFTWARE.
 [   L2   ][   N2   ][   T2   ] <
 */
 
-#define T *(s->dat + s->ptr - 1)
-#define N *(s->dat + s->ptr - 2)
-#define L *(s->dat + s->ptr - 3)
-#define X *(s->dat + s->ptr - 4)
-#define Y *(s->dat + s->ptr - 5)
-#define Z *(s->dat + s->ptr - 6)
+#define T *(s->dat + s->ptr)
+#define N *(s->dat + (Uint8)(s->ptr - 1))
+#define L *(s->dat + (Uint8)(s->ptr - 2))
+#define X *(s->dat + (Uint8)(s->ptr - 3))
+#define Y *(s->dat + (Uint8)(s->ptr - 4))
+#define Z *(s->dat + (Uint8)(s->ptr - 5))
 #define T2 (N << 8 | T)
 #define H2 (L << 8 | N)
 #define N2 (X << 8 | L)
