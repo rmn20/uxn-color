@@ -68,15 +68,9 @@ main(int argc, char **argv)
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxncli [-v] file.rom [args..]");
-	/* Connect Varvara */
-	system_connect(0x0, SYSTEM_VERSION, SYSTEM_DEIMASK, SYSTEM_DEOMASK);
-	system_connect(0x1, CONSOLE_VERSION, CONSOLE_DEIMASK, CONSOLE_DEOMASK);
-	system_connect(0xa, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
-	system_connect(0xb, FILE_VERSION, FILE_DEIMASK, FILE_DEOMASK);
-	system_connect(0xc, DATETIME_VERSION, DATETIME_DEIMASK, DATETIME_DEOMASK);
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxncli - Console Varvara Emulator", "30 Oct 2023");
+		return system_version("Uxncli - Console Varvara Emulator", "31 Oct 2023");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
 		return system_error("Init", "Failed to initialize uxn.");
 	/* Game Loop */
