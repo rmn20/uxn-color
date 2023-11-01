@@ -37,7 +37,7 @@ WITH REGARD TO THIS SOFTWARE.
 int
 uxn_eval(Uxn *u, Uint16 pc)
 {
-	int t, n, l, r;
+	Uint16 t, n, l, r;
 	Uint8 *ram = u->ram, *rr;
 	if(!pc || u->dev[0x0f]) return 0;
 	for(;;) {
@@ -91,9 +91,9 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) ram[pc + (Sint8)t] = n; break;
 			case 0x33: /* STR2 */ t=T;n=H2;       SET(3,-3) rr = ram + pc + (Sint8)t; POKE2(rr, n) break;
 			case 0x14: /* LDA  */ t=T2;           SET(2,-1) T = ram[t]; break;
-			case 0x34: /* LDA2 */ t=T2;           SET(2, 0) rr = ram + t; T2_(PEEK2(rr)) break;
+			case 0x34: /* LDA2 */ t=T2;           SET(2, 0) N = ram[t++]; T = ram[t]; break;
 			case 0x15: /* STA  */ t=T2;n=L;       SET(3,-3) ram[t] = n; break;
-			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) rr = ram + t; POKE2(rr, n) break;
+			case 0x35: /* STA2 */ t=T2;n=N2;      SET(4,-4) ram[t++] = n >> 8; ram[t] = n; break;
 			case 0x16: /* DEI  */ t=T;            SET(1, 0) T = emu_dei(u, t); break;
 			case 0x36: /* DEI2 */ t=T;            SET(1, 1) N = emu_dei(u, t); T = emu_dei(u, t + 1); break;
 			case 0x17: /* DEO  */ t=T;n=N;        SET(2,-2) emu_deo(u, t, n); break;
