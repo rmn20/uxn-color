@@ -50,7 +50,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x400: /* JMI  */                          rr = ram + pc; pc += PEEK2(rr) + 2; break;
 			case 0x600: /* JSI  */                SHIFT( 2) T2_(pc + 2); rr = ram + pc; pc += PEEK2(rr) + 2; break;
 			case 0x800: /* LIT  */ case 0xc00:    SHIFT( 1) T = ram[pc++]; break;
-			case 0xa00: /* LIT2 */ case 0xe00:    SHIFT( 2) rr = ram + pc; T2_(PEEK2(rr)) pc += 2; break;
+			case 0xa00: /* LIT2 */ case 0xe00:    SHIFT( 2) N = ram[pc++]; T = ram[pc++]; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) T = t + 1; break;
 			case 0x21: /* INC2 */ t=T2;           SET(2, 0) T2_(t + 1) break;
@@ -83,9 +83,9 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x0f: /* STH  */ t=T;            SET(1,-1) FLIP SHIFT(1) T = t; break;
 			case 0x2f: /* STH2 */ t=T2;           SET(2,-2) FLIP SHIFT(2) T2_(t) break;
 			case 0x10: /* LDZ  */ t=T;            SET(1, 0) T = ram[t]; break;
-			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) rr = ram + t; T2_(PEEK2(rr)) break;
+			case 0x30: /* LDZ2 */ t=T;            SET(1, 1) N = ram[t++]; T = ram[t]; break;
 			case 0x11: /* STZ  */ t=T;n=N;        SET(2,-2) ram[t] = n; break;
-			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) rr = ram + t; POKE2(rr, n) break;
+			case 0x31: /* STZ2 */ t=T;n=H2;       SET(3,-3) ram[t++] = n >> 8; ram[t] = n; break;
 			case 0x12: /* LDR  */ t=T;            SET(1, 0) T = ram[pc + (Sint8)t]; break;
 			case 0x32: /* LDR2 */ t=T;            SET(1, 1) rr = ram + pc + (Sint8)t; T2_(PEEK2(rr)) break;
 			case 0x13: /* STR  */ t=T;n=N;        SET(2,-2) ram[pc + (Sint8)t] = n; break;
