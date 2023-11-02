@@ -45,12 +45,12 @@ uxn_eval(Uxn *u, Uint16 pc)
 		Stack *s = ins & 0x40 ? &u->rst : &u->wst;
 		switch(ins & 0x1f ? ins & 0x3f : ins) {
 			/* IMM */
-			case 0x00: /* BRK  */                      return 1;
-			case 0x20: /* JCI  */ t=T;       SHIFT(-1) if(!t) { pc += 2; break; } /* else fallthrough */
-			case 0x40: /* JMI  */                      rr = ram + pc; pc += PEEK2(rr) + 2; break;
-			case 0x60: /* JSI  */            SHIFT( 2) T2_(pc + 2); rr = ram + pc; pc += PEEK2(rr) + 2; break;
-			case 0x80: /* LIT  */ case 0xc0: SHIFT( 1) T = ram[pc++]; break;
-			case 0xa0: /* LIT2 */ case 0xe0: SHIFT( 2) N = ram[pc++]; T = ram[pc++]; break;
+			case 0x00: /* BRK  */                           return 1;
+			case 0x20: /* JCI  */ t=T;            SHIFT(-1) if(!t) { pc += 2; break; }
+			case 0x40: /* JMI  */                           rr = ram + pc; pc += 2 + PEEK2(rr); break;
+			case 0x60: /* JSI  */                 SHIFT( 2) rr = ram + pc; pc += 2; T2_(pc); pc += PEEK2(rr); break;
+			case 0x80: /* LIT  */ case 0xc0:      SHIFT( 1) T = ram[pc++]; break;
+			case 0xa0: /* LIT2 */ case 0xe0:      SHIFT( 2) N = ram[pc++]; T = ram[pc++]; break;
 			/* ALU */
 			case 0x01: /* INC  */ t=T;            SET(1, 0) T = t + 1; break;
 			case 0x21: /* INC2 */ t=T2;           SET(2, 0) T2_(t + 1) break;
