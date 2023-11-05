@@ -12,20 +12,30 @@
 	#f0b2 .System/b DEO2
 	( | size )
 	#0080 .Screen/width DEO2
-	#008c .Screen/height DEO2
+	#010c .Screen/height DEO2
 	( | background )
 	#f2 .Screen/auto DEO
 	;check-icn .Screen/addr DEO2
-	#ee &times #02 .Screen/sprite DEO
-	INC DUP ?&times
-	POP
-	( | circles )
+	#2200
+	&times ( -- )
+		#02 .Screen/sprite DEO
+		INC GTHk ?&times
+	POP2
+	( | 1bpp )
 	#1000
-	&l ( -- )
+	&l1 ( -- )
 		#00 OVR #03 AND #50 SFT2 #0008 ADD2 .Screen/x DEO2
 		#00 OVR #02 SFT #50 SFT2 #0008 ADD2 .Screen/y DEO2
+		DUP #80 ORA #0f AND <draw-circle>
+		INC GTHk ?&l1
+	POP2
+	( | 2bpp )
+	#1000
+	&l2 ( -- )
+		#00 OVR #03 AND #50 SFT2 #0008 ADD2 .Screen/x DEO2
+		#00 OVR #02 SFT #50 SFT2 #0088 ADD2 .Screen/y DEO2
 		DUP #80 ORA <draw-circle>
-		INC GTHk ?&l
+		INC GTHk ?&l2
 	POP2 BRK
 
 @<draw-circle> ( color -- )
