@@ -53,8 +53,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 			case 0x60: /* JSI  */             SHIFT( 2) rr = ram + pc; pc += 2; T2_(pc); pc += PEEK2(rr); break;
 			case 0x80: /* LIT  */ case 0xc0:  SHIFT( 1) T = ram[pc++]; break;
 			case 0xa0: /* LIT2 */ case 0xe0:  SHIFT( 2) N = ram[pc++]; T = ram[pc++]; break;
-			}
-			break;
+			} break;
 		/* ALU */
 		case 0x01: /* INC  */ t=T;            SET(1, 0) T = t + 1; break;
 		case 0x21: /* INC2 */ t=T2;           SET(2, 0) T2_(t + 1) break;
