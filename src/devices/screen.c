@@ -156,6 +156,7 @@ screen_resize(Uint16 width, Uint16 height)
 	screen_fill(uxn_screen.bg, 0, 0, width, height, 0);
 	screen_fill(uxn_screen.fg, 0, 0, width, height, 0);
 	emu_resize(width, height);
+	screen_change(0, 0, width, height);
 }
 
 void
