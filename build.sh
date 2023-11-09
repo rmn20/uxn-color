@@ -106,6 +106,6 @@ if [ $norun = 1 ]; then exit; fi
 ./bin/uxncli -v
 ./bin/uxnemu -v
 
-./bin/uxnasm projects/examples/devices/audio-tests.tal bin/audio-tests.rom
+./bin/uxnasm projects/examples/devices/mouse.tal bin/mouse.rom
 
-./bin/uxnemu -2x bin/audio-tests.rom
+./bin/uxnemu -2x bin/mouse.rom
