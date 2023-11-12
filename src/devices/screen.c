@@ -39,7 +39,7 @@ screen_change(Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2)
 }
 
 void
-screen_fill(Uint8 *layer, int x1, int y1, int x2, int y2, int color)
+screen_rect(Uint8 *layer, int x1, int y1, int x2, int y2, int color)
 {
 	int x, y, width = uxn_screen.width, height = uxn_screen.height;
 	for(y = y1; y < y2 && y < height; y++)
@@ -153,8 +153,8 @@ screen_resize(Uint16 width, Uint16 height)
 	uxn_screen.pixels = pixels;
 	uxn_screen.width = width;
 	uxn_screen.height = height;
-	screen_fill(uxn_screen.bg, 0, 0, width, height, 0);
-	screen_fill(uxn_screen.fg, 0, 0, width, height, 0);
+	screen_rect(uxn_screen.bg, 0, 0, width, height, 0);
+	screen_rect(uxn_screen.fg, 0, 0, width, height, 0);
 	emu_resize(width, height);
 	screen_change(0, 0, width, height);
 }
@@ -219,7 +219,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 			Uint16 y2 = uxn_screen.height;
 			if(ctrl & 0x10) x2 = x, x = 0;
 			if(ctrl & 0x20) y2 = y, y = 0;
-			screen_fill(layer, x, y, x2, y2, color);
+			screen_rect(layer, x, y, x2, y2, color);
 			screen_change(x, y, x2, y2);
 		}
 		/* pixel mode */

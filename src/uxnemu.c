@@ -55,8 +55,7 @@ static SDL_Thread *stdin_thread;
 
 /* devices */
 
-static int window_created = 0;
-static int fullscreen = 0, borderless = 0;
+static int window_created, fullscreen, borderless;
 static Uint32 stdin_event, audio0_event, zoom = 1;
 static Uint64 exec_deadline, deadline_interval, ms_interval;
 
@@ -65,25 +64,6 @@ clamp(int v, int min, int max)
 {
 	return v < min ? min : v > max ? max
 								   : v;
-}
-
-static Uint8
-audio_dei(int instance, Uint8 *d, Uint8 port)
-{
-	switch(port) {
-	case 0x2:
-		return audio_get_position(instance) >> 8;
-	case 0x3:
-		return audio_get_position(instance);
-	case 0x4:
-		return audio_get_vu(instance);
-	case 0x0:
-	case 0x8:
-	case 0xa:
-	case 0xc: return PEEK2(d + port);
-	default: return d[port];
-	}
-	return d[port];
 }
 
 static void
@@ -122,8 +102,7 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 	switch(d) {
 	case 0x00:
 		system_deo(u, &u->dev[d], p);
-		if(p > 0x7 && p < 0xe)
-			screen_palette(&u->dev[0x8]);
+		if(p > 0x7 && p < 0xe) screen_palette(&u->dev[0x8]);
 		break;
 	case 0x10: console_deo(&u->dev[d], p); break;
 	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
@@ -160,23 +139,20 @@ stdin_handler(void *p)
 static void
 set_window_size(SDL_Window *window, int w, int h)
 {
-	SDL_Point win, win_old;
-	SDL_GetWindowPosition(window, &win.x, &win.y);
+	SDL_Point win_old;
 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
 	if(w == win_old.x && h == win_old.y) return;
 	SDL_RenderClear(emu_renderer);
-	/* SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2); */
 	SDL_SetWindowSize(window, w, h);
 }
 
 static void
 set_zoom(Uint8 z, int win)
 {
-	if(z >= 1) {
-		zoom = z;
-		if(win)
-			set_window_size(emu_window, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom);
-	}
+	if(z < 1) return;
+	if(win)
+		set_window_size(emu_window, (uxn_screen.width + PAD2) * z, (uxn_screen.height + PAD2) * z);
+	zoom = z;
 }
 
 static void
@@ -184,9 +160,8 @@ set_fullscreen(int value, int win)
 {
 	Uint32 flags = 0; /* windowed mode; SDL2 has no constant for this */
 	fullscreen = value;
-	if(fullscreen) {
+	if(fullscreen)
 		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-	}
 	if(win)
 		SDL_SetWindowFullscreen(emu_window, flags);
 }
@@ -203,7 +178,7 @@ static void
 set_debugger(Uxn *u, int value)
 {
 	u->dev[0x0e] = value;
-	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_rect(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	screen_redraw(u);
 }
 
@@ -254,7 +229,6 @@ emu_init(Uxn *u)
 	as.userdata = u;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 		return system_error("sdl", SDL_GetError());
-
 	audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
 	if(!audio_id)
 		system_error("sdl_audio", SDL_GetError());
@@ -279,8 +253,8 @@ static void
 emu_restart(Uxn *u, char *rom, int soft)
 {
 	screen_resize(WIDTH, HEIGHT);
-	screen_fill(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	screen_fill(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_rect(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_rect(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
 	system_reboot(u, rom, soft);
 	SDL_SetWindowTitle(emu_window, boot_rom);
 }
@@ -428,37 +402,15 @@ handle_events(Uxn *u)
 		else if(event.type == SDL_JOYHATMOTION) {
 			/* NOTE: Assuming there is only one joyhat in the controller */
 			switch(event.jhat.value) {
-			case SDL_HAT_UP:
-				controller_down(u, &u->dev[0x80], 0x10);
-				break;
-			case SDL_HAT_DOWN:
-				controller_down(u, &u->dev[0x80], 0x20);
-				break;
-			case SDL_HAT_LEFT:
-				controller_down(u, &u->dev[0x80], 0x40);
-				break;
-			case SDL_HAT_RIGHT:
-				controller_down(u, &u->dev[0x80], 0x80);
-				break;
-			case SDL_HAT_LEFTDOWN:
-				controller_down(u, &u->dev[0x80], 0x40 | 0x20);
-				break;
-			case SDL_HAT_LEFTUP:
-				controller_down(u, &u->dev[0x80], 0x40 | 0x10);
-				break;
-			case SDL_HAT_RIGHTDOWN:
-				controller_down(u, &u->dev[0x80], 0x80 | 0x20);
-				break;
-			case SDL_HAT_RIGHTUP:
-				controller_down(u, &u->dev[0x80], 0x80 | 0x10);
-				break;
-			case SDL_HAT_CENTERED:
-				/* Set all directions to down */
-				controller_up(u, &u->dev[0x80], 0x10 | 0x20 | 0x40 | 0x80);
-				break;
-			default:
-				/* Ignore */
-				break;
+			case SDL_HAT_UP: controller_down(u, &u->dev[0x80], 0x10); break;
+			case SDL_HAT_DOWN: controller_down(u, &u->dev[0x80], 0x20); break;
+			case SDL_HAT_LEFT: controller_down(u, &u->dev[0x80], 0x40); break;
+			case SDL_HAT_RIGHT: controller_down(u, &u->dev[0x80], 0x80); break;
+			case SDL_HAT_LEFTDOWN: controller_down(u, &u->dev[0x80], 0x40 | 0x20); break;
+			case SDL_HAT_LEFTUP: controller_down(u, &u->dev[0x80], 0x40 | 0x10); break;
+			case SDL_HAT_RIGHTDOWN: controller_down(u, &u->dev[0x80], 0x80 | 0x20); break;
+			case SDL_HAT_RIGHTUP: controller_down(u, &u->dev[0x80], 0x80 | 0x10); break;
+			case SDL_HAT_CENTERED: controller_up(u, &u->dev[0x80], 0x10 | 0x20 | 0x40 | 0x80); break;
 			}
 		}
 		/* Console */
@@ -478,7 +430,12 @@ emu_run(Uxn *u, char *rom)
 	window_created = 1;
 	if(fullscreen)
 		window_flags = window_flags | SDL_WINDOW_FULLSCREEN_DESKTOP;
-	emu_window = SDL_CreateWindow(rom, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (uxn_screen.width + PAD2) * zoom, (uxn_screen.height + PAD2) * zoom, window_flags);
+	emu_window = SDL_CreateWindow(rom,
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		(uxn_screen.width + PAD2) * zoom,
+		(uxn_screen.height + PAD2) * zoom,
+		window_flags);
 	if(emu_window == NULL)
 		return system_error("sdl_window", SDL_GetError());
 	emu_renderer = SDL_CreateRenderer(emu_window, -1, SDL_RENDERER_ACCELERATED);
@@ -540,7 +497,7 @@ main(int argc, char **argv)
 	/* Read flag. Right now, there can be only one. */
 	if(argv[i][0] == '-') {
 		if(argv[i][1] == 'v')
-			return system_version("Uxnemu - Graphical Varvara Emulator", "9 Nov 2023");
+			return system_version("Uxnemu - Graphical Varvara Emulator", "11 Nov 2023");
 		if(argv[i][1] == '-')
 			i++;
 		if(strcmp(argv[i], "-2x") == 0 || strcmp(argv[i], "-3x") == 0)
@@ -553,12 +510,10 @@ main(int argc, char **argv)
 	/* Start system. */
 	Uint8 *ram = (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8));
 	char *rom = argv[i++];
-	if(!system_init(&u, ram, rom)) {
+	if(!system_init(&u, ram, rom))
 		return system_error("Init", "Failed to initialize uxn.");
-	}
-	if(!system_init(&u_audio, ram, rom)) {
+	if(!system_init(&u_audio, ram, rom))
 		return system_error("Init", "Failed to initialize uxn.");
-	}
 	if(!emu_init(&u_audio))
 		return system_error("Init", "Failed to initialize varvara.");
 	/* Game Loop */
