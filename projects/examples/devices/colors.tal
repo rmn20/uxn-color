@@ -1,0 +1,101 @@
+|0100
+  ;L.screen.hook #20 DEO2
+  LIT2r 0000 main_ POP2r BRK
+  @L.screen.hook LIT2r 0000 on_screen_ POP2 POP2r BRK
+( bss )
+( data )
+@cursor_
+  c0 e0 f0 f8 fc fc f0 c0
+( text )
+@ashr
+  SWP2
+  #8000 AND2k EQU2 #ff MUL DUP
+  DUP2 ROT2 EOR2 ROT2
+  NIP #0f AND SFT2
+  EOR2
+  JMP2r
+
+@on_screen_ ( -- result* )
+    OVR2r LIT2r 0002 SUB2r #0000 #28 DEO2 #0080 #2a DEO2 #00d6 DEO #e02e DEO #0000 STH2kr STA
+    POP
+
+  &begin.1
+    LDAkr STHr #00 SWP #8000 EOR2 #8020 LTH2 #00 EQU ?&break.1
+    LDAkr STHr #00 SWP #30 SFT2 #28 DEO2 #0080 #2a DEO2 LDAkr STHr #00 SWP #0002 ashr
+    NIP #d6 DEO LDAkr STHr #03 AND #00 SWP #00a0 ORA2 NIP #2e DEO LDAkr STHr #00 SWP #30 SFT2 #28 DEO2 #0080 #2a DEO2 LDAkr STHr #00 SWP #0002 ashr
+    #0080 ORA2 NIP #d6 DEO LDAkr STHr #03 AND #00 SWP #00c0 ORA2 NIP #2e DEO
+
+  &continue.1
+    STH2kr LDAk #00 SWP INC2k ROT2 STA
+    POP POP2 !&begin.1
+
+  &break.1
+    #00d6 DEO #92 DEI2 #0008 SUB2 #28 DEO2 #94 DEI2 #2a DEO2 ;cursor_ #2c DEO2 #4f2f DEO #0000
+
+  &return
+    POP2r JMP2r
+
+@initExtPalettes_ ( layer* -- result* )
+    OVR2r LIT2r 0008 SUB2r STH2kr #0006 ADD2 STA
+    POP STH2kr #0006 ADD2 LDA ?&then.1
+    #0246 !&end.1
+
+  &then.1
+    #0135
+
+  &end.1
+    STH2kr #0004 ADD2 STA2
+    STH2kr #0006 ADD2 LDA ?&then.2
+    #8adf !&end.2
+
+  &then.2
+    #09bd
+
+  &end.2
+    STH2kr INC2 INC2 STA2
+    STH2kr #0006 ADD2 LDA #00 SWP #0740 SFT SFT2 STH2kr INC2 STA
+    POP #0000 STH2kr STA
+    POP
+
+  &begin.3
+    LDAkr STHr #00 SWP #8000 EOR2 #8008 LTH2 #00 EQU ?&break.3
+    STH2kr INC2 LDA #00 SWP LDAkr STHr #00 SWP ORA2 NIP #d6 DEO LDAkr STHr #01 AND ?&then.4
+    STH2kr #0004 ADD2 LDA2 !&end.4
+
+  &then.4
+    STH2kr INC2 INC2 LDA2
+
+  &end.4
+    #d0 DEO2 LDAkr STHr #02 AND ?&then.5
+    STH2kr #0004 ADD2 LDA2 !&end.5
+
+  &then.5
+    STH2kr INC2 INC2 LDA2
+
+  &end.5
+    #d2 DEO2 LDAkr STHr #04 AND ?&then.6
+    STH2kr #0004 ADD2 LDA2 !&end.6
+
+  &then.6
+    STH2kr INC2 INC2 LDA2
+
+  &end.6
+    #d4 DEO2
+
+  &continue.3
+    STH2kr LDAk #00 SWP INC2k ROT2 STA
+    POP POP2 !&begin.3
+
+  &break.3
+    #0000
+
+  &return
+    POP2r JMP2r
+
+@main_ ( -- result* )
+    OVR2r #27cf #08 DEO2 #27cf #0a DEO2 #27cf #0c DEO2 #0000 initExtPalettes_
+    POP2 #0001 initExtPalettes_
+    POP2 #0100 #22 DEO2 #0100 #24 DEO2 #0000
+
+  &return
+    POP2r JMP2r
