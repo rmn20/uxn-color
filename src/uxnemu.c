@@ -104,7 +104,7 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 		system_deo(u, &u->dev[d], p);
 		if(p > 0x7 && p < 0xe) {
 			screen_palette(&u->dev[0x8], 0);
-			screen_palette(&u->dev[0x8], 32);
+			screen_palette(&u->dev[0x8], 8);
 		}
 		break;
 	case 0x10: console_deo(&u->dev[d], p); break;
@@ -115,6 +115,7 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 	case 0x60: audio_deo(3, &u->dev[d], p, u); break;
 	case 0xa0: file_deo(0, u->ram, &u->dev[d], p); break;
 	case 0xb0: file_deo(1, u->ram, &u->dev[d], p); break;
+	case 0xd0: screen2_deo(u->ram, &u->dev[d], p); break;
 	}
 }
 

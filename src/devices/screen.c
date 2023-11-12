@@ -181,7 +181,7 @@ screen_redraw(Uxn *u)
 	
 	for(y = y1; y < y2; y++)
 		for(o = y * w, i = x1 + o, j = x2 + o; i < j; i++)
-			pixels[i] = palette[(fg[i] & 3) != 0 ? fg[i] : bg[i]];
+			pixels[i] = palette[(fg[i] & 3) != 0 ? (32 | fg[i]) : bg[i]];
 }
 
 Uint8
@@ -213,7 +213,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 	case 0xe: {
 		Uint8 ctrl = d[0xe];
 		
-		Uint8 pal = d[0x7] & 0x7;
+		Uint8 pal = uxn_screen.workPalette;
 		Uint8 color = (pal << 2) | (ctrl & 0x3);
 		
 		Uint8 *layer = (ctrl & 0x40) ? uxn_screen.fg : uxn_screen.bg;
@@ -246,7 +246,7 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		Uint8 i;
 		Uint8 ctrl = d[0xf];
 		Uint8 move = d[0x6];
-		Uint8 pal = d[0x7] & 0x7;
+		Uint8 pal = uxn_screen.workPalette;
 		Uint8 length = move >> 4;
 		Uint8 twobpp = !!(ctrl & 0x80);
 		Uint8 *layer = (ctrl & 0x40) ? uxn_screen.fg : uxn_screen.bg;
@@ -275,5 +275,19 @@ screen_deo(Uint8 *ram, Uint8 *d, Uint8 port)
 		if(move & 0x4) POKE2(port_addr, addr); /* auto addr+length */
 		break;
 	}
+	}
+}
+
+void
+screen2_deo(Uint8 *ram, Uint8 *d, Uint8 port)
+{
+	if(port >= 0x0 && port < 0x6) {
+		/*Set work palette colors*/
+		screen_palette(&d[0x0], uxn_screen.workPalette | (uxn_screen.workPaletteLayer << 3));
+		
+	} else if(port == 0x6) {
+		/*Set work palette id*/
+		uxn_screen.workPalette = d[0x6] & 7;
+		uxn_screen.workPaletteLayer = (d[0x6] >> 7) & 1;
 	}
 }
