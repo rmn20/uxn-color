@@ -29,7 +29,7 @@ typedef struct {
 } Stack;
 
 typedef struct Uxn {
-	Uint8 *ram, *dev;
+	Uint8 *ram, dev[0x100];
 	Stack wst, rst;
 } Uxn;
 

@@ -64,15 +64,13 @@ emu_end(Uxn *u)
 int
 main(int argc, char **argv)
 {
-	Uint8 dev[0x100] = {0};
-	Uxn u;
-	u.dev = (Uint8 *)&dev;
+	Uxn u = {0};
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxncli [-v] file.rom [args..]");
 	/* Read flags */
 	if(argv[i][0] == '-' && argv[i][1] == 'v')
-		return system_version("Uxncli - Console Varvara Emulator", "9 Nov 2023");
+		return system_version("Uxncli - Console Varvara Emulator", "11 Nov 2023");
 	if(!system_init(&u, (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8)), argv[i++]))
 		return system_error("Init", "Failed to initialize uxn.");
 	/* Game Loop */

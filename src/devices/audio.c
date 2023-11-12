@@ -334,3 +334,14 @@ audio_get_position(int instance)
 {
 	return channel[instance].sample.pos;
 }
+
+Uint8
+audio_dei(int instance, Uint8 *d, Uint8 port)
+{
+	switch(port) {
+	case 0x2: return audio_get_position(instance) >> 8;
+	case 0x3: return audio_get_position(instance);
+	case 0x4: return audio_get_vu(instance);
+	}
+	return d[port];
+}
