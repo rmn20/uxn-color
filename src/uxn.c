@@ -48,7 +48,7 @@ uxn_eval(Uxn *u, Uint16 pc)
 		case 0x00: case 0x20:
 			switch(ins) {
 			case 0x00: /* BRK  */                       return 1;
-			case 0x20: /* JCI  */ t=T;        SHIFT(-1) if(!t) { pc += 2; break; }
+			case 0x20: /* JCI  */ t=T;        SHIFT(-1) if(!t) { pc += 2; break; } /* fall-through */
 			case 0x40: /* JMI  */                       rr = ram + pc; pc += 2 + PEEK2(rr); break;
 			case 0x60: /* JSI  */             SHIFT( 2) rr = ram + pc; pc += 2; T2_(pc); pc += PEEK2(rr); break;
 			case 0x80: /* LIT  */ case 0xc0:  SHIFT( 1) T = ram[pc++]; break;

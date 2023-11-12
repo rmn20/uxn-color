@@ -486,11 +486,9 @@ emu_end(Uxn *u)
 int
 main(int argc, char **argv)
 {
-	Uint8 dev[0x100] = {0};
-	Uxn u = {0};
-	Uxn u_audio = {0};
-	u.dev = (Uint8 *)&dev;
-	u_audio.dev = (Uint8 *)&dev;
+	Uint8 *ram;
+	char *rom;
+	Uxn u = {0}, u_audio = {0};
 	int i = 1;
 	if(i == argc)
 		return system_error("usage", "uxnemu [-v] | uxnemu [-f | -2x | -3x | --] file.rom [args...]");
@@ -508,11 +506,9 @@ main(int argc, char **argv)
 		}
 	}
 	/* Start system. */
-	Uint8 *ram = (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8));
-	char *rom = argv[i++];
-	if(!system_init(&u, ram, rom))
-		return system_error("Init", "Failed to initialize uxn.");
-	if(!system_init(&u_audio, ram, rom))
+	ram = (Uint8 *)calloc(0x10000 * RAM_PAGES, sizeof(Uint8));
+	rom = argv[i++];
+	if(!system_init(&u, ram, rom) || !system_init(&u_audio, ram, rom))
 		return system_error("Init", "Failed to initialize uxn.");
 	if(!emu_init(&u_audio))
 		return system_error("Init", "Failed to initialize varvara.");
