@@ -122,8 +122,10 @@ emu_deo(Uxn *u, Uint8 addr, Uint8 value)
 	switch(d) {
 	case 0x00:
 		system_deo(u, &u->dev[d], p);
-		if(p > 0x7 && p < 0xe)
-			screen_palette(&u->dev[0x8]);
+		if(p > 0x7 && p < 0xe) {
+			screen_palette(&u->dev[0x8], 0);
+			screen_palette(&u->dev[0x8], 32);
+		}
 		break;
 	case 0x10: console_deo(&u->dev[d], p); break;
 	case 0x20: screen_deo(u->ram, &u->dev[d], p); break;
