@@ -28,7 +28,7 @@ extern int emu_resize(int width, int height);
 
 void screen_fill(Uint8 *layer, int color);
 void screen_rect(Uint8 *layer, Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2, int color);
-void screen_palette(Uint8 *addr);
+void screen_palette(Uint8 *addr, Uint8 palId);
 void screen_resize(Uint16 width, Uint16 height);
 void screen_change(Uint16 x1, Uint16 y1, Uint16 x2, Uint16 y2);
 void screen_redraw(Uxn *u);
