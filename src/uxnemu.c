@@ -178,7 +178,7 @@ static void
 set_debugger(Uxn *u, int value)
 {
 	u->dev[0x0e] = value;
-	screen_rect(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_fill(uxn_screen.fg, 0);
 	screen_redraw(u);
 }
 
@@ -253,8 +253,8 @@ static void
 emu_restart(Uxn *u, char *rom, int soft)
 {
 	screen_resize(WIDTH, HEIGHT);
-	screen_rect(uxn_screen.bg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
-	screen_rect(uxn_screen.fg, 0, 0, uxn_screen.width, uxn_screen.height, 0);
+	screen_fill(uxn_screen.bg, 0);
+	screen_fill(uxn_screen.fg, 0);
 	system_reboot(u, rom, soft);
 	SDL_SetWindowTitle(emu_window, boot_rom);
 }
